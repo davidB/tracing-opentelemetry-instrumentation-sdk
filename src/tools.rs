@@ -1,7 +1,11 @@
-use opentelemetry::global;
-use opentelemetry::sdk::propagation::TraceContextPropagator;
-use opentelemetry::sdk::trace as sdktrace;
-use opentelemetry::{sdk::Resource, trace::TraceError};
+
+#[cfg(any(feature = "jaeger", feature = "otlp"))]
+use opentelemetry::{
+    global,
+    sdk::propagation::TraceContextPropagator,
+    sdk::trace as sdktrace,
+    sdk::Resource, trace::TraceError
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CollectorKind {
