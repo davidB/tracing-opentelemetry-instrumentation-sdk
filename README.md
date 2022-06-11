@@ -4,7 +4,7 @@
 [![crate version](https://img.shields.io/crates/v/axum-tracing-opentelemetry.svg)](https://crates.io/crates/axum-tracing-opentelemetry)
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Actions Status](https://github.com/davidB/axum-tracing-opentelemetry/workflows/ci-flow/badge.svg)](https://github.com/davidB/axum-tracing-opentelemetry/actions)
+
 
 Middlewares and tools to integrate axum + tracing + opentelemetry.
 
