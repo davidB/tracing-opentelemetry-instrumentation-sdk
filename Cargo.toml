@@ -1,5 +1,6 @@
 [package]
 name = "axum-tracing-opentelemetry"
+description = "Middlewares and tools to integrate axum + tracing + opentelemetry"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,6 +9,13 @@ axum = "0.5"
 # axum-core = "0.2"
 http = "0.2"
 opentelemetry = { version = "0.17", features = ["rt-tokio", "serialize"] }
+opentelemetry-jaeger = { version = "0.16", features = [
+  "rt-tokio",
+], optional = true }
+opentelemetry-semantic-conventions = { version = "0.9.0", optional = true }
+opentelemetry-otlp = { version = "0.10", features = [
+  "http-proto",
+], optional = true }
 tower-http = { version = "0.3", features = ["trace", "cors"] }
 tracing = "0.1"
 tracing-opentelemetry = "0.17"
@@ -28,3 +36,8 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "fmt",
   "json",
 ] }
+
+
+[features]
+jaeger = ["opentelemetry-jaeger", "opentelemetry-semantic-conventions"]
+otlp = ["opentelemetry-otlp", "opentelemetry-semantic-conventions"]
