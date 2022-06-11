@@ -3,6 +3,12 @@ name = "axum-tracing-opentelemetry"
 description = "Middlewares and tools to integrate axum + tracing + opentelemetry"
 version = "0.2.0"
 edition = "2021"
+readme = "README.md"
+license = "CC0-1.0"
+keywords = ["axum", "tracing", "opentelemetry"]
+categories = ["web-programming"]
+repository = "https://github.com/davidB/axum-tracing-opentelemetry"
+homepage = "https://github.com/davidB/axum-tracing-opentelemetry"
 
 [dependencies]
 axum = "0.5"
