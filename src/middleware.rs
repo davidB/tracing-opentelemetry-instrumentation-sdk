@@ -234,7 +234,8 @@ fn extract_remote_context(headers: &http::HeaderMap) -> opentelemetry::Context {
     opentelemetry::global::get_text_map_propagator(|propagator| propagator.extract(&extractor))
 }
 
-//HACK create a context with a trace_id (if not set) before call to `tracing_opentelemetry::OpenTelemetrySpanExt::set_parent`
+//HACK create a context with a trace_id (if not set) before call to
+// `tracing_opentelemetry::OpenTelemetrySpanExt::set_parent`
 // else trace_id is defined too late and the `info_span` log `trace_id: ""`
 // Use the default global tracer (named "") to start the trace
 fn create_context_with_trace(remote_context: opentelemetry::Context) -> opentelemetry::Context {

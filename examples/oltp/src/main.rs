@@ -2,9 +2,9 @@ use axum::extract::{Path, Query};
 use axum::http::Method;
 use axum::Extension;
 use axum::{response::IntoResponse, routing::get, Router};
-use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, CollectorKind, init_tracer};
-use std::net::SocketAddr;
+use axum_tracing_opentelemetry::{init_tracer, opentelemetry_tracing_layer, CollectorKind};
 use serde_json::json;
+use std::net::SocketAddr;
 
 fn init_tracing() {
     use tracing_subscriber::filter::EnvFilter;
@@ -12,7 +12,10 @@ fn init_tracing() {
     use tracing_subscriber::layer::SubscriberExt;
 
     // std::env::set_var("RUST_LOG", "info,kube=trace");
-    std::env::set_var("RUST_LOG", std::env::var("RUST_LOG").unwrap_or("INFO".to_string()));
+    std::env::set_var(
+        "RUST_LOG",
+        std::env::var("RUST_LOG").unwrap_or("INFO".to_string()),
+    );
 
     let otel_tracer = init_tracer(CollectorKind::Otlp).expect("setup of Tracer");
     let otel_layer = tracing_opentelemetry::layer().with_tracer(otel_tracer);
@@ -50,7 +53,8 @@ fn app() -> Router {
     // build our application with a route
     Router::new()
         .route("/health", get(health))
-        // opentelemetry_tracing_layer setup `TraceLayer`, that is provided by tower-http so you have to add that as a dependency.
+        // opentelemetry_tracing_layer setup `TraceLayer`,
+        // that is provided by tower-http so you have to add that as a dependency.
         .layer(opentelemetry_tracing_layer())
 }
 

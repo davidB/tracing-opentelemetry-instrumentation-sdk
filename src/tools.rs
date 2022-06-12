@@ -18,8 +18,8 @@ pub fn init_tracer(kind: CollectorKind) -> Result<sdktrace::Tracer, TraceError> 
     // use opentelemetry_otlp::WithExportConfig;
     use opentelemetry_semantic_conventions as semcov;
     let resource = Resource::new(vec![
-        semcov::resource::SERVICE_NAME.string(env!("CARGO_PKG_NAME")), //TODO Replace with the name of your application
-        semcov::resource::SERVICE_VERSION.string(env!("CARGO_PKG_VERSION")), //TODO Replace with the version of your application
+        semcov::resource::SERVICE_NAME.string(env!("CARGO_PKG_NAME")),
+        semcov::resource::SERVICE_VERSION.string(env!("CARGO_PKG_VERSION")),
     ]);
 
     match kind {
@@ -37,10 +37,7 @@ pub fn init_tracer(kind: CollectorKind) -> Result<sdktrace::Tracer, TraceError> 
             // Or "OTEL_EXPORTER_JAEGER_ENDPOINT"
             // or now variable
             init_tracer_jaeger(resource)
-        } // _ => {
-          //     //sdktrace::stdout::new_pipeline().install_simple()
-          //     Err(TraceError::Other(anyhow!("no config found").into()))
-          // }
+        }
     }
 }
 

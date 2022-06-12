@@ -21,8 +21,10 @@ indent_size = 4
 max_line_length = 88
 
 [*.rs]
+# https://github.com/rust-dev-tools/fmt-rfcs/blob/master/guide/guide.md
 indent_size = 4
-max_line_length = 100
+# officially the limit is 100, but we have long url (unsplittable) in comment
+max_line_length = 140
 
 [{*.bazel,*.bzl,BUILD,WORKSPACE}]
 indent_size = 4

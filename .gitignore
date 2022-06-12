@@ -240,8 +240,3 @@ tags
 report/
 
 tempo-data
-
-
-# Added by cargo
-
-/target
