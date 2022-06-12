@@ -1,10 +1,7 @@
-
 #[cfg(any(feature = "jaeger", feature = "otlp"))]
 use opentelemetry::{
-    global,
-    sdk::propagation::TraceContextPropagator,
-    sdk::trace as sdktrace,
-    sdk::Resource, trace::TraceError
+    global, sdk::propagation::TraceContextPropagator, sdk::trace as sdktrace, sdk::Resource,
+    trace::TraceError,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
