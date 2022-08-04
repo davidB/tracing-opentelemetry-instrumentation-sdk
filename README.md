@@ -69,6 +69,13 @@ async fn shutdown_signal() {
 }
 ```
 
+To retrieve the current `trace_id` (eg to add it into error message (as header or attributes))
+
+```rust
+  let trace_id = axum_tracing_opentelemetry::find_current_trace_id();
+  json!({ "error" :  "xxxxxx", "trace_id": trace_id})
+```
+
 ## History
 
 ### 0.2.0
