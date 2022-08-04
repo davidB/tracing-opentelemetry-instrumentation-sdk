@@ -1,7 +1,7 @@
+use opentelemetry::sdk::Resource;
 #[cfg(any(feature = "jaeger", feature = "otlp"))]
 use opentelemetry::{
-    global, sdk::propagation::TraceContextPropagator, sdk::trace as sdktrace, sdk::Resource,
-    trace::TraceError,
+    global, sdk::propagation::TraceContextPropagator, sdk::trace as sdktrace, trace::TraceError,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -14,14 +14,10 @@ pub enum CollectorKind {
 }
 
 #[cfg(any(feature = "jaeger", feature = "otlp"))]
-pub fn init_tracer(kind: CollectorKind) -> Result<sdktrace::Tracer, TraceError> {
-    // use opentelemetry_otlp::WithExportConfig;
-    use opentelemetry_semantic_conventions as semcov;
-    let resource = Resource::new(vec![
-        semcov::resource::SERVICE_NAME.string(env!("CARGO_PKG_NAME")),
-        semcov::resource::SERVICE_VERSION.string(env!("CARGO_PKG_VERSION")),
-    ]);
-
+pub fn init_tracer(
+    kind: CollectorKind,
+    resource: Resource,
+) -> Result<sdktrace::Tracer, TraceError> {
     match kind {
         #[cfg(feature = "otlp")]
         CollectorKind::Otlp => {
@@ -41,18 +37,39 @@ pub fn init_tracer(kind: CollectorKind) -> Result<sdktrace::Tracer, TraceError> 
     }
 }
 
+/// call with service name and version
+///
+/// ```rust
+/// make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+/// ```
+pub fn make_resource<S>(service_name: S, service_version: S) -> Resource
+where
+    S: Into<String>,
+{
+    use opentelemetry_semantic_conventions as semcov;
+    Resource::new(vec![
+        semcov::resource::SERVICE_NAME.string(service_name.into()),
+        semcov::resource::SERVICE_VERSION.string(service_version.into()),
+    ])
+}
+
 #[cfg(feature = "otlp")]
 pub fn init_tracer_otlp(resource: Resource) -> Result<sdktrace::Tracer, TraceError> {
+    use opentelemetry_otlp::WithExportConfig;
+
     global::set_text_map_propagator(TraceContextPropagator::new());
-
-    // resource = resource.merge(&read_dt_metadata());
-
+    // FIXME choice the right/official env variable `OTEL_COLLECTOR_URL` or `OTEL_EXPORTER_OTLP_ENDPOINT`
+    // TODO try to autodetect if http or grpc should be used (eg based on env variable, port ???)
+    //endpoint (default = 0.0.0.0:4317 for grpc protocol, 0.0.0.0:4318 http protocol):
+    //.http().with_endpoint(collector_url),
+    let endpoint_grpc = std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
+        .unwrap_or_else(|_| "http://0.0.0.0:4317".to_string());
+    let exporter = opentelemetry_otlp::new_exporter()
+        .tonic()
+        .with_endpoint(endpoint_grpc);
     opentelemetry_otlp::new_pipeline()
         .tracing()
-        //endpoint (default = 0.0.0.0:4317 for grpc protocol, 0.0.0.0:4318 http protocol):
-        .with_exporter(
-            opentelemetry_otlp::new_exporter().tonic(), //.http().with_endpoint(collector_url),
-        )
+        .with_exporter(exporter)
         .with_trace_config(
             sdktrace::config()
                 .with_resource(resource)
@@ -69,7 +86,6 @@ pub fn init_tracer_jaeger(resource: Resource) -> Result<sdktrace::Tracer, TraceE
     );
 
     opentelemetry_jaeger::new_pipeline()
-        .with_service_name(env!("CARGO_PKG_NAME"))
         .with_trace_config(
             sdktrace::config()
                 .with_resource(resource)

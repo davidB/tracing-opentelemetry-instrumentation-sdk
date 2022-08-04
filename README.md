@@ -18,15 +18,21 @@ For examples, you can look at:
 
 ```rust
 //...
+use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
 use axum_tracing_opentelemetry::{
-  opentelemetry_tracing_layer,
-  // optional tools to init tracer (require features)
-  CollectorKind, init_tracer
+    // optional tools to init tracer (may require features)
+    init_tracer,
+    make_resource,
+    CollectorKind,
 };
 
 fn init_tracing() {
 
-    let otel_tracer = init_tracer(CollectorKind::Otlp).expect("setup of Tracer");
+    let otel_tracer = init_tracer(
+        CollectorKind::Otlp,
+        make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
+    )
+    .expect("setup of Tracer");
     let otel_layer = tracing_opentelemetry::layer().with_tracer(otel_tracer);
 
     let subscriber = tracing_subscriber::registry()

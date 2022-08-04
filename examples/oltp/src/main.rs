@@ -2,7 +2,13 @@ use axum::extract::{Path, Query};
 use axum::http::Method;
 use axum::Extension;
 use axum::{response::IntoResponse, routing::get, Router};
-use axum_tracing_opentelemetry::{init_tracer, opentelemetry_tracing_layer, CollectorKind};
+use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
+use axum_tracing_opentelemetry::{
+    // optional tools to init tracer (may require features)
+    init_tracer,
+    make_resource,
+    CollectorKind,
+};
 use serde_json::json;
 use std::net::SocketAddr;
 
@@ -17,7 +23,11 @@ fn init_tracing() {
         std::env::var("RUST_LOG").unwrap_or("INFO".to_string()),
     );
 
-    let otel_tracer = init_tracer(CollectorKind::Otlp).expect("setup of Tracer");
+    let otel_tracer = init_tracer(
+        CollectorKind::Otlp,
+        make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
+    )
+    .expect("setup of Tracer");
     let otel_layer = tracing_opentelemetry::layer().with_tracer(otel_tracer);
 
     let fmt_layer = tracing_subscriber::fmt::layer()
