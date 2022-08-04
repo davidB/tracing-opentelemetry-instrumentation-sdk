@@ -1,5 +1,8 @@
+#[cfg(any(feature = "jaeger", feature = "otlp"))]
 use opentelemetry::sdk::Resource;
+#[cfg(any(feature = "jaeger", feature = "otlp"))]
 use opentelemetry::{sdk::trace as sdktrace, trace::TraceError};
+#[cfg(any(feature = "jaeger", feature = "otlp"))]
 use opentelemetry_semantic_conventions as semcov;
 
 #[cfg(feature = "jaeger")]
@@ -45,6 +48,7 @@ pub fn init_tracer(
 /// ```rust
 /// make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
 /// ```
+#[cfg(any(feature = "jaeger", feature = "otlp"))]
 pub fn make_resource<S>(service_name: S, service_version: S) -> Resource
 where
     S: Into<String>,
