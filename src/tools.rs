@@ -3,6 +3,7 @@ use opentelemetry::sdk::Resource;
 use opentelemetry::{
     global, sdk::propagation::TraceContextPropagator, sdk::trace as sdktrace, trace::TraceError,
 };
+use opentelemetry_semantic_conventions as semcov;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CollectorKind {
@@ -46,7 +47,6 @@ pub fn make_resource<S>(service_name: S, service_version: S) -> Resource
 where
     S: Into<String>,
 {
-    use opentelemetry_semantic_conventions as semcov;
     Resource::new(vec![
         semcov::resource::SERVICE_NAME.string(service_name.into()),
         semcov::resource::SERVICE_VERSION.string(service_version.into()),
@@ -85,7 +85,11 @@ pub fn init_tracer_jaeger(resource: Resource) -> Result<sdktrace::Tracer, TraceE
         opentelemetry::sdk::propagation::TraceContextPropagator::new(),
     );
 
-    opentelemetry_jaeger::new_pipeline()
+    let mut pipeline = opentelemetry_jaeger::new_pipeline();
+    if let Some(name) = resource.get(semcov::resource::SERVICE_NAME) {
+        pipeline = pipeline.with_service_name(name.to_string());
+    }
+    pipeline
         .with_trace_config(
             sdktrace::config()
                 .with_resource(resource)
