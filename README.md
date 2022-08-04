@@ -78,11 +78,16 @@ To retrieve the current `trace_id` (eg to add it into error message (as header o
 
 ## History
 
-### 0.2.0
+### 0.3
 
-- first public release as a crate
+- Allow customization of exporter pipeline
+- Fix name of the root span (#6)
 
-### 0.1.0
+### 0.2
+
+- First public release as a crate
+
+### 0.1
 
 - Code originally created at part of axum-extra [Add OpenTelemetry middleware by davidpdrsn · Pull Request #769 · tokio-rs/axum](https://github.com/tokio-rs/axum/pull/769)
 - Code copied and modified as part of [davidB/sandbox_axum_observability: Sandbox to experiment axum and observability](https://github.com/davidB/sandbox_axum_observability)
