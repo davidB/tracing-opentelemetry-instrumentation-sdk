@@ -133,16 +133,16 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
                     .map(|ConnectInfo(client_ip)| Cow::from(client_ip.to_string()))
             })
             .unwrap_or_default();
-
-        let remote_context = create_context_with_trace(extract_remote_context(req.headers()));
+        let http_method_v = http_method(req.method());
+        let name = format!("{} {}", http_method_v, http_route);
+        let remote_context =
+            create_context_with_trace(extract_remote_context(req.headers()), name.clone());
         let remote_span = remote_context.span();
         let span_context = remote_span.span_context();
         let trace_id = span_context
             .is_valid()
             .then(|| Cow::from(span_context.trace_id().to_string()))
             .unwrap_or_default();
-        let http_method_v = http_method(req.method());
-        let name = format!("{} {}", http_method_v, http_route);
         let span = tracing::info_span!(
             "HTTP request",
             otel.name= %name,
@@ -238,14 +238,20 @@ fn extract_remote_context(headers: &http::HeaderMap) -> opentelemetry::Context {
 // `tracing_opentelemetry::OpenTelemetrySpanExt::set_parent`
 // else trace_id is defined too late and the `info_span` log `trace_id: ""`
 // Use the default global tracer (named "") to start the trace
-fn create_context_with_trace(remote_context: opentelemetry::Context) -> opentelemetry::Context {
+fn create_context_with_trace<T>(
+    remote_context: opentelemetry::Context,
+    name: T,
+) -> opentelemetry::Context
+where
+    T: Into<Cow<'static, str>>,
+{
     if !remote_context.span().span_context().is_valid() {
         // start a new valid
         use opentelemetry::global;
         use opentelemetry::trace::{SpanBuilder, Tracer};
         //TODO use the otlp tracer defined as subscriber for tracing
         let tracer = global::tracer("");
-        let span = tracer.build_with_context(SpanBuilder::from_name("hello"), &remote_context);
+        let span = tracer.build_with_context(SpanBuilder::from_name(name), &remote_context);
         remote_context.with_span(span)
     } else {
         remote_context
