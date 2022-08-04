@@ -5,7 +5,6 @@
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
-
 Middlewares and tools to integrate axum + tracing + opentelemetry.
 
 - Read OpenTelemetry header from incoming request
@@ -65,6 +64,10 @@ async fn shutdown_signal() {
 ```
 
 ## History
+
+### 0.2.0
+
+- first public release as a crate
 
 ### 0.1.0
 
