@@ -19,20 +19,19 @@ For examples, you can look at:
 ```rust
 //...
 use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
-use axum_tracing_opentelemetry::{
-    // optional tools to init tracer (may require features)
-    init_tracer,
-    make_resource,
-    CollectorKind,
-};
 
 fn init_tracing() {
+    use axum_tracing_opentelemetry::{
+        make_resource,
+        otlp,
+        //stdio,
+    };
 
-    let otel_tracer = init_tracer(
-        CollectorKind::Otlp,
-        make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
-    )
-    .expect("setup of Tracer");
+    let otel_rsrc = make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+    let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
+    // let otel_tracer =
+    //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
+    //         .expect("setup of Tracer");
     let otel_layer = tracing_opentelemetry::layer().with_tracer(otel_tracer);
 
     let subscriber = tracing_subscriber::registry()
@@ -58,9 +57,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn app() -> Router {
     // build our application with a route
     Router::new()
-        .route("/health", get(health))
+        .route("/", get(health)) // request processed inside span
         // opentelemetry_tracing_layer setup `TraceLayer`, that is provided by tower-http so you have to add that as a dependency.
         .layer(opentelemetry_tracing_layer())
+        .route("/health", get(health)) // request processed without span / trace
 }
 
 async fn shutdown_signal() {
@@ -77,6 +77,13 @@ To retrieve the current `trace_id` (eg to add it into error message (as header o
 ```
 
 ## History
+
+### 0.4
+
+- allow customization of tracer
+- add tracer to export on stdout or stderr
+- add tracer to export to nowhere (like `/dev/null`) to allow to have trace_id
+  and the opentelemetry span & metadata on log and http response (without collector)
 
 ### 0.3
 

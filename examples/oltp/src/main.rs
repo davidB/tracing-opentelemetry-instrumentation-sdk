@@ -55,11 +55,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn app() -> Router {
     // build our application with a route
     Router::new()
-        .route("/", get(health))
+        .route("/", get(health))  // request processed inside span
         // opentelemetry_tracing_layer setup `TraceLayer`,
         // that is provided by tower-http so you have to add that as a dependency.
         .layer(opentelemetry_tracing_layer())
-        .route("/health", get(health))
+        .route("/health", get(health)) // request processed without span / trace
 }
 
 async fn health() -> impl IntoResponse {
