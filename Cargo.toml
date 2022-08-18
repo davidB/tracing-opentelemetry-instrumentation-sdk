@@ -43,5 +43,6 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 
 
 [features]
-jaeger = ["opentelemetry-jaeger", "opentelemetry-semantic-conventions"]
-otlp = ["opentelemetry-otlp", "opentelemetry-semantic-conventions"]
+jaeger = ["opentelemetry-jaeger", "tracer"]
+otlp = ["opentelemetry-otlp", "tracer"]
+tracer = ["opentelemetry-semantic-conventions"]

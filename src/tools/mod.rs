@@ -2,13 +2,15 @@
 use opentelemetry::sdk::Resource;
 #[cfg(any(feature = "jaeger", feature = "otlp"))]
 use opentelemetry::{sdk::trace as sdktrace, trace::TraceError};
-#[cfg(any(feature = "jaeger", feature = "otlp"))]
+#[cfg(feature = "tracer")]
 use opentelemetry_semantic_conventions as semcov;
 
 #[cfg(feature = "jaeger")]
-mod jaeger;
+pub mod jaeger;
 #[cfg(feature = "otlp")]
-mod otlp;
+pub mod otlp;
+#[cfg(feature = "tracer")]
+pub mod write;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CollectorKind {
@@ -16,15 +18,25 @@ pub enum CollectorKind {
     Otlp,
     #[cfg(feature = "jaeger")]
     Jaeger,
-    // Stdout,
+    #[cfg(feature = "tracer")]
+    Stdout,
+    #[cfg(feature = "tracer")]
+    Stderr,
+    #[cfg(feature = "tracer")]
+    NoWrite,
 }
 
-#[cfg(any(feature = "jaeger", feature = "otlp"))]
+#[cfg(feature = "tracer")]
 pub fn init_tracer(
     kind: CollectorKind,
     resource: Resource,
 ) -> Result<sdktrace::Tracer, TraceError> {
     match kind {
+        CollectorKind::Stdout => write::init_tracer(resource, write::identity, std::io::stdout()),
+        CollectorKind::Stderr => write::init_tracer(resource, write::identity, std::io::stderr()),
+        CollectorKind::NoWrite => {
+            write::init_tracer(resource, write::identity, write::WriteNoWhere::default())
+        }
         #[cfg(feature = "otlp")]
         CollectorKind::Otlp => {
             // if let Some(url) = std::env::var_os("OTEL_COLLECTOR_URL")
@@ -52,7 +64,7 @@ pub fn init_tracer(
 /// # }
 ///
 /// ```
-#[cfg(any(feature = "jaeger", feature = "otlp"))]
+#[cfg(feature = "tracer")]
 pub fn make_resource<S>(service_name: S, service_version: S) -> Resource
 where
     S: Into<String>,
