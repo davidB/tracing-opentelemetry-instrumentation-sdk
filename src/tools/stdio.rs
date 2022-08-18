@@ -34,8 +34,8 @@ where
 pub struct WriteNoWhere;
 
 impl Write for WriteNoWhere {
-    fn write(&mut self, _buf: &[u8]) -> std::io::Result<usize> {
-        Ok(0)
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        Ok(buf.len() as usize)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
