@@ -46,7 +46,11 @@ pub fn init_tracer(
 /// call with service name and version
 ///
 /// ```rust
-/// make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+/// use axum_tracing_opentelemetry::make_resource;
+/// # fn main() {
+/// let r = make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+/// # }
+///
 /// ```
 #[cfg(any(feature = "jaeger", feature = "otlp"))]
 pub fn make_resource<S>(service_name: S, service_version: S) -> Resource
@@ -61,6 +65,12 @@ where
 
 /// Search the current opentelemetry trace id into the Context from the current tracing'span.
 /// This function can be used to report the trace id into the error message send back to user.
+///
+/// ```rust
+/// let trace_id = axum_tracing_opentelemetry::find_current_trace_id();
+/// // json!({ "error" :  "xxxxxx", "trace_id": trace_id})
+///
+/// ```
 pub fn find_current_trace_id() -> Option<String> {
     use opentelemetry::trace::TraceContextExt;
     use tracing_opentelemetry::OpenTelemetrySpanExt;
