@@ -10,7 +10,7 @@ pub mod jaeger;
 #[cfg(feature = "otlp")]
 pub mod otlp;
 #[cfg(feature = "tracer")]
-pub mod write;
+pub mod stdio;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CollectorKind {
@@ -32,10 +32,10 @@ pub fn init_tracer(
     resource: Resource,
 ) -> Result<sdktrace::Tracer, TraceError> {
     match kind {
-        CollectorKind::Stdout => write::init_tracer(resource, write::identity, std::io::stdout()),
-        CollectorKind::Stderr => write::init_tracer(resource, write::identity, std::io::stderr()),
+        CollectorKind::Stdout => stdio::init_tracer(resource, stdio::identity, std::io::stdout()),
+        CollectorKind::Stderr => stdio::init_tracer(resource, stdio::identity, std::io::stderr()),
         CollectorKind::NoWrite => {
-            write::init_tracer(resource, write::identity, write::WriteNoWhere::default())
+            stdio::init_tracer(resource, stdio::identity, stdio::WriteNoWhere::default())
         }
         #[cfg(feature = "otlp")]
         CollectorKind::Otlp => {
