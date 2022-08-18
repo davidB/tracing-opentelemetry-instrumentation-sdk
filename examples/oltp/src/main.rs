@@ -1,14 +1,5 @@
-use axum::extract::{Path, Query};
-use axum::http::Method;
-use axum::Extension;
 use axum::{response::IntoResponse, routing::get, Router};
 use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
-use axum_tracing_opentelemetry::{
-    // optional tools to init tracer (may require features)
-    init_tracer,
-    make_resource,
-    CollectorKind,
-};
 use serde_json::json;
 use std::net::SocketAddr;
 
@@ -16,24 +7,24 @@ fn init_tracing() {
     use tracing_subscriber::filter::EnvFilter;
     use tracing_subscriber::fmt::format::FmtSpan;
     use tracing_subscriber::layer::SubscriberExt;
-
-    // std::env::set_var("RUST_LOG", "info,kube=trace");
+    use axum_tracing_opentelemetry::{
+        make_resource,
+        otlp,
+        //stdio,
+    };
     std::env::set_var(
         "RUST_LOG",
         std::env::var("RUST_LOG").unwrap_or("INFO".to_string()),
     );
 
-    let otel_tracer = init_tracer(
-        CollectorKind::Otlp,
-        make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
-    )
-    .expect("setup of Tracer");
+    let otel_tracer = otlp::init_tracer(make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")), otlp::identity).expect("setup of Tracer");
+    //let otel_tracer = stdio::init_tracer(make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")), stdio::identity, stdio::WriteNoWhere::default()).expect("setup of Tracer");
     let otel_layer = tracing_opentelemetry::layer().with_tracer(otel_tracer);
 
     let fmt_layer = tracing_subscriber::fmt::layer()
         .json()
         .with_timer(tracing_subscriber::fmt::time::uptime())
-        //.with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
         ;
 
     // Build a subscriber that combines the access log and stdout log
@@ -62,10 +53,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn app() -> Router {
     // build our application with a route
     Router::new()
-        .route("/health", get(health))
+        .route("/", get(health))
         // opentelemetry_tracing_layer setup `TraceLayer`,
         // that is provided by tower-http so you have to add that as a dependency.
         .layer(opentelemetry_tracing_layer())
+        .route("/health", get(health))
 }
 
 async fn health() -> impl IntoResponse {

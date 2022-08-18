@@ -8,7 +8,6 @@ publish = false
 axum = "0.5"
 axum-tracing-opentelemetry = { path = "../..", features = ["otlp"] }
 opentelemetry = { version = "0.17", features = ["rt-tokio"] }
-opentelemetry-jaeger = { version = "0.16", features = ["rt-tokio"] }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 tokio = { version = "1.0", features = ["full"] }
