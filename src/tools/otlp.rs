@@ -14,12 +14,12 @@ where
     use opentelemetry_otlp::WithExportConfig;
 
     global::set_text_map_propagator(TraceContextPropagator::new());
-    // FIXME choice the right/official env variable `OTEL_COLLECTOR_URL` or `OTEL_EXPORTER_OTLP_ENDPOINT`
     // TODO try to autodetect if http or grpc should be used (eg based on env variable, port ???)
     //endpoint (default = 0.0.0.0:4317 for grpc protocol, 0.0.0.0:4318 http protocol):
     //.http().with_endpoint(collector_url),
     let endpoint_grpc = std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
-        .unwrap_or_else(|_| "http://0.0.0.0:4317".to_string());
+        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"))
+        .unwrap_or_else(|_| "http://127.0.0.1:4317".to_string());
     let exporter = opentelemetry_otlp::new_exporter()
         .tonic()
         .with_endpoint(endpoint_grpc);
