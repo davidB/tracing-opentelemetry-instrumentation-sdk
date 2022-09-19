@@ -14,7 +14,7 @@ homepage = "https://github.com/davidB/axum-tracing-opentelemetry"
 axum = "0.5"
 # axum-core = "0.2"
 http = "0.2"
-opentelemetry = { version = "0.17", features = ["rt-tokio", "serialize"] }
+opentelemetry = { version = "0.18", features = ["rt-tokio", "serialize"] }
 opentelemetry-jaeger = { version = "0.16", features = [
   "rt-tokio",
 ], optional = true }
