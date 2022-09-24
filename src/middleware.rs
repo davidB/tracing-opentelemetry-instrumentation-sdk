@@ -155,7 +155,7 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             http.status_code = Empty,
             http.target = %http_target,
             http.user_agent = %user_agent,
-            otel.kind = %opentelemetry::trace::SpanKind::Server,
+            otel.kind = %"server",
             otel.status_code = Empty,
             trace_id = %trace_id,
         );
