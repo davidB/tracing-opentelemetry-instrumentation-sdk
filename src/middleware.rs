@@ -3,12 +3,12 @@
 //! See [`opentelemetry_tracing_layer`] for more details.
 
 use axum::{
-    extract::{ConnectInfo, MatchedPath, OriginalUri},
+    extract::{MatchedPath, OriginalUri},
     response::Response,
 };
 use http::{header, uri::Scheme, HeaderMap, Method, Request, Version};
 use opentelemetry::trace::TraceContextExt;
-use std::{borrow::Cow, net::SocketAddr, time::Duration};
+use std::{borrow::Cow, time::Duration};
 use tower_http::{
     classify::{ServerErrorsAsFailures, ServerErrorsFailureClass, SharedClassifier},
     trace::{MakeSpan, OnBodyChunk, OnEos, OnFailure, OnRequest, OnResponse, TraceLayer},
@@ -126,13 +126,7 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             .map(|path_and_query| path_and_query.to_string())
             .unwrap_or_else(|| uri.path().to_owned());
 
-        let client_ip = parse_x_forwarded_for(req.headers())
-            .or_else(|| {
-                req.extensions()
-                    .get::<ConnectInfo<SocketAddr>>()
-                    .map(|ConnectInfo(client_ip)| Cow::from(client_ip.to_string()))
-            })
-            .unwrap_or_default();
+        let client_ip = parse_x_forwarded_for(req.headers()).map(tracing::field::display);
         let http_method_v = http_method(req.method());
         let name = format!("{} {}", http_method_v, http_route);
         let remote_context =
@@ -146,7 +140,7 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
         let span = tracing::info_span!(
             "HTTP request",
             otel.name= %name,
-            http.client_ip = %client_ip,
+            http.client_ip = client_ip,
             http.flavor = %http_flavor(req.version()),
             http.host = %host,
             http.method = %http_method_v,
@@ -439,7 +433,6 @@ mod tests {
                 "span": {
                     "http.route": "/users/:id",
                     "http.target": "/users/123",
-                    "http.client_ip": "",
                 }
             }),
         );
@@ -450,7 +443,6 @@ mod tests {
                 "span": {
                     "http.status_code": "500",
                     "otel.status_code": "ERROR",
-                    "http.client_ip": "",
                 }
             }),
         );
