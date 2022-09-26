@@ -24,7 +24,7 @@ opentelemetry-otlp = { version = "0.10", optional = true, features = [
 ] }
 tower-http = { version = "0.3", features = ["trace"] }
 tracing = "0.1"
-tracing-opentelemetry = "0.17"
+tracing-opentelemetry = "0.18"
 
 [dev-dependencies]
 assert-json-diff = "2.0.1"
