@@ -1,21 +1,24 @@
 use opentelemetry::sdk::Resource;
 use opentelemetry::{sdk::trace as sdktrace, trace::TraceError};
+use opentelemetry_jaeger::config::agent::AgentPipeline;
 use opentelemetry_semantic_conventions as semcov;
 
-pub fn identity(v: opentelemetry_jaeger::PipelineBuilder) -> opentelemetry_jaeger::PipelineBuilder {
+pub fn identity(v: AgentPipeline) -> AgentPipeline {
     v
 }
 
-// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md#jaeger-exporter
+/// Setup a jaeger agent pipeline with the trace-context propagator and the service name.
+/// The jaeger pipeline builder can be configured dynamically via environment variables.
+/// All variables are optional, a full list of accepted options can be found in the
+/// [jaeger variables spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md#jaeger-exporter).
 pub fn init_tracer<F>(resource: Resource, transform: F) -> Result<sdktrace::Tracer, TraceError>
 where
-    F: FnOnce(opentelemetry_jaeger::PipelineBuilder) -> opentelemetry_jaeger::PipelineBuilder,
+    F: FnOnce(AgentPipeline) -> AgentPipeline,
 {
     opentelemetry::global::set_text_map_propagator(
         opentelemetry::sdk::propagation::TraceContextPropagator::new(),
     );
-
-    let mut pipeline = opentelemetry_jaeger::new_pipeline();
+    let mut pipeline = opentelemetry_jaeger::new_agent_pipeline();
     if let Some(name) = resource.get(semcov::resource::SERVICE_NAME) {
         pipeline = pipeline.with_service_name(name.to_string());
     }
