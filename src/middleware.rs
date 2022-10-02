@@ -155,20 +155,11 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             http.status_code = Empty,
             http.target = %http_target,
             http.user_agent = %user_agent,
-            otel.kind = %"server",
+            otel.kind = %"server", //opentelemetry::trace::SpanKind::Server
             otel.status_code = Empty,
             trace_id = %trace_id,
         );
         tracing_opentelemetry::OpenTelemetrySpanExt::set_parent(&span, remote_context);
-
-        //HACK (until being able to have trace_id before span creation)
-        // If tracing_id is empty, OpenTelemetry create a new trace_id when span is attached
-        // but tracing::Span is not updated
-        // Currently, I don't know when the trace_id is defined and attached during the `set_parent`
-        //
-        // let trace_id = tracing::field::debug(span.context().span().span_context().trace_id());
-        // span.record("trace_id", &trace_id);
-
         span
     }
 }

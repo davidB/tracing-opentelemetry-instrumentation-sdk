@@ -78,6 +78,11 @@ To retrieve the current `trace_id` (eg to add it into error message (as header o
 
 ## History
 
+### 0.5
+
+- upgrade to opentelemetry 0.18
+- breaking change: upgrade opentelemetry-jaeger to 0.17 (switch from PipelineBuiler to AgentPipeline)
+
 ### 0.4
 
 - allow customization of tracer
