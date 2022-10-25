@@ -108,13 +108,11 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             .scheme()
             .map_or_else(|| "HTTP".into(), http_scheme);
 
-        let http_route = if let Some(matched_path) = req.extensions().get::<MatchedPath>() {
-            matched_path.as_str().to_owned()
-        } else if let Some(uri) = req.extensions().get::<OriginalUri>() {
-            uri.0.path().to_owned()
-        } else {
-            req.uri().path().to_owned()
-        };
+        let http_route = req
+            .extensions()
+            .get::<MatchedPath>()
+            .map_or("", |mp| mp.as_str())
+            .to_owned();
 
         let uri = if let Some(uri) = req.extensions().get::<OriginalUri>() {
             uri.0.clone()
@@ -335,6 +333,50 @@ mod tests {
         util::SubscriberInitExt,
         EnvFilter,
     };
+
+    #[tokio::test]
+    async fn http_route_populating() {
+        let svc = Router::new()
+            .route("/users/:id", get(|| async { StatusCode::OK }))
+            .layer(opentelemetry_tracing_layer());
+
+        let [(populated, _), (unpopulated, _)] = spans_for_requests(
+            svc,
+            [
+                Request::builder()
+                    .uri("/users/123")
+                    .body(Body::empty())
+                    .unwrap(),
+                Request::builder()
+                    .uri("/idontexist/123")
+                    .body(Body::empty())
+                    .unwrap(),
+            ],
+        )
+        .await;
+
+        assert_json_include!(
+            actual: populated,
+            expected: json!({
+                "span": {
+                    "http.route": "/users/:id",
+                    "http.target": "/users/123",
+                    "http.client_ip": "",
+                }
+            }),
+        );
+
+        assert_json_include!(
+            actual: unpopulated,
+            expected: json!({
+                "span": {
+                    "http.route": "",
+                    "http.target": "/idontexist/123",
+                    "http.client_ip": "",
+                }
+            }),
+        );
+    }
 
     #[tokio::test]
     async fn correct_fields_on_span_for_http() {
