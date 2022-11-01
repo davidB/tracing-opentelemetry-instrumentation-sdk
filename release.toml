@@ -3,7 +3,7 @@ post-release-commit-message = ":construction: (cargo-release) start next develop
 tag-prefix = ""
 tag-name = "{{prefix}}{{version}}"
 tag-message = ":bookmark: {{version}}"
-dev-version-ext = "dev"
+# dev-version-ext = "dev"
 # pre-release-replacements = [
 #     {file="CHANGELOG.md", search="x.y.z-dev", replace="{{version}}"},
 #     {file="CHANGELOG.md", search="ReleaseDate", replace="{{date}}"}
