@@ -27,7 +27,8 @@ tracing = "0.1"
 tracing-opentelemetry = "0.18"
 
 [dev-dependencies]
-assert-json-diff = "2.0.1"
+assert2 = "0.3"
+assert-json-diff = "2.0"
 opentelemetry-otlp = { version = "0.11", features = [
   "http-proto",
   "reqwest-client",

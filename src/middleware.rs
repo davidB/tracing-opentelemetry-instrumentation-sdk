@@ -220,7 +220,6 @@ fn extract_remote_context(headers: &http::HeaderMap) -> opentelemetry::Context {
             self.0.keys().map(|value| value.as_str()).collect()
         }
     }
-
     let extractor = HeaderExtractor(headers);
     opentelemetry::global::get_text_map_propagator(|propagator| propagator.extract(&extractor))
 }
@@ -239,11 +238,23 @@ where
     if !remote_context.span().span_context().is_valid() {
         // start a new valid
         use opentelemetry::global;
+        use opentelemetry::sdk::trace::IdGenerator;
+        use opentelemetry::sdk::trace::RandomIdGenerator;
+        use opentelemetry::trace::SpanContext;
+        use opentelemetry::trace::SpanId;
         use opentelemetry::trace::{SpanBuilder, Tracer};
         //TODO use the otlp tracer defined as subscriber for tracing
-        let tracer = global::tracer("");
-        let span = tracer.build_with_context(SpanBuilder::from_name(name), &remote_context);
-        remote_context.with_span(span)
+        // let tracer = global::tracer("");
+        // let span = tracer.build_with_context(SpanBuilder::from_name(name), &remote_context);
+        // remote_context.with_span(span)
+        let new_span_context = SpanContext::new(
+            RandomIdGenerator::default().new_trace_id(),
+            RandomIdGenerator::default().new_span_id(),
+            remote_context.span().span_context().trace_flags(),
+            true,
+            remote_context.span().span_context().trace_state().clone(),
+        );
+        remote_context.with_remote_span_context(new_span_context)
     } else {
         remote_context
     }
@@ -323,6 +334,7 @@ impl OnFailure<ServerErrorsFailureClass> for OtelOnFailure {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::*;
     use assert_json_diff::assert_json_include;
     use axum::{body::Body, routing::get, Router};
     use http::{Request, StatusCode};
@@ -365,17 +377,11 @@ mod tests {
         )
         .await;
 
-        //assert that trace_id is not "" when tracer is not Noop
-        assert!(!root_new
-            .as_object()
-            .and_then(|o| o.get("span"))
-            .and_then(|o| o.as_object())
-            .and_then(|o| o.get("trace_id"))
-            .and_then(|o| o.as_str())
-            .map(|o| o.to_string())
-            .unwrap()
-            .is_empty());
-
+        let_assert!(
+            Some(_trace_id) = root_new["span"]["trace_id"].as_str(),
+            "assert that trace_id is not empty when tracer is not Noop"
+        );
+        // dbg!(_trace_id);
         assert_json_include!(
             actual: root_new,
             expected: json!({
