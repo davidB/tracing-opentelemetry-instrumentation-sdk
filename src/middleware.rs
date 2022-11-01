@@ -135,8 +135,7 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             .unwrap_or_default();
         let http_method_v = http_method(req.method());
         let name = format!("{} {}", http_method_v, http_route);
-        let remote_context =
-            create_context_with_trace(extract_remote_context(req.headers()), name.clone());
+        let remote_context = create_context_with_trace(extract_remote_context(req.headers()));
         let remote_span = remote_context.span();
         let span_context = remote_span.span_context();
         let trace_id = span_context
@@ -228,25 +227,12 @@ fn extract_remote_context(headers: &http::HeaderMap) -> opentelemetry::Context {
 // `tracing_opentelemetry::OpenTelemetrySpanExt::set_parent`
 // else trace_id is defined too late and the `info_span` log `trace_id: ""`
 // Use the default global tracer (named "") to start the trace
-fn create_context_with_trace<T>(
-    remote_context: opentelemetry::Context,
-    name: T,
-) -> opentelemetry::Context
-where
-    T: Into<Cow<'static, str>>,
-{
+fn create_context_with_trace(remote_context: opentelemetry::Context) -> opentelemetry::Context {
     if !remote_context.span().span_context().is_valid() {
-        // start a new valid
-        use opentelemetry::global;
+        // create a fake remote context but with a fresh new trace_id
         use opentelemetry::sdk::trace::IdGenerator;
         use opentelemetry::sdk::trace::RandomIdGenerator;
         use opentelemetry::trace::SpanContext;
-        use opentelemetry::trace::SpanId;
-        use opentelemetry::trace::{SpanBuilder, Tracer};
-        //TODO use the otlp tracer defined as subscriber for tracing
-        // let tracer = global::tracer("");
-        // let span = tracer.build_with_context(SpanBuilder::from_name(name), &remote_context);
-        // remote_context.with_span(span)
         let new_span_context = SpanContext::new(
             RandomIdGenerator::default().new_trace_id(),
             RandomIdGenerator::default().new_span_id(),
