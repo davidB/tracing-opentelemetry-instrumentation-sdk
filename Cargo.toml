@@ -11,7 +11,7 @@ repository = "https://github.com/davidB/axum-tracing-opentelemetry"
 homepage = "https://github.com/davidB/axum-tracing-opentelemetry"
 
 [dependencies]
-axum = "0.5"
+axum = "0.6.0-rc.2"
 # axum-core = "0.2"
 http = "0.2"
 opentelemetry = { version = "0.18", features = ["rt-tokio"] }
