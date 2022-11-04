@@ -440,7 +440,7 @@ mod tests {
     }
 
     async fn spans_for_requests<const N: usize>(
-        mut router: Router<Body>,
+        mut router: Router,
         reqs: [Request<Body>; N],
     ) -> [(Value, Value); N] {
         use axum::body::HttpBody as _;
