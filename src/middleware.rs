@@ -7,7 +7,7 @@ use axum::{
     response::Response,
 };
 use http::{header, uri::Scheme, HeaderMap, Method, Request, Version};
-use opentelemetry::trace::TraceContextExt;
+use opentelemetry::trace::{TraceContextExt, TraceId};
 use std::{borrow::Cow, net::SocketAddr, time::Duration};
 use tower_http::{
     classify::{ServerErrorsAsFailures, ServerErrorsFailureClass, SharedClassifier},
@@ -133,13 +133,8 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             .unwrap_or_default();
         let http_method_v = http_method(req.method());
         let name = format!("{} {}", http_method_v, http_route);
-        let remote_context = create_context_with_trace(extract_remote_context(req.headers()));
-        let remote_span = remote_context.span();
-        let span_context = remote_span.span_context();
-        let trace_id = span_context
-            .is_valid()
-            .then(|| Cow::from(span_context.trace_id().to_string()))
-            .unwrap_or_default();
+        let (remote_context, trace_id) =
+            create_context_with_trace(extract_remote_context(req.headers()));
         let span = tracing::info_span!(
             "HTTP request",
             otel.name= %name,
@@ -225,22 +220,31 @@ fn extract_remote_context(headers: &http::HeaderMap) -> opentelemetry::Context {
 // `tracing_opentelemetry::OpenTelemetrySpanExt::set_parent`
 // else trace_id is defined too late and the `info_span` log `trace_id: ""`
 // Use the default global tracer (named "") to start the trace
-fn create_context_with_trace(remote_context: opentelemetry::Context) -> opentelemetry::Context {
+fn create_context_with_trace(
+    remote_context: opentelemetry::Context,
+) -> (opentelemetry::Context, TraceId) {
     if !remote_context.span().span_context().is_valid() {
         // create a fake remote context but with a fresh new trace_id
         use opentelemetry::sdk::trace::IdGenerator;
         use opentelemetry::sdk::trace::RandomIdGenerator;
-        use opentelemetry::trace::SpanContext;
+        use opentelemetry::trace::{SpanContext, SpanId};
+        let trace_id = RandomIdGenerator::default().new_trace_id();
         let new_span_context = SpanContext::new(
-            RandomIdGenerator::default().new_trace_id(),
-            RandomIdGenerator::default().new_span_id(),
+            trace_id,
+            SpanId::INVALID,
             remote_context.span().span_context().trace_flags(),
-            true,
+            false,
             remote_context.span().span_context().trace_state().clone(),
         );
-        remote_context.with_remote_span_context(new_span_context)
+        (
+            remote_context.with_remote_span_context(new_span_context),
+            trace_id,
+        )
     } else {
-        remote_context
+        let remote_span = remote_context.span();
+        let span_context = remote_span.span_context();
+        let trace_id = span_context.trace_id();
+        (remote_context, trace_id)
     }
 }
 
