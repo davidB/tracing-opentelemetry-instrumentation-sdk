@@ -1,6 +1,6 @@
-#[cfg(any(feature = "jaeger", feature = "otlp"))]
+#[cfg(any(feature = "jaeger", feature = "otlp", feature = "tracer"))]
 use opentelemetry::sdk::Resource;
-#[cfg(any(feature = "jaeger", feature = "otlp"))]
+#[cfg(any(feature = "jaeger", feature = "otlp", feature = "tracer"))]
 use opentelemetry::{sdk::trace as sdktrace, trace::TraceError};
 #[cfg(feature = "tracer")]
 use opentelemetry_semantic_conventions as semcov;
