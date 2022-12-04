@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-axum = "0.5"
+axum = "0.6"
 axum-tracing-opentelemetry = { path = "../..", features = ["otlp"] }
 opentelemetry = { version = "0.18", features = ["rt-tokio"] }
 serde = { version = "1.0.136", features = ["derive"] }
