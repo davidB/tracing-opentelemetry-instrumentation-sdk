@@ -1,6 +1,6 @@
-#[cfg(any(feature = "jaeger", feature = "otlp"))]
+#[cfg(feature = "tracer")]
 use opentelemetry::sdk::Resource;
-#[cfg(any(feature = "jaeger", feature = "otlp"))]
+#[cfg(feature = "tracer")]
 use opentelemetry::{sdk::trace as sdktrace, trace::TraceError};
 #[cfg(feature = "tracer")]
 use opentelemetry_semantic_conventions as semcov;
@@ -12,17 +12,15 @@ pub mod otlp;
 #[cfg(feature = "tracer")]
 pub mod stdio;
 
+#[cfg(feature = "tracer")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CollectorKind {
     #[cfg(feature = "otlp")]
     Otlp,
     #[cfg(feature = "jaeger")]
     Jaeger,
-    #[cfg(feature = "tracer")]
     Stdout,
-    #[cfg(feature = "tracer")]
     Stderr,
-    #[cfg(feature = "tracer")]
     NoWrite,
 }
 
