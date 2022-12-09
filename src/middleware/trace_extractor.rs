@@ -11,7 +11,10 @@ use http::{header, uri::Scheme, HeaderMap, Method, Request, Version};
 use opentelemetry::trace::{TraceContextExt, TraceId};
 use std::{borrow::Cow, net::SocketAddr, time::Duration};
 use tower_http::{
-    classify::{ServerErrorsAsFailures, ServerErrorsFailureClass, SharedClassifier},
+    classify::{
+        GrpcErrorsAsFailures, GrpcFailureClass, ServerErrorsAsFailures, ServerErrorsFailureClass,
+        SharedClassifier,
+    },
     trace::{MakeSpan, OnBodyChunk, OnEos, OnFailure, OnRequest, OnResponse, TraceLayer},
 };
 use tracing::{field::Empty, Span};
@@ -86,6 +89,25 @@ pub fn opentelemetry_tracing_layer() -> TraceLayer<
         .on_failure(OtelOnFailure)
 }
 
+/// OpenTelemetry tracing middleware for gRPC.
+pub fn opentelemetry_tracing_layer_grpc() -> TraceLayer<
+    SharedClassifier<GrpcErrorsAsFailures>,
+    OtelMakeGrpcSpan,
+    OtelOnRequest,
+    OtelOnResponse,
+    OtelOnBodyChunk,
+    OtelOnEos,
+    OtelOnGrpcFailure,
+> {
+    TraceLayer::new_for_grpc()
+        .make_span_with(OtelMakeGrpcSpan)
+        .on_request(OtelOnRequest)
+        .on_response(OtelOnResponse)
+        .on_body_chunk(OtelOnBodyChunk)
+        .on_eos(OtelOnEos)
+        .on_failure(OtelOnGrpcFailure)
+}
+
 /// A [`MakeSpan`] that creates tracing spans using [OpenTelemetry's conventional field names][otel].
 ///
 /// [otel]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md
@@ -141,6 +163,77 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             otel.name= %name,
             http.client_ip = %client_ip,
             http.flavor = %http_flavor(req.version()),
+            http.host = %host,
+            http.method = %http_method_v,
+            http.route = %http_route,
+            http.scheme = %scheme,
+            http.status_code = Empty,
+            http.target = %http_target,
+            http.user_agent = %user_agent,
+            otel.kind = %"server", //opentelemetry::trace::SpanKind::Server
+            otel.status_code = Empty,
+            trace_id = %trace_id,
+        );
+        tracing_opentelemetry::OpenTelemetrySpanExt::set_parent(&span, remote_context);
+        span
+    }
+}
+
+/// A [`MakeSpan`] that creates tracing spans using [OpenTelemetry's conventional field names][otel] for gRPC services.
+///
+/// [otel]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md
+#[derive(Clone, Copy, Debug)]
+pub struct OtelMakeGrpcSpan;
+
+impl<B> MakeSpan<B> for OtelMakeGrpcSpan {
+    fn make_span(&mut self, req: &Request<B>) -> Span {
+        let user_agent = req
+            .headers()
+            .get(header::USER_AGENT)
+            .map_or("", |h| h.to_str().unwrap_or(""));
+
+        let host = req
+            .headers()
+            .get(header::HOST)
+            .map_or("", |h| h.to_str().unwrap_or(""));
+
+        let scheme = req
+            .uri()
+            .scheme()
+            .map_or_else(|| "HTTP".into(), http_scheme);
+
+        let http_route = req
+            .extensions()
+            .get::<MatchedPath>()
+            .map_or("", |mp| mp.as_str())
+            .to_owned();
+
+        let uri = if let Some(uri) = req.extensions().get::<OriginalUri>() {
+            uri.0.clone()
+        } else {
+            req.uri().clone()
+        };
+        let http_target = uri
+            .path_and_query()
+            .map(|path_and_query| path_and_query.to_string())
+            .unwrap_or_else(|| uri.path().to_owned());
+
+        let client_ip = parse_x_forwarded_for(req.headers())
+            .or_else(|| {
+                req.extensions()
+                    .get::<ConnectInfo<SocketAddr>>()
+                    .map(|ConnectInfo(client_ip)| Cow::from(client_ip.to_string()))
+            })
+            .unwrap_or_default();
+        let http_method_v = http_method(req.method());
+        let (remote_context, trace_id) =
+            create_context_with_trace(extract_remote_context(req.headers()));
+        let span = tracing::info_span!(
+            "grpc request",
+            otel.name = %http_target, // Convetion in gRPC tracing.
+            http.client_ip = %client_ip,
+            http.flavor = %http_flavor(req.version()),
+            http.grpc_status = Empty,
             http.host = %host,
             http.method = %http_method_v,
             http.route = %http_route,
@@ -320,12 +413,35 @@ impl OnFailure<ServerErrorsFailureClass> for OtelOnFailure {
     }
 }
 
+/// Callback that [`Trace`] will call when a response or end-of-stream is classified as a failure.
+///
+/// [`Trace`]: tower_http::trace::Trace
+#[derive(Clone, Copy, Debug)]
+pub struct OtelOnGrpcFailure;
+
+impl OnFailure<GrpcFailureClass> for OtelOnGrpcFailure {
+    fn on_failure(&mut self, failure: GrpcFailureClass, _latency: Duration, span: &Span) {
+        match failure {
+            GrpcFailureClass::Code(code) => {
+                span.record("http.grpc_status", code);
+            }
+            GrpcFailureClass::Error(_) => {
+                span.record("http.grpc_status", 1);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use assert2::*;
     use assert_json_diff::assert_json_include;
-    use axum::{body::Body, routing::get, Router};
+    use axum::{
+        body::Body,
+        routing::{get, post},
+        Router,
+    };
     use http::{Request, StatusCode};
     use serde_json::{json, Value};
     use std::{
@@ -480,6 +596,120 @@ mod tests {
                     "http.status_code": "500",
                     "otel.status_code": "ERROR",
                     "http.client_ip": "",
+                }
+            }),
+        );
+    }
+
+    #[tokio::test]
+    async fn correct_fields_on_span_for_grpc() {
+        let svc = Router::new()
+            .route(
+                "/module.service/endpoint0",
+                post(|| async { StatusCode::OK }),
+            )
+            .route(
+                "/module.service/endpoint1",
+                post(|| async {
+                    Response::builder()
+                        .status(StatusCode::OK)
+                        .header("grpc-status", 2)
+                        .body(Body::empty())
+                        .unwrap()
+                }),
+            )
+            .layer(opentelemetry_tracing_layer_grpc());
+
+        let [(basic_new, basic_close), (err_code_new, err_code_close)] = spans_for_requests(
+            svc,
+            [
+                Request::builder()
+                    .header("user-agent", "tests")
+                    .header("x-forwarded-for", "127.0.0.1")
+                    .uri("/module.service/endpoint0")
+                    .method("POST")
+                    .body(Body::empty())
+                    .unwrap(),
+                Request::builder()
+                    .header("user-agent", "tests")
+                    .header("x-forwarded-for", "127.0.0.1")
+                    .uri("/module.service/endpoint1")
+                    .method("POST")
+                    .body(Body::empty())
+                    .unwrap(),
+            ],
+        )
+        .await;
+
+        let_assert!(
+            Some(_trace_id) = basic_new["span"]["trace_id"].as_str(),
+            "assert that trace_id is not empty when tracer is not Noop"
+        );
+        assert_json_include!(
+            actual: basic_new,
+            expected: json!({
+                "fields": {
+                    "message": "new",
+                },
+                "level": "INFO",
+                "span": {
+                    "http.client_ip": "127.0.0.1",
+                    "http.flavor": "1.1",
+                    "http.host": "",
+                    "http.method": "POST",
+                    "http.route": "/module.service/endpoint0",
+                    "http.scheme": "HTTP",
+                    "http.target": "/module.service/endpoint0",
+                    "http.user_agent": "tests",
+                    "name": "grpc request",
+                    "otel.kind": "server",
+                    "otel.name": "/module.service/endpoint0",
+                }
+            }),
+        );
+
+        assert_json_include!(
+            actual: basic_close,
+            expected: json!({
+                "fields": {
+                    "message": "close",
+                },
+                "level": "INFO",
+                "span": {
+                    "http.client_ip": "127.0.0.1",
+                    "http.flavor": "1.1",
+                    "http.host": "",
+                    "http.method": "POST",
+                    "http.route": "/module.service/endpoint0",
+                    "http.scheme": "HTTP",
+                    "http.status_code": "200",
+                    "http.target": "/module.service/endpoint0",
+                    "http.user_agent": "tests",
+                    "name": "grpc request",
+                    "otel.kind": "server",
+                    "otel.status_code": "OK",
+                    "otel.name": "/module.service/endpoint0",
+                }
+            }),
+        );
+
+        assert_json_include!(
+            actual: err_code_new,
+            expected: json!({
+                "span": {
+                    "http.route": "/module.service/endpoint1",
+                    "http.target": "/module.service/endpoint1",
+                    "http.client_ip": "127.0.0.1",
+                }
+            }),
+        );
+        assert_json_include!(
+            actual: err_code_close,
+            expected: json!({
+                "span": {
+                    "http.status_code": "200",
+                    "http.grpc_status": 2,
+                    "http.client_ip": "127.0.0.1",
                 }
             }),
         );
