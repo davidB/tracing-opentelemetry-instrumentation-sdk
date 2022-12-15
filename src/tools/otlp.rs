@@ -16,21 +16,15 @@ where
     use opentelemetry_otlp::WithExportConfig;
 
     global::set_text_map_propagator(TraceContextPropagator::new());
-    let protocol = std::env::var("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL")
-        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL"))
-        .unwrap_or_else(|_| "http/protobuf".to_string());
-    let endpoint = std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
-        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT"))
-        .ok();
-
+    let (protocol, endpoint) = infer_protocol_and_endpoint(read_protocol_and_endpoint_from_env());
     let exporter: SpanExporterBuilder = match protocol.as_str() {
         "http/protobuf" => opentelemetry_otlp::new_exporter()
             .http()
-            .with_endpoint(endpoint.unwrap_or_else(|| "http://localhost:4318".to_string())) //Devskim: ignore DS137138
+            .with_endpoint(endpoint)
             .into(),
         _ => opentelemetry_otlp::new_exporter()
             .tonic()
-            .with_endpoint(endpoint.unwrap_or_else(|| "http://localhost:4317".to_string())) //Devskim: ignore DS137138
+            .with_endpoint(endpoint)
             .into(),
     };
 
@@ -44,4 +38,81 @@ where
         );
     pipeline = transform(pipeline);
     pipeline.install_batch(opentelemetry::runtime::Tokio)
+}
+
+fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
+    let maybe_endpoint = std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
+        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT"))
+        .ok();
+    let maybe_protocol = std::env::var("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL")
+        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL"))
+        .ok();
+    (maybe_protocol, maybe_endpoint)
+}
+
+fn infer_protocol_and_endpoint(
+    (maybe_protocol, maybe_endpoint): (Option<String>, Option<String>),
+) -> (String, String) {
+    let protocol = maybe_protocol.unwrap_or_else(|| {
+        match maybe_endpoint
+            .as_ref()
+            .map(|e| e.contains(":4317"))
+            .unwrap_or(false)
+        {
+            true => "grpc",
+            false => "http/protobuf",
+        }
+        .to_string()
+    });
+
+    let endpoint = match protocol.as_str() {
+        "http/protobuf" => maybe_endpoint.unwrap_or_else(|| "http://localhost:4318".to_string()), //Devskim: ignore DS137138
+        _ => maybe_endpoint.unwrap_or_else(|| "http://localhost:4317".to_string()), //Devskim: ignore DS137138
+    };
+
+    (protocol, endpoint)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert2::assert;
+    use rstest::*;
+
+    #[rstest]
+    #[case(None, None, "http/protobuf", "http://localhost:4318")] //Devskim: ignore DS137138
+    #[case(Some("http/protobuf"), None, "http/protobuf", "http://localhost:4318")] //Devskim: ignore DS137138
+    #[case(Some("grpc"), None, "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
+    #[case(None, Some("http://localhost:4317"), "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
+    #[case(
+        Some("http/protobuf"),
+        Some("http://localhost:4318"), //Devskim: ignore DS137138
+        "http/protobuf",
+        "http://localhost:4318" //Devskim: ignore DS137138
+    )]
+    #[case(
+        Some("http/protobuf"),
+        Some("https://examples.com:4318"),
+        "http/protobuf",
+        "https://examples.com:4318"
+    )]
+    #[case(
+        Some("http/protobuf"),
+        Some("https://examples.com:4317"),
+        "http/protobuf",
+        "https://examples.com:4317"
+    )]
+    fn test_infer_protocol_and_endpoint(
+        #[case] traces_protocol: Option<&str>,
+        #[case] traces_endpoint: Option<&str>,
+        #[case] expected_protocol: &str,
+        #[case] expected_endpoint: &str,
+    ) {
+        assert!(
+            infer_protocol_and_endpoint((
+                traces_protocol.map(|s| s.to_string()),
+                traces_endpoint.map(|s| s.to_string())
+            )) == (expected_protocol.to_string(), expected_endpoint.to_string())
+        );
+    }
 }
