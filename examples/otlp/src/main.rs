@@ -14,7 +14,7 @@ fn init_tracing() {
     use tracing_subscriber::layer::SubscriberExt;
     std::env::set_var(
         "RUST_LOG",
-        std::env::var("RUST_LOG").unwrap_or("INFO".to_string()),
+        std::env::var("RUST_LOG").unwrap_or_else(|_| "INFO".to_string()),
     );
 
     let otel_rsrc = make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
@@ -47,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::warn!("listening on {}", addr);
     tracing::info!("try to call `curl -i http://127.0.0.1:3003/` (with trace)"); //Devskim: ignore DS137138
     tracing::info!("try to call `curl -i http://127.0.0.1:3003/heatlh` (with NO trace)"); //Devskim: ignore DS137138
-    axum::Server::bind(&addr)
+    axum::Server::bind(addr)
         .serve(app.into_make_service())
         .with_graceful_shutdown(shutdown_signal())
         .await?;
