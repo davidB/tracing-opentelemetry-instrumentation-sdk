@@ -76,6 +76,57 @@ To retrieve the current `trace_id` (eg to add it into error message (as header o
   json!({ "error" :  "xxxxxx", "trace_id": trace_id})
 ```
 
+To also inject the trace id into the response (could be useful for debugging) uses the layer `response_with_trace_layer`
+
+```rust
+    // build our application with a route
+    Router::new()
+        ...
+        // include trace context as header into the response
+        .layer(response_with_trace_layer())
+```
+
+## `examples/otlp`
+
+In a terminal, run
+
+```sh
+❯ cd examples/otlp
+❯ cargo run
+    Finished dev [unoptimized + debuginfo] target(s) in 0.06s
+     Running `target/debug/examples-otlp`
+{"timestamp":"   0.007110513s","level":"WARN","fields":{"message":"listening on 0.0.0.0:3003"},"target":"examples_oltp"}
+{"timestamp":"   0.007163973s","level":"INFO","fields":{"message":"try to call `curl -i http://127.0.0.1:3003/` (with trace)"},"target":"examples_oltp"}
+{"timestamp":"   0.007181296s","level":"INFO","fields":{"message":"try to call `curl -i http://127.0.0.1:3003/heatlh` (with NO trace)"},"target":"examples_oltp"}
+...
+```
+
+Into an other terminal, call the `/` (endpoint with `opentelemetry_tracing_layer` and `response_with_trace_layer`)
+
+```sh
+❯ curl -i http://127.0.0.1:3003/
+HTTP/1.1 200 OK
+content-type: application/json
+content-length: 50
+traceparent: 00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01
+tracestate:
+date: Wed, 28 Dec 2022 17:04:59 GMT
+
+{"my_trace_id":"b2611246a58fd7ea623d2264c5a1e226"}
+```
+
+call the `/health` (endpoint with NO layer)
+
+```sh
+❯ curl -i http://127.0.0.1:3003/health
+HTTP/1.1 200 OK
+content-type: application/json
+content-length: 15
+date: Wed, 28 Dec 2022 17:14:07 GMT
+
+{"status":"UP"}
+```
+
 ## Compatibility
 
 |axum|axum-tracing-opentelemetry|

@@ -13,6 +13,7 @@ homepage = "https://github.com/davidB/axum-tracing-opentelemetry"
 [dependencies]
 axum = "0.6"
 # axum-core = "0.3"
+futures = "0.3"
 http = "0.2"
 opentelemetry = { version = "0.18", features = ["rt-tokio"] }
 opentelemetry-jaeger = { version = "0.17", features = [
@@ -22,6 +23,7 @@ opentelemetry-semantic-conventions = { version = "0.10", optional = true }
 opentelemetry-otlp = { version = "0.11", optional = true, features = [
   "http-proto",
 ] }
+tower = "0.4"
 tower-http = { version = "0.3", features = ["trace"] }
 tracing = "0.1"
 tracing-opentelemetry = "0.18"
@@ -38,7 +40,6 @@ rstest = "0.16"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 tokio = { version = "1.17", features = ["full"] }
-tower = "0.4"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "env-filter",
   "fmt",
