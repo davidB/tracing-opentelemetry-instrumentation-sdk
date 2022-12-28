@@ -94,10 +94,10 @@ In a terminal, run
 ❯ cd examples/otlp
 ❯ cargo run
     Finished dev [unoptimized + debuginfo] target(s) in 0.06s
-     Running `target/debug/examples-otlp`
-{"timestamp":"   0.007110513s","level":"WARN","fields":{"message":"listening on 0.0.0.0:3003"},"target":"examples_oltp"}
-{"timestamp":"   0.007163973s","level":"INFO","fields":{"message":"try to call `curl -i http://127.0.0.1:3003/` (with trace)"},"target":"examples_oltp"}
-{"timestamp":"   0.007181296s","level":"INFO","fields":{"message":"try to call `curl -i http://127.0.0.1:3003/heatlh` (with NO trace)"},"target":"examples_oltp"}
+    Running `target/debug/examples-otlp`
+{"timestamp":"   0.007110513s","level":"WARN","fields":{"message":"listening on 0.0.0.0:3003"},"target":"examples_otlp"}
+{"timestamp":"   0.007163973s","level":"INFO","fields":{"message":"try to call `curl -i http://127.0.0.1:3003/` (with trace)"},"target":"examples_otlp"}
+{"timestamp":"   0.007181296s","level":"INFO","fields":{"message":"try to call `curl -i http://127.0.0.1:3003/heatlh` (with NO trace)"},"target":"examples_otlp"}
 ...
 ```
 
