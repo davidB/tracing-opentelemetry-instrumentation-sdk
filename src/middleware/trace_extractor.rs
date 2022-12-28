@@ -1,3 +1,4 @@
+//
 //! OpenTelemetry middleware.
 //!
 //! See [`opentelemetry_tracing_layer`] for more details.
