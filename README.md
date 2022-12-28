@@ -76,7 +76,18 @@ To retrieve the current `trace_id` (eg to add it into error message (as header o
   json!({ "error" :  "xxxxxx", "trace_id": trace_id})
 ```
 
+## Compatibility
+
+|axum|axum-tracing-opentelemetry|
+|----|--------------------------|
+|0.6 | latest - 0.6             |
+|0.5 | 0.1 - 0.5                |
+
 ## History
+
+### 0.6
+
+- upgrade to axum 0.6
 
 ### 0.5
 
