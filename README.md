@@ -136,6 +136,11 @@ date: Wed, 28 Dec 2022 17:14:07 GMT
 
 ## History
 
+### 0.7
+
+- add a layer`response_with_trace_layer` to have `traceparent` injected into response
+- improve discovery of otlp configuration based on `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL`, `OTEL_EXPORTER_OTLP_PROTOCOL`
+
 ### 0.6
 
 - upgrade to axum 0.6
