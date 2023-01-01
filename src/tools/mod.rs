@@ -63,9 +63,10 @@ pub fn init_tracer(
 ///
 /// ```
 #[cfg(feature = "tracer")]
-pub fn make_resource<S>(service_name: S, service_version: S) -> Resource
+pub fn make_resource<S1, S2>(service_name: S1, service_version: S2) -> Resource
 where
-    S: Into<String>,
+    S1: Into<String>,
+    S2: Into<String>,
 {
     Resource::new(vec![
         semcov::resource::SERVICE_NAME.string(service_name.into()),
