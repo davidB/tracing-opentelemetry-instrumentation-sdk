@@ -14,10 +14,15 @@ fn init_tracing() {
     use tracing_subscriber::layer::SubscriberExt;
     std::env::set_var(
         "RUST_LOG",
-        std::env::var("RUST_LOG").unwrap_or_else(|_| "INFO".to_string()),
+        std::env::var("RUST_LOG")
+            .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
+            .unwrap_or_else(|_| "INFO".to_string()),
     );
 
-    let otel_rsrc = make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+    let otel_rsrc = make_resource(
+        std::env::var("OTEL_SERVICE_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
+        env!("CARGO_PKG_VERSION"),
+    );
     let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
     // let otel_tracer =
     //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
