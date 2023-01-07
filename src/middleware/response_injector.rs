@@ -58,7 +58,6 @@ fn inject_context(headers: &mut http::HeaderMap) {
     impl<'a> opentelemetry::propagation::Injector for HeaderInjector<'a> {
         /// Add a key and value to the underlying data.
         fn set(&mut self, key: &str, value: String) {
-            dbg!(key, &value);
             // TODO manage error when failed to convert
             if let Ok(k) = http::header::HeaderName::from_bytes(key.as_bytes()) {
                 if let Ok(v) = http::HeaderValue::from_str(&value) {

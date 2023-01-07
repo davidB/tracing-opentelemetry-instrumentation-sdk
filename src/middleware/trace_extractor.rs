@@ -414,7 +414,6 @@ mod tests {
             Some(_trace_id) = root_new["span"]["trace_id"].as_str(),
             "assert that trace_id is not empty when tracer is not Noop"
         );
-        // dbg!(_trace_id);
         assert_json_include!(
             actual: root_new,
             expected: json!({
