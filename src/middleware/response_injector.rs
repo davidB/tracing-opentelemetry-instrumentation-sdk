@@ -44,7 +44,6 @@ where
         Box::pin(async move {
             let mut response: Response = future.await?;
             // inject the trace context into the response (optional but useful for debugging and client)
-            eprintln!("call injector");
             inject_context(response.headers_mut());
             Ok(response)
         })
