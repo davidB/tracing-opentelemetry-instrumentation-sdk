@@ -241,6 +241,8 @@ date: Wed, 28 Dec 2022 17:14:07 GMT
 
 - add `init_propagator` to configure the global propagator based on content of the env variable [OTEL_PROPAGATORS](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_propagators)
 
+### 0.7
+
 - add a layer`response_with_trace_layer` to have `traceparent` injected into response
 - improve discovery of otlp configuration based on `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL`, `OTEL_EXPORTER_OTLP_PROTOCOL`
 
