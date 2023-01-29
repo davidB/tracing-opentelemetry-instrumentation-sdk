@@ -1,7 +1,7 @@
+use opentelemetry::sdk::propagation::TraceContextPropagator;
+use opentelemetry::sdk::trace::{Sampler, Tracer};
 use opentelemetry::sdk::Resource;
-use opentelemetry::{
-    global, sdk::propagation::TraceContextPropagator, sdk::trace as sdktrace, trace::TraceError,
-};
+use opentelemetry::trace::TraceError;
 use opentelemetry_otlp::SpanExporterBuilder;
 
 pub fn identity(v: opentelemetry_otlp::OtlpTracePipeline) -> opentelemetry_otlp::OtlpTracePipeline {
@@ -9,13 +9,13 @@ pub fn identity(v: opentelemetry_otlp::OtlpTracePipeline) -> opentelemetry_otlp:
 }
 
 // see https://opentelemetry.io/docs/reference/specification/protocol/exporter/
-pub fn init_tracer<F>(resource: Resource, transform: F) -> Result<sdktrace::Tracer, TraceError>
+pub fn init_tracer<F>(resource: Resource, transform: F) -> Result<Tracer, TraceError>
 where
     F: FnOnce(opentelemetry_otlp::OtlpTracePipeline) -> opentelemetry_otlp::OtlpTracePipeline,
 {
     use opentelemetry_otlp::WithExportConfig;
 
-    global::set_text_map_propagator(TraceContextPropagator::new());
+    opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
     let (protocol, endpoint) = infer_protocol_and_endpoint(read_protocol_and_endpoint_from_env());
     let exporter: SpanExporterBuilder = match protocol.as_str() {
         "http/protobuf" => opentelemetry_otlp::new_exporter()
@@ -32,9 +32,9 @@ where
         .tracing()
         .with_exporter(exporter)
         .with_trace_config(
-            sdktrace::config()
+            opentelemetry::sdk::trace::config()
                 .with_resource(resource)
-                .with_sampler(sdktrace::Sampler::AlwaysOn),
+                .with_sampler(Sampler::AlwaysOn),
         );
     pipeline = transform(pipeline);
     pipeline.install_batch(opentelemetry::runtime::Tokio)
