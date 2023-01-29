@@ -20,39 +20,69 @@ For examples, you can look at:
 //...
 use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
 
-fn init_tracing() {
-    use axum_tracing_opentelemetry::{
-        make_resource,
-        otlp,
-        //stdio,
-    };
+fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
+    use tracing_subscriber::filter::EnvFilter;
+    use tracing_subscriber::fmt::format::FmtSpan;
+    use tracing_subscriber::layer::SubscriberExt;
 
+    let subscriber = tracing_subscriber::registry();
+
+    // register opentelemetry tracer layer
+    let otel_layer = {
+        use axum_tracing_opentelemetry::{
+            init_propagator, //stdio,
+            make_resource,
+            otlp,
+        };
+        let otel_rsrc = make_resource(
+            std::env::var("OTEL_SERVICE_NAME")
+                .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
+            env!("CARGO_PKG_VERSION"),
+        );
+        let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
+        // let otel_tracer =
+        //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
+        //         .expect("setup of Tracer");
+
+        // init propagator based on OTEL_PROPAGATORS value
+        init_propagator()?;
+        tracing_opentelemetry::layer().with_tracer(otel_tracer)
+    };
+    let subscriber = subscriber.with(otel_layer);
+
+    // filter what is output on log (fmt), but not what is send to trace (opentelemetry collector)
+    // std::env::set_var("RUST_LOG", "info,kube=trace");
     std::env::set_var(
         "RUST_LOG",
         std::env::var("RUST_LOG")
             .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
-            .unwrap_or_else(|_| "INFO".to_string()),
+            .unwrap_or_else(|_| "info".to_string()),
     );
+    let subscriber = subscriber.with(EnvFilter::from_default_env());
 
-    let otel_rsrc = make_resource(
-        std::env::var("OTEL_SERVICE_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
-        env!("CARGO_PKG_VERSION"),
-    );
-    let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
-    // let otel_tracer =
-    //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
-    //         .expect("setup of Tracer");
-    let otel_layer = tracing_opentelemetry::layer().with_tracer(otel_tracer);
-
-    let subscriber = tracing_subscriber::registry()
-        //...
-        .with(otel_layer);
-    tracing::subscriber::set_global_default(subscriber).unwrap();
+    if cfg!(debug_assertions) {
+        let fmt_layer = tracing_subscriber::fmt::layer()
+            .pretty()
+            .with_line_number(true)
+            .with_thread_names(true)
+            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let subscriber = subscriber.with(fmt_layer);
+        tracing::subscriber::set_global_default(subscriber)?;
+    } else {
+        let fmt_layer = tracing_subscriber::fmt::layer()
+            .json()
+            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let subscriber = subscriber.with(fmt_layer);
+        tracing::subscriber::set_global_default(subscriber)?;
+    };
+    Ok(())
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    init_tracing();
+    init_tracing()?;
     let app = app();
     // run it
     let addr = &"0.0.0.0:3000".parse::<SocketAddr>()?;
@@ -96,6 +126,61 @@ To also inject the trace id into the response (could be useful for debugging) us
         .layer(response_with_trace_layer())
 ```
 
+## Configuration based on environment variable
+
+To ease setup and compliancy with [Opentelemetry SDK configuration](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/), the configuration can be done with the following environment variables (see sample `init_tracing()` above):
+
+- `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` fallback to `OTEL_EXPORTER_OTLP_ENDPOINT` for the url of the exporter / collector
+- `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` fallback to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to autodetection based on ENDPOINT port
+- `OTEL_SERVICE_NAME` for the name of the service
+- `OTEL_PROPAGATORS` for the configuration of propagator
+
+In the context of kubernetes, the above environment variable can be injected by the Opentelemetry operator (via inject-sdk):
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    metadata:
+      annotations:
+        # to inject environment variables only by opentelemetry-operator
+        instrumentation.opentelemetry.io/inject-sdk: "opentelemetry-operator/instrumentation"
+        instrumentation.opentelemetry.io/container-names: "app"
+      containers:
+        - name: app
+```
+
+Or if you don't setup inject-sdk, you can manually set the environment variable eg
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    metadata:
+      containers:
+        - name: app
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: "app"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
+            # for otel collector in `deployment` mode, use the name of the service
+            # - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            #   value: "http://opentelemetry-collector.opentelemetry-collector:4317"
+            # for otel collector in sidecar mode (imply to deploy a sidecar CR per namespace)
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://localhost:4317"
+            # for `daemonset` mode: need to use the local daemonset (value interpolated by k8s: `$(...)`)
+            # - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            #   value: "http://$(HOST_IP):4317"
+            # - name: HOST_IP
+            #   valueFrom:
+            #     fieldRef:
+            #       fieldPath: status.hostIP
+```
+
 ## `examples/otlp`
 
 In a terminal, run
@@ -103,11 +188,17 @@ In a terminal, run
 ```sh
 ❯ cd examples/otlp
 ❯ cargo run
-    Finished dev [unoptimized + debuginfo] target(s) in 0.06s
-    Running `target/debug/examples-otlp`
-{"timestamp":"   0.007110513s","level":"WARN","fields":{"message":"listening on 0.0.0.0:3003"},"target":"examples_otlp"}
-{"timestamp":"   0.007163973s","level":"INFO","fields":{"message":"try to call `curl -i http://127.0.0.1:3003/` (with trace)"},"target":"examples_otlp"}
-{"timestamp":"   0.007181296s","level":"INFO","fields":{"message":"try to call `curl -i http://127.0.0.1:3003/heatlh` (with NO trace)"},"target":"examples_otlp"}
+   Compiling examples-otlp v0.1.0 (/home/david/src/github.com/davidB/axum-tracing-opentelemetry/examples/otlp)
+    Finished dev [unoptimized + debuginfo] target(s) in 2.96s
+     Running `target/debug/examples-otlp`
+     0.000170750s  WARN examples_otlp: listening on 0.0.0.0:3003
+    at src/main.rs:70 on main
+
+     0.000203401s  INFO examples_otlp: try to call `curl -i http://127.0.0.1:3003/` (with trace)
+    at src/main.rs:71 on main
+
+     0.000213920s  INFO examples_otlp: try to call `curl -i http://127.0.0.1:3003/heatlh` (with NO trace)
+    at src/main.rs:72 on main
 ...
 ```
 
@@ -146,7 +237,9 @@ date: Wed, 28 Dec 2022 17:14:07 GMT
 
 ## History
 
-### 0.7
+### 0.8
+
+- add `init_propagator` to configure the global propagator based on content of the env variable [OTEL_PROPAGATORS](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_propagators)
 
 - add a layer`response_with_trace_layer` to have `traceparent` injected into response
 - improve discovery of otlp configuration based on `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL`, `OTEL_EXPORTER_OTLP_PROTOCOL`

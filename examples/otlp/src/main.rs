@@ -3,49 +3,67 @@ use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trac
 use serde_json::json;
 use std::net::SocketAddr;
 
-fn init_tracing() {
-    use axum_tracing_opentelemetry::{
-        make_resource,
-        otlp,
-        //stdio,
-    };
+fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
     use tracing_subscriber::filter::EnvFilter;
     use tracing_subscriber::fmt::format::FmtSpan;
     use tracing_subscriber::layer::SubscriberExt;
+
+    let subscriber = tracing_subscriber::registry();
+
+    // register opentelemetry tracer layer
+    let otel_layer = {
+        use axum_tracing_opentelemetry::{
+            init_propagator, //stdio,
+            make_resource,
+            otlp,
+        };
+        let otel_rsrc = make_resource(
+            std::env::var("OTEL_SERVICE_NAME")
+                .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
+            env!("CARGO_PKG_VERSION"),
+        );
+        let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
+        // let otel_tracer =
+        //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
+        //         .expect("setup of Tracer");
+        init_propagator()?;
+        tracing_opentelemetry::layer().with_tracer(otel_tracer)
+    };
+    let subscriber = subscriber.with(otel_layer);
+
+    // filter what is output on log (fmt), but not what is send to trace (opentelemetry collector)
+    // std::env::set_var("RUST_LOG", "info,kube=trace");
     std::env::set_var(
         "RUST_LOG",
         std::env::var("RUST_LOG")
             .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
-            .unwrap_or_else(|_| "INFO".to_string()),
+            .unwrap_or_else(|_| "info".to_string()),
     );
+    let subscriber = subscriber.with(EnvFilter::from_default_env());
 
-    let otel_rsrc = make_resource(
-        std::env::var("OTEL_SERVICE_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
-        env!("CARGO_PKG_VERSION"),
-    );
-    let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
-    // let otel_tracer =
-    //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
-    //         .expect("setup of Tracer");
-    let otel_layer = tracing_opentelemetry::layer().with_tracer(otel_tracer);
-
-    let fmt_layer = tracing_subscriber::fmt::layer()
-        .json()
-        .with_timer(tracing_subscriber::fmt::time::uptime())
-        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
-
-    // Build a subscriber that combines the access log and stdout log
-    // layers.
-    let subscriber = tracing_subscriber::registry()
-        .with(fmt_layer)
-        .with(EnvFilter::from_default_env())
-        .with(otel_layer);
-    tracing::subscriber::set_global_default(subscriber).unwrap();
+    if cfg!(debug_assertions) {
+        let fmt_layer = tracing_subscriber::fmt::layer()
+            .pretty()
+            .with_line_number(true)
+            .with_thread_names(true)
+            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let subscriber = subscriber.with(fmt_layer);
+        tracing::subscriber::set_global_default(subscriber)?;
+    } else {
+        let fmt_layer = tracing_subscriber::fmt::layer()
+            .json()
+            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let subscriber = subscriber.with(fmt_layer);
+        tracing::subscriber::set_global_default(subscriber)?;
+    };
+    Ok(())
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    init_tracing();
+    init_tracing()?;
     let app = app();
     // run it
     let addr = &"0.0.0.0:3003".parse::<SocketAddr>()?;
