@@ -91,8 +91,8 @@ where
 /// - "ottrace": OT Trace (third party) (not supported)
 /// - "none": No automatically configured propagator.
 pub fn init_propagator() -> Result<(), TraceError> {
-    let value_from_env = std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
-        .unwrap_or_else(|_| "tracecontext,baggage".to_string());
+    let value_from_env =
+        std::env::var("OTEL_PROPAGATORS").unwrap_or_else(|_| "tracecontext,baggage".to_string());
     let propagators: Vec<Box<dyn TextMapPropagator + Send + Sync>> = value_from_env
         .split(',')
         .map(|s| propagator_from_string(s.trim().to_lowercase().as_str()))
