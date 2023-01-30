@@ -177,3 +177,123 @@ pub fn find_current_trace_id() -> Option<String> {
         .is_valid()
         .then(|| span_context.trace_id().to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use assert2::*;
+    use axum::{
+        body::Body,
+        http::{Request, StatusCode},
+        routing::get,
+        Router,
+    };
+    use tower::Service; // for `call`
+    use tower::ServiceExt; // for `oneshot` and `ready`
+
+    fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
+        use tracing_subscriber::filter::EnvFilter;
+        use tracing_subscriber::fmt::format::FmtSpan;
+        use tracing_subscriber::layer::SubscriberExt;
+
+        let subscriber = tracing_subscriber::registry();
+
+        // register opentelemetry tracer layer
+        let otel_layer = {
+            use crate::{
+                init_propagator, //stdio,
+                make_resource,
+                otlp,
+            };
+            let otel_rsrc = make_resource(
+                std::env::var("OTEL_SERVICE_NAME")
+                    .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
+                env!("CARGO_PKG_VERSION"),
+            );
+            let otel_tracer =
+                otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
+            // let otel_tracer =
+            //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
+            //         .expect("setup of Tracer");
+            init_propagator()?;
+            tracing_opentelemetry::layer().with_tracer(otel_tracer)
+        };
+        let subscriber = subscriber.with(otel_layer);
+
+        // filter what is output on log (fmt), but not what is send to trace (opentelemetry collector)
+        // std::env::set_var("RUST_LOG", "info,kube=trace");
+        std::env::set_var(
+            "RUST_LOG",
+            std::env::var("RUST_LOG")
+                .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
+                .unwrap_or_else(|_| "info".to_string()),
+        );
+        let subscriber = subscriber.with(EnvFilter::from_default_env());
+
+        let fmt_layer = tracing_subscriber::fmt::layer()
+            .json()
+            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let subscriber = subscriber.with(fmt_layer);
+        tracing::subscriber::set_global_default(subscriber)?;
+        Ok(())
+    }
+
+    /// Having a function that produces our app makes it easy to call it from tests
+    /// without having to create an HTTP server.
+    #[allow(dead_code)]
+    fn app() -> Router {
+        init_tracing().unwrap();
+
+        Router::new()
+            .route(
+                "/",
+                get(|| async { crate::find_current_trace_id().unwrap_or_default() }),
+            )
+            // include trace context as header into the response
+            .layer(crate::response_with_trace_layer())
+            .layer(crate::opentelemetry_tracing_layer())
+    }
+
+    #[tokio::test]
+    async fn trace_id_propagate_into_response() {
+        std::env::set_var("OTEL_PROPAGATORS", "tracecontext,b3multi");
+        let mut app = app();
+
+        let request = Request::builder()
+            .uri("/")
+            .method("GET")
+            .body(Body::empty())
+            .unwrap();
+        let response = app.ready().await.unwrap().call(request).await.unwrap();
+        check!(response.status() == StatusCode::OK);
+
+        let trace_id_b3 = String::from_utf8(
+            response
+                .headers()
+                .get("X-B3-TraceId")
+                .unwrap()
+                .as_bytes()
+                .to_vec(),
+        )
+        .unwrap();
+        let trace_id_context = String::from_utf8(
+            response
+                .headers()
+                .get("traceparent")
+                .unwrap()
+                .as_bytes()
+                .to_vec(),
+        )
+        .unwrap();
+        let trace_id_body = String::from_utf8(
+            hyper::body::to_bytes(response.into_body())
+                .await
+                .unwrap()
+                .to_vec(),
+        )
+        .unwrap();
+
+        check!(trace_id_body == trace_id_b3);
+        check!(trace_id_context.contains(&trace_id_body));
+    }
+}
