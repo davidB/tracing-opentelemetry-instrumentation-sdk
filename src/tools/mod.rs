@@ -200,20 +200,21 @@ mod tests {
         // register opentelemetry tracer layer
         let otel_layer = {
             use crate::{
-                init_propagator, //stdio,
+                init_propagator,
                 make_resource,
-                otlp,
+                //otlp,
+                stdio,
             };
             let otel_rsrc = make_resource(
                 std::env::var("OTEL_SERVICE_NAME")
                     .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
                 env!("CARGO_PKG_VERSION"),
             );
-            let otel_tracer =
-                otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
             // let otel_tracer =
-            //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
-            //         .expect("setup of Tracer");
+            //     otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
+            let otel_tracer =
+                stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
+                    .expect("setup of Tracer");
             init_propagator()?;
             tracing_opentelemetry::layer().with_tracer(otel_tracer)
         };
