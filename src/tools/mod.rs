@@ -179,6 +179,7 @@ pub fn find_current_trace_id() -> Option<String> {
 }
 
 #[cfg(test)]
+#[cfg(feature = "tracer")]
 mod tests {
     use assert2::*;
     use axum::{
