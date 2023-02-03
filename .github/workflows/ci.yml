@@ -43,3 +43,4 @@ jobs:
           tool: cargo-hack
       - run: cargo hack check --each-feature --no-dev-deps
       - run: cargo hack test --each-feature
+      - run: cd examples; cargo check
