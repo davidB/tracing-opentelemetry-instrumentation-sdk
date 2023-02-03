@@ -24,9 +24,9 @@ jobs:
     name: MegaLinter
     runs-on: ubuntu-latest
     steps:
-    - uses: taiki-e/install-action@v2
-      with:
-        tool: protoc
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: protoc
 
       # Git Checkout
       - name: Checkout Code
