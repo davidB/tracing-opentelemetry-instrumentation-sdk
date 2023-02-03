@@ -186,12 +186,12 @@ mod tests {
         body::Body,
         http::{Request, StatusCode},
         routing::get,
-        Router,
+        BoxError, Router,
     };
     use tower::Service; // for `call`
     use tower::ServiceExt; // for `oneshot` and `ready`
 
-    fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
+    fn init_tracing() -> Result<(), BoxError> {
         use tracing_subscriber::filter::EnvFilter;
         use tracing_subscriber::fmt::format::FmtSpan;
         use tracing_subscriber::layer::SubscriberExt;
@@ -258,7 +258,11 @@ mod tests {
 
     #[tokio::test]
     async fn trace_id_propagate_into_response() {
-        std::env::set_var("OTEL_PROPAGATORS", "tracecontext,b3multi");
+        if cfg!(feature = "zipkin") {
+            std::env::set_var("OTEL_PROPAGATORS", "tracecontext,b3multi");
+        } else {
+            std::env::set_var("OTEL_PROPAGATORS", "tracecontext");
+        }
         let mut app = app();
 
         let request = Request::builder()
@@ -273,18 +277,16 @@ mod tests {
             response
                 .headers()
                 .get("X-B3-TraceId")
-                .unwrap()
-                .as_bytes()
-                .to_vec(),
+                .map(|h| h.as_bytes().to_vec())
+                .unwrap_or_default(),
         )
         .unwrap();
         let trace_id_context = String::from_utf8(
             response
                 .headers()
                 .get("traceparent")
-                .unwrap()
-                .as_bytes()
-                .to_vec(),
+                .map(|h| h.as_bytes().to_vec())
+                .unwrap_or_default(),
         )
         .unwrap();
         let trace_id_body = String::from_utf8(
@@ -295,7 +297,17 @@ mod tests {
         )
         .unwrap();
 
-        check!(trace_id_body == trace_id_b3);
         check!(trace_id_context.contains(&trace_id_body));
+        if cfg!(feature = "zipkin") {
+            check!(trace_id_b3 == trace_id_body, "B3 should be as trace Id");
+        } else {
+            check!(trace_id_b3.is_empty(), "B3 should be empty");
+        }
+    }
+
+    #[test]
+    fn init_tracing_failed_on_invalid_propagator() {
+        std::env::set_var("OTEL_PROPAGATORS", "xxxxxx");
+        let_assert!(Err(_) = init_tracing());
     }
 }
