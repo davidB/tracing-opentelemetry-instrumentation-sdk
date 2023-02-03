@@ -13,6 +13,10 @@ charset = utf-8
 [*.conf]
 indent_size = 2
 
+[*.md]
+#inside code block, indentation could be anything
+indent_size = unset
+
 [*.py]
 indent_size = 4
 # 88 is the default for black formatter
