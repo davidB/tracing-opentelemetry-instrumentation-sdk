@@ -1,9 +1,9 @@
-use axum::{response::IntoResponse, routing::get, Router};
+use axum::{response::IntoResponse, routing::get, BoxError, Router};
 use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trace_layer};
 use serde_json::json;
 use std::net::SocketAddr;
 
-fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
+fn init_tracing() -> Result<(), BoxError> {
     use tracing_subscriber::filter::EnvFilter;
     use tracing_subscriber::fmt::format::FmtSpan;
     use tracing_subscriber::layer::SubscriberExt;
@@ -19,13 +19,20 @@ fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
         };
         let otel_rsrc = make_resource(
             std::env::var("OTEL_SERVICE_NAME")
+                .or_else(|_| std::env::var("SERVICE_NAME"))
+                .or_else(|_| std::env::var("APP_NAME"))
                 .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
-            env!("CARGO_PKG_VERSION"),
+            std::env::var("SERVICE_VERSION")
+                .or_else(|_| std::env::var("APP_VERSION"))
+                .unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_string()),
         );
-        let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
+        let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
+        // to not send trace somewhere, but continue to create and propagate,...
+        // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
+        // or to `std::io::stdout()` to print
+        //
         // let otel_tracer =
-        //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
-        //         .expect("setup of Tracer");
+        //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())?;
         init_propagator()?;
         tracing_opentelemetry::layer().with_tracer(otel_tracer)
     };
@@ -62,7 +69,7 @@ fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), BoxError> {
     init_tracing()?;
     let app = app();
     // run it

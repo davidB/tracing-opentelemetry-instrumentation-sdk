@@ -20,7 +20,7 @@ For examples, you can look at:
 //...
 use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
 
-fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
+fn init_tracing() -> Result<(), axum::BoxError> {
     use tracing_subscriber::filter::EnvFilter;
     use tracing_subscriber::fmt::format::FmtSpan;
     use tracing_subscriber::layer::SubscriberExt;
@@ -36,15 +36,20 @@ fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
         };
         let otel_rsrc = make_resource(
             std::env::var("OTEL_SERVICE_NAME")
+                .or_else(|_| std::env::var("SERVICE_NAME"))
+                .or_else(|_| std::env::var("APP_NAME"))
                 .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
-            env!("CARGO_PKG_VERSION"),
+            std::env::var("SERVICE_VERSION")
+                .or_else(|_| std::env::var("APP_VERSION"))
+                .unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_string()),
         );
-        let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
+        let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
+        // to not send trace somewhere, but continue to create and propagate,...
+        // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
+        // or to `std::io::stdout()` to print
+        //
         // let otel_tracer =
-        //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
-        //         .expect("setup of Tracer");
-
-        // init propagator based on OTEL_PROPAGATORS value
+        //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())?;
         init_propagator()?;
         tracing_opentelemetry::layer().with_tracer(otel_tracer)
     };
@@ -81,7 +86,7 @@ fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), axum::BoxError> {
     init_tracing()?;
     let app = app();
     // run it
@@ -131,7 +136,7 @@ To also inject the trace id into the response (could be useful for debugging) us
 To ease setup and compliancy with [Opentelemetry SDK configuration](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/), the configuration can be done with the following environment variables (see sample `init_tracing()` above):
 
 - `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` fallback to `OTEL_EXPORTER_OTLP_ENDPOINT` for the url of the exporter / collector
-- `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` fallback to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to autodetection based on ENDPOINT port
+- `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` fallback to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to auto-detection based on ENDPOINT port
 - `OTEL_SERVICE_NAME` for the name of the service
 - `OTEL_PROPAGATORS` for the configuration of propagator
 
