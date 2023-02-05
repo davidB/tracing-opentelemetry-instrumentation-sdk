@@ -10,6 +10,7 @@ DISABLE:
 DISABLE_LINTERS:
   - MARKDOWN_MARKDOWN_LINK_CHECK
   - DOCKERFILE_DOCKERFILELINT
+  - RUST_CLIPPY
 SHOW_ELAPSED_TIME: true
 FILEIO_REPORTER: false
 # DISABLE_ERRORS: true # Uncomment if you want MegaLinter to detect errors but not block CI to pass
