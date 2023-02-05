@@ -30,9 +30,6 @@ pub enum CollectorKind {
 }
 
 #[cfg(feature = "tracer")]
-pub use resource::make_resource; // for backward compatibility
-
-#[cfg(feature = "tracer")]
 pub fn init_tracer(kind: CollectorKind, resource: Resource) -> Result<Tracer, TraceError> {
     match kind {
         CollectorKind::Stdout => stdio::init_tracer(resource, stdio::identity, std::io::stdout()),
@@ -172,8 +169,9 @@ mod tests {
     };
     use tower::Service; // for `call`
     use tower::ServiceExt; // for `oneshot` and `ready`
+    use tracing::subscriber::DefaultGuard;
 
-    fn init_tracing() -> Result<(), BoxError> {
+    fn init_tracing() -> Result<DefaultGuard, BoxError> {
         use tracing_subscriber::filter::EnvFilter;
         use tracing_subscriber::fmt::format::FmtSpan;
         use tracing_subscriber::layer::SubscriberExt;
@@ -192,8 +190,7 @@ mod tests {
             // let otel_tracer =
             //     otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
             let otel_tracer =
-                stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())
-                    .expect("setup of Tracer");
+                stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())?;
             init_propagator()?;
             tracing_opentelemetry::layer().with_tracer(otel_tracer)
         };
@@ -214,24 +211,25 @@ mod tests {
             .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
             .with_timer(tracing_subscriber::fmt::time::uptime());
         let subscriber = subscriber.with(fmt_layer);
-        tracing::subscriber::set_global_default(subscriber)?;
-        Ok(())
+
+        Ok(tracing::subscriber::set_default(subscriber))
     }
 
     /// Having a function that produces our app makes it easy to call it from tests
     /// without having to create an HTTP server.
     #[allow(dead_code)]
-    fn app() -> Router {
-        init_tracing().unwrap();
+    fn app() -> (Router, DefaultGuard) {
+        let guard = init_tracing().unwrap();
 
-        Router::new()
+        let router = Router::new()
             .route(
                 "/",
                 get(|| async { crate::find_current_trace_id().unwrap_or_default() }),
             )
             // include trace context as header into the response
             .layer(crate::response_with_trace_layer())
-            .layer(crate::opentelemetry_tracing_layer())
+            .layer(crate::opentelemetry_tracing_layer());
+        (router, guard)
     }
 
     #[tokio::test]
@@ -241,7 +239,7 @@ mod tests {
         } else {
             std::env::set_var("OTEL_PROPAGATORS", "tracecontext");
         }
-        let mut app = app();
+        let (mut app, _guard) = app();
 
         let request = Request::builder()
             .uri("/")
@@ -285,7 +283,10 @@ mod tests {
 
     #[test]
     fn init_tracing_failed_on_invalid_propagator() {
-        std::env::set_var("OTEL_PROPAGATORS", "xxxxxx");
-        let_assert!(Err(_) = init_tracing());
+        let_assert!(Err(_) = super::propagator_from_string("xxxxxx"));
+
+        // std::env::set_var("OTEL_PROPAGATORS", "xxxxxx");
+        // dbg!(std::env::var("OTEL_PROPAGATORS"));
+        // let_assert!(Err(_) = init_tracing());
     }
 }

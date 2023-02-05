@@ -26,6 +26,17 @@ where
     ])
 }
 
+/// ```rust
+/// use axum_tracing_opentelemetry::resource::DetectResource;
+/// # fn main() {
+/// let otel_rsrc = DetectResource::default()
+///     .with_fallback_service_name(env!("CARGO_PKG_NAME"))
+///     .with_fallback_service_version(env!("CARGO_PKG_VERSION"))
+///     .with_println()
+///     .build();
+/// # }
+///
+/// ```
 #[derive(Debug, Default)]
 pub struct DetectResource {
     fallback_service_name: Option<&'static str>,
@@ -36,10 +47,7 @@ pub struct DetectResource {
 impl DetectResource {
     /// `service.name` is first extracted from environment variables
     /// (in this order) `OTEL_SERVICE_NAME`, `SERVICE_NAME`, `APP_NAME`.
-    /// But a default value can be provided
-    /// ```
-    /// DetectResource::default().with_fallback_service_name(env!("CARGO_PKG_NAME"))
-    /// ```
+    /// But a default value can be provided with this method.
     pub fn with_fallback_service_name(mut self, fallback_service_name: &'static str) -> Self {
         self.fallback_service_name = Some(fallback_service_name);
         self
@@ -47,10 +55,7 @@ impl DetectResource {
 
     /// `service.name` is first extracted from environment variables
     /// (in this order) `SERVICE_VERSION`, `APP_VERSION`.
-    /// But a default value can be provided
-    /// ```
-    /// DetectResource::default().with_fallback_service_version(env!("CARGO_PKG_VERSION"))
-    /// ```
+    /// But a default value can be provided with this method.
     pub fn with_fallback_service_version(mut self, fallback_service_version: &'static str) -> Self {
         self.fallback_service_version = Some(fallback_service_version);
         self

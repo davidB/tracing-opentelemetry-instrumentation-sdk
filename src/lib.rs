@@ -6,3 +6,7 @@ mod tools;
 pub use self::middleware::opentelemetry_tracing_layer;
 pub use self::middleware::response_with_trace_layer;
 pub use self::tools::*;
+
+#[cfg(feature = "tracer")]
+#[deprecated(since = "0.9.0", note = "replace by `DetectResource` builder")]
+pub use self::tools::resource::make_resource; // for backward compatibility
