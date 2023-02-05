@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "esbenp.prettier-vscode",
+        "Bridgecrew.checkov",
+        "MS-CST-E.vscode-devskim",
+        "timonwong.shellcheck",
+        "AquaSecurityOfficial.trivy-vulnerability-scanner",
+        "foxundermoon.shell-format"
+    ]
+}

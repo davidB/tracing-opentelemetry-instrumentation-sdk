@@ -1,0 +1,5 @@
+Results of shellcheck linter (version 0.9.0)
+See documentation on https://megalinter.io/6.19.0/descriptors/bash_shellcheck/
+-----------------------------------------------
+
+✅ [SUCCESS] for workspace /github/workspace

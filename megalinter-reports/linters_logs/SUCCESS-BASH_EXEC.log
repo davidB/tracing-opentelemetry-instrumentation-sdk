@@ -1,0 +1,5 @@
+Results of bash-exec linter (version 5.1.16)
+See documentation on https://megalinter.io/6.19.0/descriptors/bash_bash_exec/
+-----------------------------------------------
+
+✅ [SUCCESS] mega-linter.sh
