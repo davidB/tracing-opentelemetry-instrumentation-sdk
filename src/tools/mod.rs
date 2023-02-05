@@ -7,13 +7,13 @@ use opentelemetry::sdk::trace::Tracer;
 #[cfg(feature = "tracer")]
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::TraceError;
-#[cfg(feature = "tracer")]
-use opentelemetry_semantic_conventions as semcov;
 
 #[cfg(feature = "jaeger")]
 pub mod jaeger;
 #[cfg(feature = "otlp")]
 pub mod otlp;
+#[cfg(feature = "tracer")]
+pub mod resource;
 #[cfg(feature = "tracer")]
 pub mod stdio;
 
@@ -28,6 +28,9 @@ pub enum CollectorKind {
     Stderr,
     NoWrite,
 }
+
+#[cfg(feature = "tracer")]
+pub use resource::make_resource; // for backward compatibility
 
 #[cfg(feature = "tracer")]
 pub fn init_tracer(kind: CollectorKind, resource: Resource) -> Result<Tracer, TraceError> {
@@ -53,27 +56,6 @@ pub fn init_tracer(kind: CollectorKind, resource: Resource) -> Result<Tracer, Tr
             jaeger::init_tracer(resource, jaeger::identity)
         }
     }
-}
-
-/// call with service name and version
-///
-/// ```rust
-/// use axum_tracing_opentelemetry::make_resource;
-/// # fn main() {
-/// let r = make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-/// # }
-///
-/// ```
-#[cfg(feature = "tracer")]
-pub fn make_resource<S1, S2>(service_name: S1, service_version: S2) -> Resource
-where
-    S1: Into<String>,
-    S2: Into<String>,
-{
-    Resource::new(vec![
-        semcov::resource::SERVICE_NAME.string(service_name.into()),
-        semcov::resource::SERVICE_VERSION.string(service_version.into()),
-    ])
 }
 
 /// Configure the global propagator based on content of the env variable [OTEL_PROPAGATORS](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_propagators)
@@ -202,15 +184,11 @@ mod tests {
         let otel_layer = {
             use crate::{
                 init_propagator,
-                make_resource,
+                resource::DetectResource,
                 //otlp,
                 stdio,
             };
-            let otel_rsrc = make_resource(
-                std::env::var("OTEL_SERVICE_NAME")
-                    .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
-                env!("CARGO_PKG_VERSION"),
-            );
+            let otel_rsrc = DetectResource::default().build();
             // let otel_tracer =
             //     otlp::init_tracer(otel_rsrc, otlp::identity).expect("setup of Tracer");
             let otel_tracer =

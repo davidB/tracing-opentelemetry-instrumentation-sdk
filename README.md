@@ -31,18 +31,14 @@ fn init_tracing() -> Result<(), axum::BoxError> {
     let otel_layer = {
         use axum_tracing_opentelemetry::{
             init_propagator, //stdio,
-            make_resource,
+            resource::DetectResource,
             otlp,
         };
-        let otel_rsrc = make_resource(
-            std::env::var("OTEL_SERVICE_NAME")
-                .or_else(|_| std::env::var("SERVICE_NAME"))
-                .or_else(|_| std::env::var("APP_NAME"))
-                .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
-            std::env::var("SERVICE_VERSION")
-                .or_else(|_| std::env::var("APP_VERSION"))
-                .unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_string()),
-        );
+        let otel_rsrc = DetectResource::default()
+            .with_fallback_service_name(env!("CARGO_PKG_NAME"))
+            .with_fallback_service_version(env!("CARGO_PKG_VERSION"))
+            .with_println()
+            .build();
         let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
         // to not send trace somewhere, but continue to create and propagate,...
         // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
@@ -276,6 +272,10 @@ Then :
 | 0.5  | 0.1 - 0.5                  |
 
 ## History
+
+### 0.9
+
+- add `DetectResource` builder to help detection for [Resource Semantic Conventions | OpenTelemetry](https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/#semantic-attributes-with-sdk-provided-default-value)
 
 ### 0.8
 

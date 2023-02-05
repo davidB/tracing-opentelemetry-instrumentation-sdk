@@ -14,18 +14,14 @@ fn init_tracing() -> Result<(), BoxError> {
     let otel_layer = {
         use axum_tracing_opentelemetry::{
             init_propagator, //stdio,
-            make_resource,
             otlp,
+            resource::DetectResource,
         };
-        let otel_rsrc = make_resource(
-            std::env::var("OTEL_SERVICE_NAME")
-                .or_else(|_| std::env::var("SERVICE_NAME"))
-                .or_else(|_| std::env::var("APP_NAME"))
-                .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
-            std::env::var("SERVICE_VERSION")
-                .or_else(|_| std::env::var("APP_VERSION"))
-                .unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_string()),
-        );
+        let otel_rsrc = DetectResource::default()
+            .with_fallback_service_name(env!("CARGO_PKG_NAME"))
+            .with_fallback_service_version(env!("CARGO_PKG_VERSION"))
+            .with_println()
+            .build();
         let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
         // to not send trace somewhere, but continue to create and propagate,...
         // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
