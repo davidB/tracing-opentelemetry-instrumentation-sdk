@@ -135,6 +135,7 @@ To ease setup and compliancy with [Opentelemetry SDK configuration](https://open
 - `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` fallback to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to auto-detection based on ENDPOINT port
 - `OTEL_SERVICE_NAME` for the name of the service
 - `OTEL_PROPAGATORS` for the configuration of propagator
+- `OTEL_TRACES_SAMPLER` & `OTEL_TRACES_SAMPLER_ARG` for configuration of the sampler
 
 In the context of kubernetes, the above environment variable can be injected by the Opentelemetry operator (via inject-sdk):
 
@@ -188,6 +189,9 @@ In a terminal, run
 
 ```sh
 ❯ cd examples/otlp
+> # or direnv allow
+❯ export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4317
+❯ export OTEL_TRACES_SAMPLER=always_on
 ❯ cargo run
    Compiling examples-otlp v0.1.0 (/home/david/src/github.com/davidB/axum-tracing-opentelemetry/examples/otlp)
     Finished dev [unoptimized + debuginfo] target(s) in 2.96s
@@ -238,9 +242,9 @@ To collect and visualize trace on local, one of the simplest solution:
 # see https://www.jaegertracing.io/docs/1.41/getting-started/#all-in-one
 
 # nerctl or docker or any container runner
-nerdctl run -d --name jaeger \
-  -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 \
-  -e COLLECTOR_OTLP_ENABLED=true \
+nerdctl run --rm --name jaeger \
+  -e COLLECTOR_ZIPKIN_HOST_PORT:9411 \
+  -e COLLECTOR_OTLP_ENABLED:true \
   -p 6831:6831/udp \
   -p 6832:6832/udp \
   -p 5778:5778 \
@@ -258,7 +262,7 @@ open http://localhost:16686
 
 Then :
 
-- setup env variable (or not),
+- setup env variable (or not), (eg see [.envrc](.envrc))
 - launch your server
 - send the request
 - copy trace_id from log (or response header)
@@ -272,6 +276,10 @@ Then :
 | 0.5  | 0.1 - 0.5                  |
 
 ## History
+
+### 0.10
+
+- breaking: default configuration for otlp Sampler is now longer hardcoded to `always_on`, but read environment variables `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG`
 
 ### 0.9
 
