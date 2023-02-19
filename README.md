@@ -202,7 +202,7 @@ In a terminal, run
      0.000203401s  INFO examples_otlp: try to call `curl -i http://127.0.0.1:3003/` (with trace)
     at src/main.rs:71 on main
 
-     0.000213920s  INFO examples_otlp: try to call `curl -i http://127.0.0.1:3003/heatlh` (with NO trace)
+     0.000213920s  INFO examples_otlp: try to call `curl -i http://127.0.0.1:3003/health` (with NO trace)
     at src/main.rs:72 on main
 ...
 ```
