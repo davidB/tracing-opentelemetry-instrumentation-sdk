@@ -73,7 +73,7 @@ async fn main() -> Result<(), BoxError> {
     let addr = &"0.0.0.0:3003".parse::<SocketAddr>()?;
     tracing::warn!("listening on {}", addr);
     tracing::info!("try to call `curl -i http://127.0.0.1:3003/` (with trace)"); //Devskim: ignore DS137138
-    tracing::info!("try to call `curl -i http://127.0.0.1:3003/heatlh` (with NO trace)"); //Devskim: ignore DS137138
+    tracing::info!("try to call `curl -i http://127.0.0.1:3003/health` (with NO trace)"); //Devskim: ignore DS137138
     axum::Server::bind(addr)
         .serve(app.into_make_service())
         .with_graceful_shutdown(shutdown_signal())
