@@ -37,7 +37,7 @@ fn init_tracing() -> Result<(), axum::BoxError> {
         let otel_rsrc = DetectResource::default()
             .with_fallback_service_name(env!("CARGO_PKG_NAME"))
             .with_fallback_service_version(env!("CARGO_PKG_VERSION"))
-            .with_println()
+            .log_of_resources(tracing::log::Level::Info)
             .build();
         let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
         // to not send trace somewhere, but continue to create and propagate,...

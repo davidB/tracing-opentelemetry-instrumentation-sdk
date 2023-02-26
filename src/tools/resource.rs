@@ -4,6 +4,7 @@ use opentelemetry::sdk::{
 };
 use opentelemetry_semantic_conventions as semcov;
 use std::time::Duration;
+use tracing::log::{log, Level};
 
 /// call with service name and version
 ///
@@ -32,16 +33,26 @@ where
 /// let otel_rsrc = DetectResource::default()
 ///     .with_fallback_service_name(env!("CARGO_PKG_NAME"))
 ///     .with_fallback_service_version(env!("CARGO_PKG_VERSION"))
-///     .with_println()
+///     .with_log_of_resources(tracing::log::Level::Info)
 ///     .build();
 /// # }
 ///
 /// ```
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct DetectResource {
     fallback_service_name: Option<&'static str>,
     fallback_service_version: Option<&'static str>,
-    with_println: bool,
+    log_of_resources: Level,
+}
+
+impl Default for DetectResource {
+    fn default() -> Self {
+        Self {
+            fallback_service_name: Default::default(),
+            fallback_service_version: Default::default(),
+            log_of_resources: Level::Debug,
+        }
+    }
 }
 
 impl DetectResource {
@@ -61,10 +72,10 @@ impl DetectResource {
         self
     }
 
-    /// to print every key & value defined as resource
-    /// tracing / logging is potentialy not setup yet
-    pub fn with_println(mut self) -> Self {
-        self.with_println = true;
+    /// to print/log every key & value defined as resource
+    /// ⚠️ if tracing / logging is not (pre) setup yet, nothing is logged
+    pub fn with_log_of_resources(mut self, level: Level) -> Self {
+        self.log_of_resources = level;
         self
     }
 
@@ -82,16 +93,14 @@ impl DetectResource {
             ],
         );
         let rsrc = base.merge(&fallback); // base has lower priority
-        if self.with_println {
-            println_resource(&rsrc)
-        }
+        log_resource(self.log_of_resources, &rsrc);
         rsrc
     }
 }
 
-pub fn println_resource(rsrc: &Resource) {
+pub fn log_resource(level: Level, rsrc: &Resource) {
     rsrc.iter()
-        .for_each(|kv| println!("otel resource '{}':'{}'", kv.0, kv.1));
+        .for_each(|kv| log!(level, "otel resource '{}':'{}'", kv.0, kv.1));
 }
 
 #[derive(Debug)]
