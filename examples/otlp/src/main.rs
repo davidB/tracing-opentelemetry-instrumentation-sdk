@@ -4,70 +4,11 @@ use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trac
 use serde_json::json;
 use std::net::SocketAddr;
 
-fn init_tracing() -> Result<(), BoxError> {
-    use tracing_subscriber::filter::EnvFilter;
-    use tracing_subscriber::fmt::format::FmtSpan;
-    use tracing_subscriber::layer::SubscriberExt;
-
-    let subscriber = tracing_subscriber::registry();
-
-    // register opentelemetry tracer layer
-    let otel_layer = {
-        use axum_tracing_opentelemetry::{
-            init_propagator, //stdio,
-            otlp,
-            resource::DetectResource,
-        };
-        let otel_rsrc = DetectResource::default()
-            .with_fallback_service_name(env!("CARGO_PKG_NAME"))
-            .with_fallback_service_version(env!("CARGO_PKG_VERSION"))
-            .with_println()
-            .build();
-        let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
-        // to not send trace somewhere, but continue to create and propagate,...
-        // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
-        // or to `std::io::stdout()` to print
-        //
-        // let otel_tracer =
-        //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())?;
-        init_propagator()?;
-        tracing_opentelemetry::layer().with_tracer(otel_tracer)
-    };
-    let subscriber = subscriber.with(otel_layer);
-
-    // filter what is output on log (fmt), but not what is send to trace (opentelemetry collector)
-    // std::env::set_var("RUST_LOG", "info,kube=trace");
-    std::env::set_var(
-        "RUST_LOG",
-        std::env::var("RUST_LOG")
-            .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
-            .unwrap_or_else(|_| "info".to_string()),
-    );
-    let subscriber = subscriber.with(EnvFilter::from_default_env());
-
-    if cfg!(debug_assertions) {
-        let fmt_layer = tracing_subscriber::fmt::layer()
-            .pretty()
-            .with_line_number(true)
-            .with_thread_names(true)
-            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-            .with_timer(tracing_subscriber::fmt::time::uptime());
-        let subscriber = subscriber.with(fmt_layer);
-        tracing::subscriber::set_global_default(subscriber)?;
-    } else {
-        let fmt_layer = tracing_subscriber::fmt::layer()
-            .json()
-            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-            .with_timer(tracing_subscriber::fmt::time::uptime());
-        let subscriber = subscriber.with(fmt_layer);
-        tracing::subscriber::set_global_default(subscriber)?;
-    };
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() -> Result<(), BoxError> {
-    init_tracing()?;
+    // very opinionated init of tracing, look as is source to make your own
+    axum_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+
     let app = app();
     // run it
     let addr = &"0.0.0.0:3003".parse::<SocketAddr>()?;

@@ -20,74 +20,11 @@ For examples, you can look at:
 //...
 use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
 
-fn init_tracing() -> Result<(), axum::BoxError> {
-    use tracing_subscriber::filter::EnvFilter;
-    use tracing_subscriber::fmt::format::FmtSpan;
-    use tracing_subscriber::layer::SubscriberExt;
-
-    let subscriber = tracing_subscriber::registry();
-
-    // register opentelemetry tracer layer
-    let otel_layer = {
-        use axum_tracing_opentelemetry::{
-            init_propagator, //stdio,
-            resource::DetectResource,
-            otlp,
-        };
-        let otel_rsrc = DetectResource::default()
-            .with_fallback_service_name(env!("CARGO_PKG_NAME"))
-            .with_fallback_service_version(env!("CARGO_PKG_VERSION"))
-            .build();
-        let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
-        // to not send trace somewhere, but continue to create and propagate,...
-        // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
-        // or to `std::io::stdout()` to print
-        //
-        // let otel_tracer =
-        //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())?;
-        init_propagator()?;
-        tracing_opentelemetry::layer().with_tracer(otel_tracer)
-    };
-    let subscriber = subscriber.with(otel_layer);
-
-    // filter what is output on log (fmt)
-    // std::env::set_var("RUST_LOG", "warn,axum_tracing_opentelemetry=info,otel=debug");
-    std::env::set_var(
-        "RUST_LOG",
-        format!(
-            // `axum_tracing_opentelemetry` should be a level info to emit opentelemetry trace & span
-            // `otel::setup` set to debug to log detected resources, configuration read and infered
-            "{},axum_tracing_opentelemetry=info,otel=debug",
-            std::env::var("RUST_LOG")
-                .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
-                .unwrap_or_else(|_| "info".to_string())
-        ),
-    );
-    let subscriber = subscriber.with(EnvFilter::from_default_env());
-
-    if cfg!(debug_assertions) {
-        let fmt_layer = tracing_subscriber::fmt::layer()
-            .pretty()
-            .with_line_number(true)
-            .with_thread_names(true)
-            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-            .with_timer(tracing_subscriber::fmt::time::uptime());
-        let subscriber = subscriber.with(fmt_layer);
-        tracing::subscriber::set_global_default(subscriber)?;
-    } else {
-        let fmt_layer = tracing_subscriber::fmt::layer()
-            .json()
-            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-            .with_timer(tracing_subscriber::fmt::time::uptime());
-        let subscriber = subscriber.with(fmt_layer);
-        tracing::subscriber::set_global_default(subscriber)?;
-    };
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() -> Result<(), axum::BoxError> {
-    init_tracing()?;
+    // very opinionated init of tracing, look as is source to make your own
+    axum_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+
     let app = app();
     // run it
     let addr = &"0.0.0.0:3000".parse::<SocketAddr>()?;
@@ -111,6 +48,51 @@ fn app() -> Router {
 async fn shutdown_signal() {
     //...
     opentelemetry::global::shutdown_tracer_provider();
+}
+```
+
+To configure opentelemetry tracer & tracing, you can use function fom `axum_tracing_opentelemetry::tracing_subscriber_ext`, but they are very opinionated (and WIP to make them more customizable and friendly), so we recommend to make your own composition, but look at the code (to avoid some issue) and share your feedback.
+
+```rust
+pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
+    // filter what is output on log (fmt)
+    // std::env::set_var("RUST_LOG", "warn,axum_tracing_opentelemetry=info,otel=debug");
+    std::env::set_var(
+        "RUST_LOG",
+        format!(
+            // `axum_tracing_opentelemetry` should be a level info to emit opentelemetry trace & span
+            // `otel::setup` set to debug to log detected resources, configuration read and infered
+            "{},axum_tracing_opentelemetry=info,otel=debug",
+            std::env::var("RUST_LOG")
+                .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
+                .unwrap_or_else(|_| "info".to_string())
+        ),
+    );
+    EnvFilter::from_default_env()
+}
+
+pub fn build_otel_layer<S>() -> Result<OpenTelemetryLayer<S, Tracer>, BoxError>
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+{
+    use crate::{
+        init_propagator, //stdio,
+        otlp,
+        resource::DetectResource,
+    };
+    let otel_rsrc = DetectResource::default()
+        //.with_fallback_service_name(env!("CARGO_PKG_NAME"))
+        //.with_fallback_service_version(env!("CARGO_PKG_VERSION"))
+        .build();
+    let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
+    // to not send trace somewhere, but continue to create and propagate,...
+    // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
+    // or to `std::io::stdout()` to print
+    //
+    // let otel_tracer =
+    //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())?;
+    init_propagator()?;
+    Ok(tracing_opentelemetry::layer().with_tracer(otel_tracer))
 }
 ```
 
@@ -307,6 +289,7 @@ Then :
 
 ### 0.10
 
+- ✨ provide opinionated `tracing_subscriber_ext`
 - ✨ log under target `otel::setup` detected configuration by otel setup tools
 - 💥 default configuration for otlp Sampler is no longer hardcoded to `always_on`, but read environment variables `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG`
 

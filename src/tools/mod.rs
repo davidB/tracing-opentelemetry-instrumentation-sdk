@@ -16,6 +16,8 @@ pub mod otlp;
 pub mod resource;
 #[cfg(feature = "tracer")]
 pub mod stdio;
+#[cfg(feature = "tracing_subscriber_ext")]
+pub mod tracing_subscriber_ext;
 
 #[cfg(feature = "tracer")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -30,6 +32,10 @@ pub enum CollectorKind {
 }
 
 #[cfg(feature = "tracer")]
+#[deprecated(
+    since = "0.10.0",
+    note = "call `init_tracer` from sub sub package directly"
+)]
 pub fn init_tracer(kind: CollectorKind, resource: Resource) -> Result<Tracer, TraceError> {
     match kind {
         CollectorKind::Stdout => stdio::init_tracer(resource, stdio::identity, std::io::stdout()),
@@ -72,15 +78,21 @@ pub fn init_tracer(kind: CollectorKind, resource: Resource) -> Result<Tracer, Tr
 pub fn init_propagator() -> Result<(), TraceError> {
     let value_from_env =
         std::env::var("OTEL_PROPAGATORS").unwrap_or_else(|_| "tracecontext,baggage".to_string());
-    let propagators: Vec<Box<dyn TextMapPropagator + Send + Sync>> = value_from_env
+    let propagators: Vec<(Box<dyn TextMapPropagator + Send + Sync>, String)> = value_from_env
         .split(',')
-        .map(|s| propagator_from_string(s.trim().to_lowercase().as_str()))
+        .map(|s| {
+            let name = s.trim().to_lowercase();
+            propagator_from_string(&name).map(|o| o.map(|b| (b, name)))
+        })
         .collect::<Result<Vec<_>, _>>()?
         .into_iter()
         .flatten()
         .collect();
     if !propagators.is_empty() {
-        let composite_propagator = TextMapCompositePropagator::new(propagators);
+        let (propagators_impl, propagators_name): (Vec<_>, Vec<_>) =
+            propagators.into_iter().unzip();
+        tracing::debug!(target: "otel::setup", OTEL_PROPAGATORS = propagators_name.join(","));
+        let composite_propagator = TextMapCompositePropagator::new(propagators_impl);
         opentelemetry::global::set_text_map_propagator(composite_propagator);
     }
     Ok(())

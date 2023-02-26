@@ -29,6 +29,12 @@ tower = "0.4"
 tower-http = { version = "0.3", features = ["trace"] }
 tracing = "0.1"
 tracing-opentelemetry = "0.18"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "ansi",
+  "env-filter",
+  "fmt",
+  "json",
+], optional = true }
 
 [dev-dependencies]
 assert2 = "0.3"
@@ -49,10 +55,10 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "json",
 ] }
 
-
 [features]
-jaeger = ["opentelemetry-jaeger", "tracer"]
-otlp = ["opentelemetry-otlp", "tracer"]
-tracer = ["opentelemetry-semantic-conventions"]
-xray = ["opentelemetry-aws"]
-zipkin = ["opentelemetry-zipkin"]
+jaeger = ["dep:opentelemetry-jaeger", "tracer"]
+otlp = ["dep:opentelemetry-otlp", "tracer"]
+tracer = ["dep:opentelemetry-semantic-conventions"]
+xray = ["dep:opentelemetry-aws"]
+zipkin = ["dep:opentelemetry-zipkin"]
+tracing_subscriber_ext = ["dep:tracing-subscriber"]
