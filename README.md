@@ -285,13 +285,14 @@ Then :
 | 0.6  | latest - 0.6               |
 | 0.5  | 0.1 - 0.5                  |
 
-## History
+## Changelog - History
 
 ### 0.10
 
+- 💥 default configuration for otlp Sampler is no longer hardcoded to `always_on`, but read environment variables `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG`
 - ✨ provide opinionated `tracing_subscriber_ext`
 - ✨ log under target `otel::setup` detected configuration by otel setup tools
-- 💥 default configuration for otlp Sampler is no longer hardcoded to `always_on`, but read environment variables `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG`
+- ✨ add a axum layer for gRPC (#36) (wip)
 
 ### 0.9
 
