@@ -19,6 +19,8 @@ where
 
     opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
     let (protocol, endpoint) = infer_protocol_and_endpoint(read_protocol_and_endpoint_from_env());
+    tracing::debug!(target: "otel::setup", OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = endpoint);
+    tracing::debug!(target: "otel::setup", OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = protocol);
     let exporter: SpanExporterBuilder = match protocol.as_str() {
         "http/protobuf" => opentelemetry_otlp::new_exporter()
             .http()
@@ -55,12 +57,11 @@ fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
 /// see [https://opentelemetry.io/docs/reference/specification/sdk-environment-variables/#general-sdk-configuration](https://opentelemetry.io/docs/reference/specification/sdk-environment-variables/#general-sdk-configuration)
 /// TODO log error and infered sampler
 fn read_sampler_from_env() -> Sampler {
-    match std::env::var("OTEL_TRACES_SAMPLER")
+    let mut name = std::env::var("OTEL_TRACES_SAMPLER")
         .ok()
         .unwrap_or_default()
-        .to_lowercase()
-        .as_str()
-    {
+        .to_lowercase();
+    let v = match name.as_str() {
         "always_on" => Sampler::AlwaysOn,
         "always_off" => Sampler::AlwaysOff,
         "traceidratio" => Sampler::TraceIdRatioBased(read_sampler_arg_from_env(1f64)),
@@ -71,18 +72,25 @@ fn read_sampler_from_env() -> Sampler {
         ))),
         "jaeger_remote" => todo!("unsupported: OTEL_TRACES_SAMPLER='jaeger_remote'"),
         "xray" => todo!("unsupported: OTEL_TRACES_SAMPLER='xray'"),
-        _ => Sampler::ParentBased(Box::new(Sampler::AlwaysOn)),
-    }
+        _ => {
+            name = "parentbased_always_on".to_string();
+            Sampler::ParentBased(Box::new(Sampler::AlwaysOn))
+        }
+    };
+    tracing::debug!(target: "otel::setup", OTEL_TRACES_SAMPLER = ?name);
+    v
 }
 
 fn read_sampler_arg_from_env<T>(default: T) -> T
 where
-    T: FromStr + Copy,
+    T: FromStr + Copy + std::fmt::Debug,
 {
     //TODO Log for invalid value (how to log)
-    std::env::var("OTEL_TRACES_SAMPLER_ARG")
+    let v = std::env::var("OTEL_TRACES_SAMPLER_ARG")
         .map(|s| T::from_str(&s).unwrap_or(default))
-        .unwrap_or(default)
+        .unwrap_or(default);
+    tracing::debug!(target: "otel::setup", OTEL_TRACES_SAMPLER_ARG = ?v);
+    v
 }
 
 fn infer_protocol_and_endpoint(

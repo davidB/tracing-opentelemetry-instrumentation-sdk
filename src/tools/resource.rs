@@ -4,7 +4,6 @@ use opentelemetry::sdk::{
 };
 use opentelemetry_semantic_conventions as semcov;
 use std::time::Duration;
-use tracing::log::{log, Level};
 
 /// call with service name and version
 ///
@@ -27,32 +26,21 @@ where
     ])
 }
 
+/// To log detected value set environement variable RUST_LOG="...,otel::setup::resource=debug"
 /// ```rust
 /// use axum_tracing_opentelemetry::resource::DetectResource;
 /// # fn main() {
 /// let otel_rsrc = DetectResource::default()
 ///     .with_fallback_service_name(env!("CARGO_PKG_NAME"))
 ///     .with_fallback_service_version(env!("CARGO_PKG_VERSION"))
-///     .with_log_of_resources(tracing::log::Level::Info)
 ///     .build();
 /// # }
 ///
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct DetectResource {
     fallback_service_name: Option<&'static str>,
     fallback_service_version: Option<&'static str>,
-    log_of_resources: Level,
-}
-
-impl Default for DetectResource {
-    fn default() -> Self {
-        Self {
-            fallback_service_name: Default::default(),
-            fallback_service_version: Default::default(),
-            log_of_resources: Level::Debug,
-        }
-    }
 }
 
 impl DetectResource {
@@ -72,13 +60,6 @@ impl DetectResource {
         self
     }
 
-    /// to print/log every key & value defined as resource
-    /// ⚠️ if tracing / logging is not (pre) setup yet, nothing is logged
-    pub fn with_log_of_resources(mut self, level: Level) -> Self {
-        self.log_of_resources = level;
-        self
-    }
-
     pub fn build(mut self) -> Resource {
         let base = Resource::default();
         let fallback = Resource::from_detectors(
@@ -93,14 +74,14 @@ impl DetectResource {
             ],
         );
         let rsrc = base.merge(&fallback); // base has lower priority
-        log_resource(self.log_of_resources, &rsrc);
+        debug_resource(&rsrc);
         rsrc
     }
 }
 
-pub fn log_resource(level: Level, rsrc: &Resource) {
+pub fn debug_resource(rsrc: &Resource) {
     rsrc.iter()
-        .for_each(|kv| log!(level, "otel resource '{}':'{}'", kv.0, kv.1));
+        .for_each(|kv| tracing::debug!(target: "otel::setup::resource", key = %kv.0, value = %kv.1))
 }
 
 #[derive(Debug)]

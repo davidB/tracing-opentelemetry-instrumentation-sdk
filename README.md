@@ -37,7 +37,6 @@ fn init_tracing() -> Result<(), axum::BoxError> {
         let otel_rsrc = DetectResource::default()
             .with_fallback_service_name(env!("CARGO_PKG_NAME"))
             .with_fallback_service_version(env!("CARGO_PKG_VERSION"))
-            .log_of_resources(tracing::log::Level::Info)
             .build();
         let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
         // to not send trace somewhere, but continue to create and propagate,...
@@ -51,13 +50,18 @@ fn init_tracing() -> Result<(), axum::BoxError> {
     };
     let subscriber = subscriber.with(otel_layer);
 
-    // filter what is output on log (fmt), but not what is send to trace (opentelemetry collector)
-    // std::env::set_var("RUST_LOG", "info,kube=trace");
+    // filter what is output on log (fmt)
+    // std::env::set_var("RUST_LOG", "warn,axum_tracing_opentelemetry=info,otel=debug");
     std::env::set_var(
         "RUST_LOG",
-        std::env::var("RUST_LOG")
-            .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
-            .unwrap_or_else(|_| "info".to_string()),
+        format!(
+            // `axum_tracing_opentelemetry` should be a level info to emit opentelemetry trace & span
+            // `otel::setup` set to debug to log detected resources, configuration read and infered
+            "{},axum_tracing_opentelemetry=info,otel=debug",
+            std::env::var("RUST_LOG")
+                .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
+                .unwrap_or_else(|_| "info".to_string())
+        ),
     );
     let subscriber = subscriber.with(EnvFilter::from_default_env());
 
@@ -193,17 +197,41 @@ In a terminal, run
 ❯ export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4317
 ❯ export OTEL_TRACES_SAMPLER=always_on
 ❯ cargo run
+warning: `axum-tracing-opentelemetry` (lib) generated 1 warning
    Compiling examples-otlp v0.1.0 (/home/david/src/github.com/davidB/axum-tracing-opentelemetry/examples/otlp)
-    Finished dev [unoptimized + debuginfo] target(s) in 2.96s
-     Running `target/debug/examples-otlp`
-     0.000170750s  WARN examples_otlp: listening on 0.0.0.0:3003
-    at src/main.rs:70 on main
+    Finished dev [unoptimized + debuginfo] target(s) in 2.38s
+      Running `/home/david/src/github.com/davidB/axum-tracing-opentelemetry/examples/target/debug/examples-otlp`
+      0.000043962s  INFO axum_tracing_opentelemetry::tools::tracing_subscriber_ext: init logging & tracing
+    at /home/david/src/github.com/davidB/axum-tracing-opentelemetry/src/tools/tracing_subscriber_ext.rs:82 on main
 
-     0.000203401s  INFO examples_otlp: try to call `curl -i http://127.0.0.1:3003/` (with trace)
-    at src/main.rs:71 on main
+      0.000472423s DEBUG otel::resource: key: service.name, value: unknown_service
+    at /home/david/src/github.com/davidB/axum-tracing-opentelemetry/src/tools/resource.rs:84 on main
 
      0.000213920s  INFO examples_otlp: try to call `curl -i http://127.0.0.1:3003/health` (with NO trace)
     at src/main.rs:72 on main
+      0.000501468s DEBUG otel::resource: key: os.type, value: linux
+    at /home/david/src/github.com/davidB/axum-tracing-opentelemetry/src/tools/resource.rs:84 on main
+
+      0.000549097s DEBUG otel::setup: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://localhost:4317"
+    at /home/david/src/github.com/davidB/axum-tracing-opentelemetry/src/tools/otlp.rs:22 on main
+
+      0.000570727s DEBUG otel::setup: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: "grpc"
+    at /home/david/src/github.com/davidB/axum-tracing-opentelemetry/src/tools/otlp.rs:23 on main
+
+      0.000623135s DEBUG otel::setup: OTEL_TRACES_SAMPLER: "always_on"
+    at /home/david/src/github.com/davidB/axum-tracing-opentelemetry/src/tools/otlp.rs:80 on main
+
+      0.000928215s DEBUG otel::setup: OTEL_PROPAGATORS: "tracecontext,baggage"
+    at /home/david/src/github.com/davidB/axum-tracing-opentelemetry/src/tools/mod.rs:94 on main
+
+      0.000190306s  WARN examples_otlp: listening on 0.0.0.0:3003
+    at otlp/src/main.rs:15 on main
+
+      0.000222566s  INFO examples_otlp: try to call `curl -i http://127.0.0.1:3003/` (with trace)
+    at otlp/src/main.rs:16 on main
+
+      0.000240970s  INFO examples_otlp: try to call `curl -i http://127.0.0.1:3003/heatlh` (with NO trace)
+    at otlp/src/main.rs:17 on main
 ...
 ```
 
@@ -279,7 +307,8 @@ Then :
 
 ### 0.10
 
-- breaking: default configuration for otlp Sampler is now longer hardcoded to `always_on`, but read environment variables `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG`
+- ✨ log under target `otel::setup` detected configuration by otel setup tools
+- 💥 default configuration for otlp Sampler is no longer hardcoded to `always_on`, but read environment variables `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG`
 
 ### 0.9
 
