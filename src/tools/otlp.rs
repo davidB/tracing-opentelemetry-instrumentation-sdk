@@ -54,7 +54,7 @@ fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
     (maybe_protocol, maybe_endpoint)
 }
 
-/// see [https://opentelemetry.io/docs/reference/specification/sdk-environment-variables/#general-sdk-configuration](https://opentelemetry.io/docs/reference/specification/sdk-environment-variables/#general-sdk-configuration)
+/// see <https://opentelemetry.io/docs/reference/specification/sdk-environment-variables/#general-sdk-configuration>
 /// TODO log error and infered sampler
 fn read_sampler_from_env() -> Sampler {
     let mut name = std::env::var("OTEL_TRACES_SAMPLER")
