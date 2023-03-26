@@ -134,7 +134,7 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
         let http_route = req
             .extensions()
             .get::<MatchedPath>()
-            .map_or("", |mp| mp.as_str())
+            .map_or_else(|| req.uri().path(), |mp| mp.as_str())
             .to_owned();
 
         let uri = if let Some(uri) = req.extensions().get::<OriginalUri>() {
