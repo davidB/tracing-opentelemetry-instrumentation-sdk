@@ -156,7 +156,7 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             .unwrap_or_default();
         let http_method_v = http_method(req.method());
         let name = format!("{http_method_v} {http_route}").trim().to_string();
-        let (remote_context, trace_id) =
+        let (trace_id, otel_context) =
             create_context_with_trace(extract_remote_context(req.headers()));
         let span = tracing::info_span!(
             "HTTP request",
@@ -174,7 +174,14 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             otel.status_code = Empty,
             trace_id = %trace_id,
         );
-        tracing_opentelemetry::OpenTelemetrySpanExt::set_parent(&span, remote_context);
+        match otel_context {
+            OtelContext::Remote(cx) => {
+                tracing_opentelemetry::OpenTelemetrySpanExt::set_parent(&span, cx)
+            }
+            OtelContext::Local(cx) => {
+                tracing_opentelemetry::OpenTelemetrySpanExt::add_link(&span, cx)
+            }
+        }
         span
     }
 }
@@ -226,7 +233,7 @@ impl<B> MakeSpan<B> for OtelMakeGrpcSpan {
             })
             .unwrap_or_default();
         let http_method_v = http_method(req.method());
-        let (remote_context, trace_id) =
+        let (trace_id, otel_context) =
             create_context_with_trace(extract_remote_context(req.headers()));
         let span = tracing::info_span!(
             "grpc request",
@@ -245,7 +252,14 @@ impl<B> MakeSpan<B> for OtelMakeGrpcSpan {
             otel.status_code = Empty,
             trace_id = %trace_id,
         );
-        tracing_opentelemetry::OpenTelemetrySpanExt::set_parent(&span, remote_context);
+        match otel_context {
+            OtelContext::Remote(cx) => {
+                tracing_opentelemetry::OpenTelemetrySpanExt::set_parent(&span, cx)
+            }
+            OtelContext::Local(cx) => {
+                tracing_opentelemetry::OpenTelemetrySpanExt::add_link(&span, cx)
+            }
+        }
         span
     }
 }
@@ -310,35 +324,36 @@ fn extract_remote_context(headers: &http::HeaderMap) -> opentelemetry::Context {
     opentelemetry::global::get_text_map_propagator(|propagator| propagator.extract(&extractor))
 }
 
+enum OtelContext {
+    Remote(opentelemetry::Context),
+    Local(opentelemetry::trace::SpanContext),
+}
+
 //HACK create a context with a trace_id (if not set) before call to
 // `tracing_opentelemetry::OpenTelemetrySpanExt::set_parent`
 // else trace_id is defined too late and the `info_span` log `trace_id: ""`
 // Use the default global tracer (named "") to start the trace
-fn create_context_with_trace(
-    remote_context: opentelemetry::Context,
-) -> (opentelemetry::Context, TraceId) {
+fn create_context_with_trace(remote_context: opentelemetry::Context) -> (TraceId, OtelContext) {
     if !remote_context.span().span_context().is_valid() {
         // create a fake remote context but with a fresh new trace_id
         use opentelemetry::sdk::trace::IdGenerator;
         use opentelemetry::sdk::trace::RandomIdGenerator;
-        use opentelemetry::trace::{SpanContext, SpanId};
+        use opentelemetry::trace::SpanContext;
         let trace_id = RandomIdGenerator::default().new_trace_id();
+        let span_id = RandomIdGenerator::default().new_span_id();
         let new_span_context = SpanContext::new(
             trace_id,
-            SpanId::INVALID,
+            span_id,
             remote_context.span().span_context().trace_flags(),
             false,
             remote_context.span().span_context().trace_state().clone(),
         );
-        (
-            remote_context.with_remote_span_context(new_span_context),
-            trace_id,
-        )
+        (trace_id, OtelContext::Local(new_span_context))
     } else {
         let remote_span = remote_context.span();
         let span_context = remote_span.span_context();
         let trace_id = span_context.trace_id();
-        (remote_context, trace_id)
+        (trace_id, OtelContext::Remote(remote_context))
     }
 }
 
@@ -461,6 +476,7 @@ mod tests {
     #[case("filled_http_headers", "/users/123", &[("user-agent", "tests"), ("x-forwarded-for", "127.0.0.1")], 0, false)]
     #[case("call_with_w3c_trace", "/users/123", &[("traceparent", "00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01")], 0, true)]
     #[case("trace_id_in_child_span", "/with_child_span", &[], 1, false)]
+    #[case("trace_id_in_child_span_for_remote", "/with_child_span", &[("traceparent", "00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01")], 1, true)]
     #[tokio::test]
     async fn check_span_event(
         #[case] name: &str,

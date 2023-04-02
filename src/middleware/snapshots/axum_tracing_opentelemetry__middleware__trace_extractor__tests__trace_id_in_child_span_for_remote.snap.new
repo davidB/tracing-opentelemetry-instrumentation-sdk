@@ -1,0 +1,26 @@
+---
+source: src/middleware/trace_extractor.rs
+assertion_line: 512
+expression: "events[event_idx]"
+---
+fields:
+  message: new
+level: INFO
+span:
+  name: my child span
+spans:
+  - http.client_ip: ""
+    http.flavor: "1.1"
+    http.host: ""
+    http.method: GET
+    http.route: /with_child_span
+    http.scheme: HTTP
+    http.target: /with_child_span
+    http.user_agent: ""
+    name: HTTP request
+    otel.kind: server
+    otel.name: GET /with_child_span
+    trace_id: b2611246a58fd7ea623d2264c5a1e226
+target: "axum_tracing_opentelemetry::middleware::trace_extractor::tests"
+timestamp: "[timestamp]"
+
