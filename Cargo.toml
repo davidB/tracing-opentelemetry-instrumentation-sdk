@@ -16,7 +16,7 @@ axum = "0.6"
 futures = "0.3"
 http = "0.2"
 opentelemetry = { version = "0.18", features = ["rt-tokio"] }
-opentelemetry-aws = { version = "0.6", optional = true }
+opentelemetry-aws = { version = "0.7", optional = true }
 opentelemetry-jaeger = { version = "0.17", features = [
   "rt-tokio",
 ], optional = true }
