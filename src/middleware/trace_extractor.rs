@@ -442,6 +442,7 @@ mod tests {
         Router,
     };
     use http::{Request, StatusCode};
+    use opentelemetry::sdk::propagation::TraceContextPropagator;
     use rstest::*;
     use serde_json::Value;
     use std::sync::mpsc::{self, Receiver, SyncSender};
@@ -453,23 +454,37 @@ mod tests {
     };
 
     #[rstest]
-    #[case("filled_http_route_for_existing_route", "/users/123", &[], 0)]
-    #[case("empty_http_route_for_nonexisting_route", "/idontexist/123", &[], 0)]
-    #[case("status_code_on_close_for_ok", "/users/123", &[], 1)]
-    #[case("status_code_on_close_for_error", "/status/500", &[], 1)]
-    #[case("filled_http_headers", "/users/123", &[("user-agent", "tests"), ("x-forwarded-for", "127.0.0.1")], 0)]
+    #[case("filled_http_route_for_existing_route", "/users/123", &[], 0, false)]
+    #[case("empty_http_route_for_nonexisting_route", "/idontexist/123", &[], 0, false)]
+    #[case("status_code_on_close_for_ok", "/users/123", &[], 1, false)]
+    #[case("status_code_on_close_for_error", "/status/500", &[], 1, false)]
+    #[case("filled_http_headers", "/users/123", &[("user-agent", "tests"), ("x-forwarded-for", "127.0.0.1")], 0, false)]
+    #[case("call_with_w3c_trace", "/users/123", &[("traceparent", "00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01")], 0, true)]
+    #[case("trace_id_in_child_span", "/with_child_span", &[], 1, false)]
     #[tokio::test]
     async fn check_span_event(
         #[case] name: &str,
         #[case] uri: &str,
         #[case] headers: &[(&str, &str)],
         #[case] event_idx: usize,
+        #[case] is_trace_id_constant: bool,
     ) {
         let svc = Router::new()
             .route("/users/:id", get(|| async { StatusCode::OK }))
             .route(
                 "/status/500",
                 get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
+            )
+            .route(
+                "/with_child_span",
+                get(|| async {
+                    let span = tracing::span!(tracing::Level::INFO, "my child span");
+                    span.in_scope(|| {
+                        // Any trace events in this closure or code called by it will occur within
+                        // the span.
+                    });
+                    StatusCode::OK
+                }),
             )
             .layer(opentelemetry_tracing_layer());
         let mut builder = Request::builder();
@@ -482,9 +497,21 @@ mod tests {
             ".timestamp" => "[timestamp]",
             ".fields[\"time.busy\"]" => "[duration]",
             ".fields[\"time.idle\"]" => "[duration]",
-            ".span.trace_id" => insta::dynamic_redaction(|value, _path| {
+            ".span.trace_id" => insta::dynamic_redaction(move |value, _path| {
                 let_assert!(Some(trace_id) = value.as_str());
-                format!("[trace_id:lg{}]", trace_id.len())
+                if is_trace_id_constant {
+                    trace_id.to_string()
+                } else {
+                    format!("[trace_id:lg{}]", trace_id.len())
+                }
+            }),
+            ".spans[0].trace_id" => insta::dynamic_redaction(move |value, _path| {
+                let_assert!(Some(trace_id) = value.as_str());
+                if is_trace_id_constant {
+                    trace_id.to_string()
+                } else {
+                    format!("[trace_id:lg{}]", trace_id.len())
+                }
             }),
         });
     }
@@ -539,6 +566,7 @@ mod tests {
             .with_exporter(opentelemetry_otlp::new_exporter().tonic())
             .install_batch(opentelemetry::runtime::Tokio)
             .unwrap();
+        opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
         let (make_writer, rx) = duplex_writer();
