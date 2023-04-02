@@ -23,7 +23,7 @@ opentelemetry-jaeger = { version = "0.17", features = [
 opentelemetry-otlp = { version = "0.11", optional = true, features = [
   "http-proto",
 ] }
-opentelemetry-semantic-conventions = { version = "0.10", optional = true }
+opentelemetry-semantic-conventions = { version = "0.11", optional = true }
 opentelemetry-zipkin = { version = "0.16", features = [], optional = true }
 tower = "0.4"
 tower-http = { version = "0.4", features = ["trace"] }
