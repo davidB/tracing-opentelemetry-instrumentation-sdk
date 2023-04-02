@@ -155,7 +155,7 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             })
             .unwrap_or_default();
         let http_method_v = http_method(req.method());
-        let name = format!("{http_method_v} {http_route}");
+        let name = format!("{http_method_v} {http_route}").trim().to_string();
         let (remote_context, trace_id) =
             create_context_with_trace(extract_remote_context(req.headers()));
         let span = tracing::info_span!(
