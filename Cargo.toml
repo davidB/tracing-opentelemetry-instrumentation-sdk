@@ -20,10 +20,10 @@ opentelemetry-aws = { version = "0.6", optional = true }
 opentelemetry-jaeger = { version = "0.17", features = [
   "rt-tokio",
 ], optional = true }
-opentelemetry-semantic-conventions = { version = "0.10", optional = true }
 opentelemetry-otlp = { version = "0.11", optional = true, features = [
   "http-proto",
 ] }
+opentelemetry-semantic-conventions = { version = "0.10", optional = true }
 opentelemetry-zipkin = { version = "0.16", features = [], optional = true }
 tower = "0.4"
 tower-http = { version = "0.4", features = ["trace"] }
@@ -37,8 +37,8 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ], optional = true }
 
 [dev-dependencies]
-assert2 = "0.3"
 assert-json-diff = "2.0"
+assert2 = "0.3"
 hyper = "0.14"
 opentelemetry-otlp = { version = "0.11", features = [
   "http-proto",
