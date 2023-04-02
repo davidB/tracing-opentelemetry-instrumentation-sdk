@@ -134,7 +134,7 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
         let http_route = req
             .extensions()
             .get::<MatchedPath>()
-            .map_or_else(|| req.uri().path(), |mp| mp.as_str())
+            .map_or_else(|| "", |mp| mp.as_str())
             .to_owned();
 
         let uri = if let Some(uri) = req.extensions().get::<OriginalUri>() {
@@ -436,178 +436,69 @@ impl OnFailure<GrpcFailureClass> for OtelOnGrpcFailure {
 mod tests {
     use super::*;
     use assert2::*;
-    use assert_json_diff::assert_json_include;
     use axum::{
         body::Body,
         routing::{get, post},
         Router,
     };
     use http::{Request, StatusCode};
-    use serde_json::{json, Value};
-    use std::{
-        convert::TryInto,
-        sync::mpsc::{self, Receiver, SyncSender},
-    };
-    use tower::{Service, ServiceExt};
+    use rstest::*;
+    use serde_json::Value;
+    use std::sync::mpsc::{self, Receiver, SyncSender};
+
     use tracing_subscriber::{
         fmt::{format::FmtSpan, MakeWriter},
         util::SubscriberInitExt,
         EnvFilter,
     };
 
+    #[rstest]
+    #[case("filled_http_route_for_existing_route", "/users/123", &[], 0)]
+    #[case("empty_http_route_for_nonexisting_route", "/idontexist/123", &[], 0)]
+    #[case("status_code_on_close_for_ok", "/users/123", &[], 1)]
+    #[case("status_code_on_close_for_error", "/status/500", &[], 1)]
+    #[case("filled_http_headers", "/users/123", &[("user-agent", "tests"), ("x-forwarded-for", "127.0.0.1")], 0)]
     #[tokio::test]
-    async fn http_route_populating() {
+    async fn check_span_event(
+        #[case] name: &str,
+        #[case] uri: &str,
+        #[case] headers: &[(&str, &str)],
+        #[case] event_idx: usize,
+    ) {
         let svc = Router::new()
             .route("/users/:id", get(|| async { StatusCode::OK }))
-            .layer(opentelemetry_tracing_layer());
-
-        let [(populated, _), (unpopulated, _)] = spans_for_requests(
-            svc,
-            [
-                Request::builder()
-                    .uri("/users/123")
-                    .body(Body::empty())
-                    .unwrap(),
-                Request::builder()
-                    .uri("/idontexist/123")
-                    .body(Body::empty())
-                    .unwrap(),
-            ],
-        )
-        .await;
-
-        assert_json_include!(
-            actual: populated,
-            expected: json!({
-                "span": {
-                    "http.route": "/users/:id",
-                    "http.target": "/users/123",
-                    "http.client_ip": "",
-                }
-            }),
-        );
-
-        assert_json_include!(
-            actual: unpopulated,
-            expected: json!({
-                "span": {
-                    "http.route": "",
-                    "http.target": "/idontexist/123",
-                    "http.client_ip": "",
-                }
-            }),
-        );
-    }
-
-    #[tokio::test]
-    async fn correct_fields_on_span_for_http() {
-        let svc = Router::new()
-            .route("/", get(|| async { StatusCode::OK }))
             .route(
-                "/users/:id",
+                "/status/500",
                 get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
             )
             .layer(opentelemetry_tracing_layer());
-
-        let [(root_new, root_close), (users_id_new, users_id_close)] = spans_for_requests(
-            svc,
-            [
-                Request::builder()
-                    .header("user-agent", "tests")
-                    .header("x-forwarded-for", "127.0.0.1")
-                    .uri("/")
-                    .body(Body::empty())
-                    .unwrap(),
-                Request::builder()
-                    .uri("/users/123")
-                    .body(Body::empty())
-                    .unwrap(),
-            ],
-        )
-        .await;
-
-        let_assert!(
-            Some(_trace_id) = root_new["span"]["trace_id"].as_str(),
-            "assert that trace_id is not empty when tracer is not Noop"
-        );
-        assert_json_include!(
-            actual: root_new,
-            expected: json!({
-                "fields": {
-                    "message": "new",
-                },
-                "level": "INFO",
-                "span": {
-                    "http.client_ip": "127.0.0.1",
-                    "http.flavor": "1.1",
-                    "http.host": "",
-                    "http.method": "GET",
-                    "http.route": "/",
-                    "http.scheme": "HTTP",
-                    "http.target": "/",
-                    "http.user_agent": "tests",
-                    "name": "HTTP request",
-                    "otel.kind": "server",
-                    "otel.name": "GET /",
-                }
+        let mut builder = Request::builder();
+        for (key, value) in headers.iter() {
+            builder = builder.header(*key, *value);
+        }
+        let req = builder.uri(uri).body(Body::empty()).unwrap();
+        let events = span_event_for_request(svc, req).await;
+        insta::assert_yaml_snapshot!(name, events[event_idx], {
+            ".timestamp" => "[timestamp]",
+            ".fields[\"time.busy\"]" => "[duration]",
+            ".fields[\"time.idle\"]" => "[duration]",
+            ".span.trace_id" => insta::dynamic_redaction(|value, _path| {
+                let_assert!(Some(trace_id) = value.as_str());
+                format!("[trace_id:lg{}]", trace_id.len())
             }),
-        );
-
-        assert_json_include!(
-            actual: root_close,
-            expected: json!({
-                "fields": {
-                    "message": "close",
-                },
-                "level": "INFO",
-                "span": {
-                    "http.client_ip": "127.0.0.1",
-                    "http.flavor": "1.1",
-                    "http.host": "",
-                    "http.method": "GET",
-                    "http.route": "/",
-                    "http.scheme": "HTTP",
-                    "http.status_code": "200",
-                    "http.target": "/",
-                    "http.user_agent": "tests",
-                    "name": "HTTP request",
-                    "otel.kind": "server",
-                    "otel.status_code": "OK",
-                    "otel.name": "GET /",
-                }
-            }),
-        );
-
-        assert_json_include!(
-            actual: users_id_new,
-            expected: json!({
-                "span": {
-                    "http.route": "/users/:id",
-                    "http.target": "/users/123",
-                    "http.client_ip": "",
-                }
-            }),
-        );
-
-        assert_json_include!(
-            actual: users_id_close,
-            expected: json!({
-                "span": {
-                    "http.status_code": "500",
-                    "otel.status_code": "ERROR",
-                    "http.client_ip": "",
-                }
-            }),
-        );
+        });
     }
 
+    #[rstest]
+    #[case("grpc_status_code_on_close_for_ok", "/module.service/endpoint1", &[], 1)]
     #[tokio::test]
-    async fn correct_fields_on_span_for_grpc() {
+    async fn check_span_event_grpc(
+        #[case] name: &str,
+        #[case] uri: &str,
+        #[case] headers: &[(&str, &str)],
+        #[case] event_idx: usize,
+    ) {
         let svc = Router::new()
-            .route(
-                "/module.service/endpoint0",
-                post(|| async { StatusCode::OK }),
-            )
             .route(
                 "/module.service/endpoint1",
                 post(|| async {
@@ -619,107 +510,27 @@ mod tests {
                 }),
             )
             .layer(opentelemetry_tracing_layer_grpc());
-
-        let [(basic_new, basic_close), (err_code_new, err_code_close)] = spans_for_requests(
-            svc,
-            [
-                Request::builder()
-                    .header("user-agent", "tests")
-                    .header("x-forwarded-for", "127.0.0.1")
-                    .uri("/module.service/endpoint0")
-                    .method("POST")
-                    .body(Body::empty())
-                    .unwrap(),
-                Request::builder()
-                    .header("user-agent", "tests")
-                    .header("x-forwarded-for", "127.0.0.1")
-                    .uri("/module.service/endpoint1")
-                    .method("POST")
-                    .body(Body::empty())
-                    .unwrap(),
-            ],
-        )
-        .await;
-
-        let_assert!(
-            Some(_trace_id) = basic_new["span"]["trace_id"].as_str(),
-            "assert that trace_id is not empty when tracer is not Noop"
-        );
-        assert_json_include!(
-            actual: basic_new,
-            expected: json!({
-                "fields": {
-                    "message": "new",
-                },
-                "level": "INFO",
-                "span": {
-                    "http.client_ip": "127.0.0.1",
-                    "http.flavor": "1.1",
-                    "http.host": "",
-                    "http.method": "POST",
-                    "http.route": "/module.service/endpoint0",
-                    "http.scheme": "HTTP",
-                    "http.target": "/module.service/endpoint0",
-                    "http.user_agent": "tests",
-                    "name": "grpc request",
-                    "otel.kind": "server",
-                    "otel.name": "/module.service/endpoint0",
-                }
+        let mut builder = Request::builder();
+        for (key, value) in headers.iter() {
+            builder = builder.header(*key, *value);
+        }
+        builder = builder.method("POST");
+        let req = builder.uri(uri).body(Body::empty()).unwrap();
+        let events = span_event_for_request(svc, req).await;
+        insta::assert_yaml_snapshot!(name, events[event_idx], {
+            ".timestamp" => "[timestamp]",
+            ".fields[\"time.busy\"]" => "[duration]",
+            ".fields[\"time.idle\"]" => "[duration]",
+            ".span.trace_id" => insta::dynamic_redaction(|value, _path| {
+                let_assert!(Some(trace_id) = value.as_str());
+                format!("[trace_id:lg{}]", trace_id.len())
             }),
-        );
-
-        assert_json_include!(
-            actual: basic_close,
-            expected: json!({
-                "fields": {
-                    "message": "close",
-                },
-                "level": "INFO",
-                "span": {
-                    "http.client_ip": "127.0.0.1",
-                    "http.flavor": "1.1",
-                    "http.host": "",
-                    "http.method": "POST",
-                    "http.route": "/module.service/endpoint0",
-                    "http.scheme": "HTTP",
-                    "http.status_code": "200",
-                    "http.target": "/module.service/endpoint0",
-                    "http.user_agent": "tests",
-                    "name": "grpc request",
-                    "otel.kind": "server",
-                    "otel.status_code": "OK",
-                    "otel.name": "/module.service/endpoint0",
-                }
-            }),
-        );
-
-        assert_json_include!(
-            actual: err_code_new,
-            expected: json!({
-                "span": {
-                    "http.route": "/module.service/endpoint1",
-                    "http.target": "/module.service/endpoint1",
-                    "http.client_ip": "127.0.0.1",
-                }
-            }),
-        );
-        assert_json_include!(
-            actual: err_code_close,
-            expected: json!({
-                "span": {
-                    "http.status_code": "200",
-                    "http.grpc_status": 2,
-                    "http.client_ip": "127.0.0.1",
-                }
-            }),
-        );
+        });
     }
 
-    async fn spans_for_requests<const N: usize>(
-        mut router: Router,
-        reqs: [Request<Body>; N],
-    ) -> [(Value, Value); N] {
+    async fn span_event_for_request(mut router: Router, req: Request<Body>) -> Vec<Value> {
         use axum::body::HttpBody as _;
+        use tower::{Service, ServiceExt};
         use tracing_subscriber::layer::SubscriberExt;
 
         // setup a non Noop OpenTelemetry tracer to have non-empty trace_id
@@ -741,24 +552,15 @@ mod tests {
             .with(otel_layer);
         let _guard = subscriber.set_default();
 
-        let mut spans = Vec::new();
+        let mut res = router.ready().await.unwrap().call(req).await.unwrap();
 
-        for req in reqs {
-            let mut res = router.ready().await.unwrap().call(req).await.unwrap();
+        while res.data().await.is_some() {}
+        res.trailers().await.unwrap();
+        drop(res);
 
-            while res.data().await.is_some() {}
-            res.trailers().await.unwrap();
-            drop(res);
-
-            let logs = std::iter::from_fn(|| rx.try_recv().ok())
-                .map(|bytes| serde_json::from_slice::<Value>(&bytes).unwrap())
-                .collect::<Vec<_>>();
-            let [new, close]: [_; 2] = logs.try_into().unwrap();
-
-            spans.push((new, close));
-        }
-
-        spans.try_into().unwrap()
+        std::iter::from_fn(|| rx.try_recv().ok())
+            .map(|bytes| serde_json::from_slice::<Value>(&bytes).unwrap())
+            .collect::<Vec<_>>()
     }
 
     fn duplex_writer() -> (DuplexWriter, Receiver<Vec<u8>>) {

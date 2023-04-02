@@ -37,15 +37,15 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ], optional = true }
 
 [dev-dependencies]
-assert-json-diff = "2.0"
 assert2 = "0.3"
 hyper = "0.14"
+insta = { version = "1.29.0", features = ["yaml", "redactions"] }
 opentelemetry-otlp = { version = "0.11", features = [
   "http-proto",
   "reqwest-client",
   "reqwest-rustls",
 ] }
-rstest = "0.16"
+rstest = "0.17"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 tokio = { version = "1.17", features = ["full"] }
@@ -62,3 +62,9 @@ tracer = ["dep:opentelemetry-semantic-conventions"]
 xray = ["dep:opentelemetry-aws"]
 zipkin = ["dep:opentelemetry-zipkin"]
 tracing_subscriber_ext = ["dep:tracing-subscriber", "otlp"]
+
+[profile.dev.package.insta]
+opt-level = 3
+
+[profile.dev.package.similar]
+opt-level = 3

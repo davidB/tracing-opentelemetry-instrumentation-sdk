@@ -1,0 +1,28 @@
+---
+source: src/middleware/trace_extractor.rs
+expression: "events[event_idx]"
+---
+fields:
+  message: close
+  time.busy: "[duration]"
+  time.idle: "[duration]"
+level: INFO
+span:
+  http.client_ip: ""
+  http.flavor: "1.1"
+  http.host: ""
+  http.method: GET
+  http.route: /status/500
+  http.scheme: HTTP
+  http.status_code: "500"
+  http.target: /status/500
+  http.user_agent: ""
+  name: HTTP request
+  otel.kind: server
+  otel.name: GET /status/500
+  otel.status_code: ERROR
+  trace_id: "[trace_id:lg32]"
+spans: []
+target: "axum_tracing_opentelemetry::middleware::trace_extractor"
+timestamp: "[timestamp]"
+
