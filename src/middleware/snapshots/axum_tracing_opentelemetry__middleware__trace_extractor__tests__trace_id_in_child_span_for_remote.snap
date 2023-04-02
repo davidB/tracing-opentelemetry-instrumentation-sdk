@@ -1,6 +1,5 @@
 ---
 source: src/middleware/trace_extractor.rs
-assertion_line: 512
 expression: "events[event_idx]"
 ---
 fields:
