@@ -68,3 +68,9 @@ opt-level = 3
 
 [profile.dev.package.similar]
 opt-level = 3
+
+[package.metadata.release]
+pre-release-commit-message = ":rocket: (cargo-release) version {{version}}"
+tag-prefix = ""
+tag-name = "{{prefix}}{{version}}"
+tag-message = ":bookmark: {{version}}"
