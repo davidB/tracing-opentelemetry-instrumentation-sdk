@@ -481,7 +481,7 @@ mod tests {
     // - https://github.com/davidB/axum-tracing-opentelemetry/pull/54 (reverted)
     // - https://github.com/tokio-rs/axum/issues/1441#issuecomment-1272158039
     #[case("extract_route_from_nested", "/nest/123", &[], 0, false)]
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn check_span_event(
         #[case] name: &str,
         #[case] uri: &str,
@@ -519,7 +519,7 @@ mod tests {
             builder = builder.header(*key, *value);
         }
         let req = builder.uri(uri).body(Body::empty()).unwrap();
-        let events = span_event_for_request(svc, req).await;
+        let (events, otel_spans) = span_event_for_request(svc, req).await;
         insta::assert_yaml_snapshot!(name, events[event_idx], {
             ".timestamp" => "[timestamp]",
             ".fields[\"time.busy\"]" => "[duration]",
@@ -541,6 +541,7 @@ mod tests {
                 }
             }),
         });
+        insta::assert_debug_snapshot!(format!("{name}_otel"), otel_spans);
     }
 
     #[rstest]
@@ -570,7 +571,7 @@ mod tests {
         }
         builder = builder.method("POST");
         let req = builder.uri(uri).body(Body::empty()).unwrap();
-        let events = span_event_for_request(svc, req).await;
+        let (events, _otel_spans) = span_event_for_request(svc, req).await;
         insta::assert_yaml_snapshot!(name, events[event_idx], {
             ".timestamp" => "[timestamp]",
             ".fields[\"time.busy\"]" => "[duration]",
@@ -582,17 +583,16 @@ mod tests {
         });
     }
 
-    async fn span_event_for_request(mut router: Router, req: Request<Body>) -> Vec<Value> {
+    async fn span_event_for_request(
+        mut router: Router,
+        req: Request<Body>,
+    ) -> (Vec<Value>, Vec<crate::tools::mock_collector::ExportedSpan>) {
         use axum::body::HttpBody as _;
         use tower::{Service, ServiceExt};
         use tracing_subscriber::layer::SubscriberExt;
 
         // setup a non Noop OpenTelemetry tracer to have non-empty trace_id
-        let tracer = opentelemetry_otlp::new_pipeline()
-            .tracing()
-            .with_exporter(opentelemetry_otlp::new_exporter().tonic())
-            .install_batch(opentelemetry::runtime::Tokio)
-            .unwrap();
+        let (tracer, mut req_rx) = crate::tools::mock_collector::setup_tracer().await;
         opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
@@ -613,9 +613,14 @@ mod tests {
         res.trailers().await.unwrap();
         drop(res);
 
-        std::iter::from_fn(|| rx.try_recv().ok())
+        opentelemetry_api::global::shutdown_tracer_provider();
+
+        let otel_span = std::iter::from_fn(|| req_rx.try_recv().ok()).collect::<Vec<_>>();
+        // insta::assert_debug_snapshot!(first_span);
+        let tracing_events = std::iter::from_fn(|| rx.try_recv().ok())
             .map(|bytes| serde_json::from_slice::<Value>(&bytes).unwrap())
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>();
+        (tracing_events, otel_span)
     }
 
     fn duplex_writer() -> (DuplexWriter, Receiver<Vec<u8>>) {
