@@ -477,10 +477,10 @@ mod tests {
     #[case("call_with_w3c_trace", "/users/123", &[("traceparent", "00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01")], 0, true)]
     #[case("trace_id_in_child_span", "/with_child_span", &[], 1, false)]
     #[case("trace_id_in_child_span_for_remote", "/with_child_span", &[("traceparent", "00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01")], 1, true)]
-    // failed to extract "http.route"
+    // failed to extract "http.route" before axum-0.6.15
     // - https://github.com/davidB/axum-tracing-opentelemetry/pull/54 (reverted)
     // - https://github.com/tokio-rs/axum/issues/1441#issuecomment-1272158039
-    //#[case("extract_route_from_nested", "/nest/123", &[], 0, false)]
+    #[case("extract_route_from_nested", "/nest/123", &[], 0, false)]
     #[tokio::test]
     async fn check_span_event(
         #[case] name: &str,

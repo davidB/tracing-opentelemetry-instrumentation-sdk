@@ -10,13 +10,13 @@ span:
   http.flavor: "1.1"
   http.host: ""
   http.method: GET
-  http.route: /*__private__axum_fallback
+  http.route: "/nest/:nest_id"
   http.scheme: HTTP
-  http.target: /idontexist/123
+  http.target: /nest/123
   http.user_agent: ""
   name: HTTP request
   otel.kind: server
-  otel.name: GET /*__private__axum_fallback
+  otel.name: "GET /nest/:nest_id"
   trace_id: "[trace_id:lg32]"
 spans: []
 target: "axum_tracing_opentelemetry::middleware::trace_extractor"
