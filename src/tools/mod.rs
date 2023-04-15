@@ -19,6 +19,10 @@ pub mod stdio;
 #[cfg(feature = "tracing_subscriber_ext")]
 pub mod tracing_subscriber_ext;
 
+#[cfg(test)]
+pub mod mock_collector;
+//pub mod inmemory_exporter;
+
 #[cfg(feature = "tracer")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CollectorKind {
