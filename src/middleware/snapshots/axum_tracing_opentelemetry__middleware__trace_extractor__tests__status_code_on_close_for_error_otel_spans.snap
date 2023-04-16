@@ -1,0 +1,44 @@
+---
+source: src/middleware/trace_extractor.rs
+expression: otel_spans
+---
+- trace_id: "[trace_id:lg32]"
+  span_id: "[span_id:lg16]"
+  trace_state: ""
+  parent_span_id: "[span_id:lg0]"
+  name: GET /status/500
+  kind: SPAN_KIND_SERVER
+  start_time_unix_nano: "[timestamp]"
+  end_time_unix_nano: "[timestamp]"
+  attributes:
+    busy_ns: ignore
+    code.filepath: ignore
+    code.lineno: ignore
+    code.namespace: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor\")) })"
+    http.client_ip: "Some(AnyValue { value: Some(StringValue(\"\")) })"
+    http.flavor: "Some(AnyValue { value: Some(StringValue(\"1.1\")) })"
+    http.host: "Some(AnyValue { value: Some(StringValue(\"\")) })"
+    http.method: "Some(AnyValue { value: Some(StringValue(\"GET\")) })"
+    http.route: "Some(AnyValue { value: Some(StringValue(\"/status/500\")) })"
+    http.scheme: "Some(AnyValue { value: Some(StringValue(\"HTTP\")) })"
+    http.status_code: "Some(AnyValue { value: Some(StringValue(\"500\")) })"
+    http.target: "Some(AnyValue { value: Some(StringValue(\"/status/500\")) })"
+    http.user_agent: "Some(AnyValue { value: Some(StringValue(\"\")) })"
+    idle_ns: ignore
+    thread.id: ignore
+    thread.name: "Some(AnyValue { value: Some(StringValue(\"middleware::trace_extractor::tests::check_span_event::case_4\")) })"
+    trace_id: ignore
+  dropped_attributes_count: 0
+  events: []
+  dropped_events_count: 0
+  links:
+    - trace_id: "[trace_id:lg32]"
+      span_id: "[span_id:lg16]"
+      trace_state: ""
+      attributes: {}
+      dropped_attributes_count: 0
+  dropped_links_count: 0
+  status:
+    message: ""
+    code: STATUS_CODE_ERROR
+
