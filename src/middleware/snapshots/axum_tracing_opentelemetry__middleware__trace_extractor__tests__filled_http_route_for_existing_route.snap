@@ -1,24 +1,47 @@
 ---
 source: src/middleware/trace_extractor.rs
-expression: "events[event_idx]"
+expression: tracing_events
 ---
-fields:
-  message: new
-level: INFO
-span:
-  http.client_ip: ""
-  http.flavor: "1.1"
-  http.host: ""
-  http.method: GET
-  http.route: "/users/:id"
-  http.scheme: HTTP
-  http.target: /users/123
-  http.user_agent: ""
-  name: HTTP request
-  otel.kind: server
-  otel.name: "GET /users/:id"
-  trace_id: "[trace_id:lg32]"
-spans: []
-target: "axum_tracing_opentelemetry::middleware::trace_extractor"
-timestamp: "[timestamp]"
+- fields:
+    message: new
+  level: INFO
+  span:
+    http.client_ip: ""
+    http.flavor: "1.1"
+    http.host: ""
+    http.method: GET
+    http.route: "/users/:id"
+    http.scheme: HTTP
+    http.target: /users/123
+    http.user_agent: ""
+    name: HTTP request
+    otel.kind: server
+    otel.name: "GET /users/:id"
+    trace_id: "[trace_id:lg32]"
+  spans: []
+  target: "axum_tracing_opentelemetry::middleware::trace_extractor"
+  timestamp: "[timestamp]"
+- fields:
+    message: close
+    time.busy: "[duration]"
+    time.idle: "[duration]"
+  level: INFO
+  span:
+    http.client_ip: ""
+    http.flavor: "1.1"
+    http.host: ""
+    http.method: GET
+    http.route: "/users/:id"
+    http.scheme: HTTP
+    http.status_code: "200"
+    http.target: /users/123
+    http.user_agent: ""
+    name: HTTP request
+    otel.kind: server
+    otel.name: "GET /users/:id"
+    otel.status_code: OK
+    trace_id: "[trace_id:lg32]"
+  spans: []
+  target: "axum_tracing_opentelemetry::middleware::trace_extractor"
+  timestamp: "[timestamp]"
 

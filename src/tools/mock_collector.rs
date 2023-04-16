@@ -8,6 +8,7 @@ use opentelemetry_proto::tonic::collector::trace::v1::{
     ExportTraceServiceRequest, ExportTraceServiceResponse,
 };
 use serde::Serialize;
+use std::collections::BTreeMap;
 use std::sync::mpsc;
 use std::{net::SocketAddr, sync::Mutex};
 use tokio_stream::wrappers::TcpListenerStream;
@@ -17,7 +18,7 @@ use tracing::debug;
 
 /// opentelemetry_proto::tonic::trace::v1::Span is no compatible with serde::Serialize
 /// and to be able to test with insta,... it's needed (Debug is not enough to be able to filter unstable value,...)
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ExportedSpan {
     pub trace_id: String,
     pub span_id: String,
@@ -27,7 +28,7 @@ pub struct ExportedSpan {
     pub kind: String, //SpanKind,
     pub start_time_unix_nano: u64,
     pub end_time_unix_nano: u64,
-    pub attributes: Vec<(String, String)>,
+    pub attributes: BTreeMap<String, String>,
     pub dropped_attributes_count: u32,
     pub events: Vec<Event>,
     pub dropped_events_count: u32,
@@ -73,12 +74,12 @@ impl From<opentelemetry_proto::tonic::trace::v1::Status> for Status {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Link {
     pub trace_id: String,
     pub span_id: String,
     pub trace_state: String,
-    pub attributes: Vec<(String, String)>,
+    pub attributes: BTreeMap<String, String>,
     pub dropped_attributes_count: u32,
 }
 
@@ -96,20 +97,20 @@ impl From<&opentelemetry_proto::tonic::trace::v1::span::Link> for Link {
 
 fn cnv_attributes(
     attributes: &[opentelemetry_proto::tonic::common::v1::KeyValue],
-) -> Vec<(String, String)> {
-    let mut v = attributes
+) -> BTreeMap<String, String> {
+    attributes
         .iter()
         .map(|kv| (kv.key.to_string(), format!("{:?}", kv.value)))
-        .collect::<Vec<(String, String)>>();
-    v.sort_by_key(|kv| kv.0.clone());
-    v
+        .collect::<BTreeMap<String, String>>()
+    // v.sort_by_key(|kv| kv.0.clone());
+    // v
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Event {
     time_unix_nano: u64,
     name: String,
-    attributes: Vec<(String, String)>,
+    attributes: BTreeMap<String, String>,
     dropped_attributes_count: u32,
 }
 

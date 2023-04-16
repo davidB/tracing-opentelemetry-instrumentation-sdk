@@ -469,24 +469,23 @@ mod tests {
     };
 
     #[rstest]
-    #[case("filled_http_route_for_existing_route", "/users/123", &[], 0, false)]
-    #[case("empty_http_route_for_nonexisting_route", "/idontexist/123", &[], 0, false)]
-    #[case("status_code_on_close_for_ok", "/users/123", &[], 1, false)]
-    #[case("status_code_on_close_for_error", "/status/500", &[], 1, false)]
-    #[case("filled_http_headers", "/users/123", &[("user-agent", "tests"), ("x-forwarded-for", "127.0.0.1")], 0, false)]
-    #[case("call_with_w3c_trace", "/users/123", &[("traceparent", "00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01")], 0, true)]
-    #[case("trace_id_in_child_span", "/with_child_span", &[], 1, false)]
-    #[case("trace_id_in_child_span_for_remote", "/with_child_span", &[("traceparent", "00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01")], 1, true)]
+    #[case("filled_http_route_for_existing_route", "/users/123", &[], false)]
+    #[case("empty_http_route_for_nonexisting_route", "/idontexist/123", &[], false)]
+    #[case("status_code_on_close_for_ok", "/users/123", &[], false)]
+    #[case("status_code_on_close_for_error", "/status/500", &[], false)]
+    #[case("filled_http_headers", "/users/123", &[("user-agent", "tests"), ("x-forwarded-for", "127.0.0.1")], false)]
+    #[case("call_with_w3c_trace", "/users/123", &[("traceparent", "00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01")], true)]
+    #[case("trace_id_in_child_span", "/with_child_span", &[], false)]
+    #[case("trace_id_in_child_span_for_remote", "/with_child_span", &[("traceparent", "00-b2611246a58fd7ea623d2264c5a1e226-b2c9b811f2f424af-01")], true)]
     // failed to extract "http.route" before axum-0.6.15
     // - https://github.com/davidB/axum-tracing-opentelemetry/pull/54 (reverted)
     // - https://github.com/tokio-rs/axum/issues/1441#issuecomment-1272158039
-    #[case("extract_route_from_nested", "/nest/123", &[], 0, false)]
+    #[case("extract_route_from_nested", "/nest/123", &[], false)]
     #[tokio::test(flavor = "multi_thread")]
     async fn check_span_event(
         #[case] name: &str,
         #[case] uri: &str,
         #[case] headers: &[(&str, &str)],
-        #[case] event_idx: usize,
         #[case] is_trace_id_constant: bool,
     ) {
         let svc = Router::new()
@@ -519,39 +518,17 @@ mod tests {
             builder = builder.header(*key, *value);
         }
         let req = builder.uri(uri).body(Body::empty()).unwrap();
-        let (events, otel_spans) = span_event_for_request(svc, req).await;
-        insta::assert_yaml_snapshot!(name, events[event_idx], {
-            ".timestamp" => "[timestamp]",
-            ".fields[\"time.busy\"]" => "[duration]",
-            ".fields[\"time.idle\"]" => "[duration]",
-            ".span.trace_id" => insta::dynamic_redaction(move |value, _path| {
-                let_assert!(Some(trace_id) = value.as_str());
-                if is_trace_id_constant {
-                    trace_id.to_string()
-                } else {
-                    format!("[trace_id:lg{}]", trace_id.len())
-                }
-            }),
-            ".spans[0].trace_id" => insta::dynamic_redaction(move |value, _path| {
-                let_assert!(Some(trace_id) = value.as_str());
-                if is_trace_id_constant {
-                    trace_id.to_string()
-                } else {
-                    format!("[trace_id:lg{}]", trace_id.len())
-                }
-            }),
-        });
-        insta::assert_debug_snapshot!(format!("{name}_otel"), otel_spans);
+        let (tracing_events, otel_spans) = span_event_for_request(svc, req).await;
+        assert_trace(name, tracing_events, otel_spans, is_trace_id_constant);
     }
 
     #[rstest]
-    #[case("grpc_status_code_on_close_for_ok", "/module.service/endpoint1", &[], 1)]
-    #[tokio::test]
+    #[case("grpc_status_code_on_close_for_ok", "/module.service/endpoint1", &[])]
+    #[tokio::test(flavor = "multi_thread")]
     async fn check_span_event_grpc(
         #[case] name: &str,
         #[case] uri: &str,
         #[case] headers: &[(&str, &str)],
-        #[case] event_idx: usize,
     ) {
         let svc = Router::new()
             .route(
@@ -571,15 +548,67 @@ mod tests {
         }
         builder = builder.method("POST");
         let req = builder.uri(uri).body(Body::empty()).unwrap();
-        let (events, _otel_spans) = span_event_for_request(svc, req).await;
-        insta::assert_yaml_snapshot!(name, events[event_idx], {
-            ".timestamp" => "[timestamp]",
-            ".fields[\"time.busy\"]" => "[duration]",
-            ".fields[\"time.idle\"]" => "[duration]",
-            ".span.trace_id" => insta::dynamic_redaction(|value, _path| {
+        let (tracing_events, otel_spans) = span_event_for_request(svc, req).await;
+        assert_trace(name, tracing_events, otel_spans, false);
+    }
+
+    fn assert_trace(
+        name: &str,
+        tracing_events: Vec<Value>,
+        otel_spans: Vec<crate::tools::mock_collector::ExportedSpan>,
+        is_trace_id_constant: bool,
+    ) {
+        insta::assert_yaml_snapshot!(name, tracing_events, {
+            "[].timestamp" => "[timestamp]",
+            "[].fields[\"time.busy\"]" => "[duration]",
+            "[].fields[\"time.idle\"]" => "[duration]",
+            "[].span.trace_id" => insta::dynamic_redaction(move |value, _path| {
                 let_assert!(Some(trace_id) = value.as_str());
+                if is_trace_id_constant {
+                    trace_id.to_string()
+                } else {
+                    format!("[trace_id:lg{}]", trace_id.len())
+                }
+            }),
+            "[].spans[0].trace_id" => insta::dynamic_redaction(move |value, _path| {
+                let_assert!(Some(trace_id) = value.as_str());
+                if is_trace_id_constant {
+                    trace_id.to_string()
+                } else {
+                    format!("[trace_id:lg{}]", trace_id.len())
+                }
+            }),
+        });
+        insta::assert_yaml_snapshot!(format!("{}_otel_spans", name), otel_spans, {
+            "[].start_time_unix_nano" => "[timestamp]",
+            "[].end_time_unix_nano" => "[timestamp]",
+            "[].events[].time_unix_nano" => "[timestamp]",
+            "[].trace_id" => insta::dynamic_redaction(|value, _path| {
+                assert2::let_assert!(Some(trace_id) = value.as_str());
                 format!("[trace_id:lg{}]", trace_id.len())
             }),
+            "[].span_id" => insta::dynamic_redaction(|value, _path| {
+                assert2::let_assert!(Some(span_id) = value.as_str());
+                format!("[span_id:lg{}]", span_id.len())
+            }),
+            "[].parent_span_id" => insta::dynamic_redaction(|value, _path| {
+                assert2::let_assert!(Some(span_id) = value.as_str());
+                format!("[span_id:lg{}]", span_id.len())
+            }),
+            "[].links[].trace_id" => insta::dynamic_redaction(|value, _path| {
+                assert2::let_assert!(Some(trace_id) = value.as_str());
+                format!("[trace_id:lg{}]", trace_id.len())
+            }),
+            "[].links[].span_id" => insta::dynamic_redaction(|value, _path| {
+                assert2::let_assert!(Some(span_id) = value.as_str());
+                format!("[span_id:lg{}]", span_id.len())
+            }),
+            "[].attributes.busy_ns" => "ignore",
+            "[].attributes.idle_ns" => "ignore",
+            "[].attributes.trace_id" => "ignore",
+            "[].attributes[\"code.lineno\"]" => "ignore",
+            "[].attributes[\"code.filepath\"]" => "ignore",
+            "[].attributes[\"thread.id\"]" => "ignore",
         });
     }
 
@@ -592,7 +621,11 @@ mod tests {
         use tracing_subscriber::layer::SubscriberExt;
 
         // setup a non Noop OpenTelemetry tracer to have non-empty trace_id
-        let (tracer, mut req_rx) = crate::tools::mock_collector::setup_tracer().await;
+        let mock_collector = crate::tools::mock_collector::MockCollectorServer::start()
+            .await
+            .unwrap();
+        let tracer = crate::tools::mock_collector::setup_tracer(&mock_collector).await;
+        //let (tracer, mut req_rx) = crate::tools::mock_collector::setup_tracer().await;
         opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
@@ -615,7 +648,7 @@ mod tests {
 
         opentelemetry_api::global::shutdown_tracer_provider();
 
-        let otel_span = std::iter::from_fn(|| req_rx.try_recv().ok()).collect::<Vec<_>>();
+        let otel_span = mock_collector.exported_spans();
         // insta::assert_debug_snapshot!(first_span);
         let tracing_events = std::iter::from_fn(|| rx.try_recv().ok())
             .map(|bytes| serde_json::from_slice::<Value>(&bytes).unwrap())
