@@ -47,5 +47,5 @@ jobs:
           tool: cargo-hack,protoc
       - run: cargo hack check --each-feature --no-dev-deps
       - run: cargo clippy --workspace --all-features --all-targets -- --deny warnings --allow deprecated
-      - run: cargo hack test --each-feature
+      - run: cargo hack test --each-feature -- --test-threads=1
       - run: cd examples; cargo check
