@@ -1,0 +1,26 @@
+---
+source: src/tools/mock_collector.rs
+expression: otel_spans
+---
+- trace_id: "[trace_id:lg32]"
+  span_id: "[span_id:lg16]"
+  trace_state: ""
+  parent_span_id: ""
+  name: my-test-span
+  kind: SPAN_KIND_SERVER
+  start_time_unix_nano: "[timestamp]"
+  end_time_unix_nano: "[timestamp]"
+  attributes: []
+  dropped_attributes_count: 0
+  events:
+    - time_unix_nano: "[timestamp]"
+      name: my-test-event
+      attributes: []
+      dropped_attributes_count: 0
+  dropped_events_count: 0
+  links: []
+  dropped_links_count: 0
+  status:
+    message: ""
+    code: STATUS_CODE_UNSET
+
