@@ -213,13 +213,15 @@ impl MockCollectorServer {
 }
 
 pub async fn setup_tracer(mock_server: &MockCollectorServer) -> opentelemetry::sdk::trace::Tracer {
-    std::env::set_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", mock_server.endpoint());
+    use opentelemetry_otlp::WithExportConfig;
+    // if the environment variable is set (in test or in caller), `with_endpoint` value is ignored
+    std::env::remove_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
     opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
-            opentelemetry_otlp::new_exporter().tonic(),
-            // if the environment variable is set (in test or in caller), this value is ignored
-            // .with_endpoint(mock_server.endpoint()),
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint(mock_server.endpoint()),
         )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
         .expect("failed to install")
