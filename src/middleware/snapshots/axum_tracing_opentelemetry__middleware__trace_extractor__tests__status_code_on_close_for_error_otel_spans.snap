@@ -31,12 +31,7 @@ expression: otel_spans
   dropped_attributes_count: 0
   events: []
   dropped_events_count: 0
-  links:
-    - trace_id: "[trace_id:lg32]"
-      span_id: "[span_id:lg16]"
-      trace_state: ""
-      attributes: {}
-      dropped_attributes_count: 0
+  links: []
   dropped_links_count: 0
   status:
     message: ""
