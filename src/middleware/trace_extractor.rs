@@ -8,7 +8,7 @@ use axum::{
     response::Response,
 };
 use http::{header, uri::Scheme, HeaderMap, Method, Request, Version};
-use opentelemetry::trace::{TraceContextExt, TraceId};
+use opentelemetry::trace::{FutureExt, TraceContextExt, TraceId};
 use std::{borrow::Cow, net::SocketAddr, time::Duration};
 use tower_http::{
     classify::{
@@ -18,7 +18,6 @@ use tower_http::{
     trace::{MakeSpan, OnBodyChunk, OnEos, OnFailure, OnRequest, OnResponse, TraceLayer},
 };
 use tracing::{field::Empty, Span};
-use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 /// OpenTelemetry tracing middleware.
 ///
@@ -189,7 +188,8 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
     }
 }
 
-// HACK based on tracing-opentelemetry to be able to attach trace_id, span_id without being a parent context
+// HACK duplicate tracing-opentelemetry to be able to attach trace_id, span_id without being a parent context
+#[allow(dead_code, clippy::type_complexity)]
 pub(crate) struct WithContext(
     fn(
         &tracing::Dispatch,
@@ -201,6 +201,7 @@ pub(crate) struct WithContext(
     ),
 );
 
+#[allow(dead_code)]
 impl WithContext {
     // This function allows a function to be called in the context of the
     // "remembered" subscriber.
@@ -217,6 +218,7 @@ impl WithContext {
     }
 }
 
+#[allow(dead_code)]
 fn with_span_context(tspan: &tracing::Span, cx: opentelemetry::trace::SpanContext) {
     //tspan.context().with_span(span)
     if cx.is_valid() {
@@ -390,7 +392,8 @@ fn create_context_with_trace(remote_context: opentelemetry::Context) -> (TraceId
         use opentelemetry::sdk::trace::IdGenerator;
         use opentelemetry::sdk::trace::RandomIdGenerator;
         use opentelemetry::trace::SpanContext;
-        let trace_id = RandomIdGenerator::default().new_trace_id();
+        //let trace_id = RandomIdGenerator::default().new_trace_id();
+        let trace_id = TraceId::from_bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0]);
         let span_id = RandomIdGenerator::default().new_span_id();
         let new_span_context = SpanContext::new(
             trace_id,
@@ -626,21 +629,21 @@ mod tests {
             "[].fields[\"time.busy\"]" => "[duration]",
             "[].fields[\"time.idle\"]" => "[duration]",
             "[].span.trace_id" => insta::dynamic_redaction(move |value, _path| {
-                let_assert!(Some(trace_id) = value.as_str());
-                check!(trace_id_1 == trace_id);
+                let_assert!(Some(tracing_trace_id) = value.as_str());
+                check!(trace_id_1 == tracing_trace_id);
                 if is_trace_id_constant {
-                    trace_id.to_string()
+                    tracing_trace_id.to_string()
                 } else {
-                    format!("[trace_id:lg{}]", trace_id.len())
+                    format!("[trace_id:lg{}]", tracing_trace_id.len())
                 }
             }),
             "[].spans[].trace_id" => insta::dynamic_redaction(move |value, _path| {
-                let_assert!(Some(trace_id) = value.as_str());
-                check!(trace_id_2 == trace_id);
+                let_assert!(Some(tracing_trace_id) = value.as_str());
+                check!(trace_id_2 == tracing_trace_id);
                 if is_trace_id_constant {
-                    trace_id.to_string()
+                    tracing_trace_id.to_string()
                 } else {
-                    format!("[trace_id:lg{}]", trace_id.len())
+                    format!("[trace_id:lg{}]", tracing_trace_id.len())
                 }
             }),
         });
@@ -649,9 +652,9 @@ mod tests {
             "[].end_time_unix_nano" => "[timestamp]",
             "[].events[].time_unix_nano" => "[timestamp]",
             "[].trace_id" => insta::dynamic_redaction(move |value, _path| {
-                assert2::let_assert!(Some(trace_id) = value.as_str());
-                // check!(trace_id_3 == trace_id);
-                format!("[trace_id:lg{}]", trace_id.len())
+                assert2::let_assert!(Some(otel_trace_id) = value.as_str());
+                check!(trace_id_3 == otel_trace_id);
+                format!("[trace_id:lg{}]", otel_trace_id.len())
             }),
             "[].span_id" => insta::dynamic_redaction(|value, _path| {
                 assert2::let_assert!(Some(span_id) = value.as_str());
@@ -662,8 +665,8 @@ mod tests {
                 format!("[span_id:lg{}]", span_id.len())
             }),
             "[].links[].trace_id" => insta::dynamic_redaction(|value, _path| {
-                assert2::let_assert!(Some(trace_id) = value.as_str());
-                format!("[trace_id:lg{}]", trace_id.len())
+                assert2::let_assert!(Some(otel_trace_id) = value.as_str());
+                format!("[trace_id:lg{}]", otel_trace_id.len())
             }),
             "[].links[].span_id" => insta::dynamic_redaction(|value, _path| {
                 assert2::let_assert!(Some(span_id) = value.as_str());
