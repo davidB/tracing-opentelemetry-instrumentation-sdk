@@ -10,13 +10,13 @@ expression: tracing_events
     http.flavor: "1.1"
     http.host: ""
     http.method: GET
-    http.route: /*__private__axum_fallback
+    http.route: ""
     http.scheme: HTTP
     http.target: /idontexist/123
     http.user_agent: ""
     name: HTTP request
     otel.kind: server
-    otel.name: GET /*__private__axum_fallback
+    otel.name: GET
     trace_id: "[trace_id:lg32]"
   spans: []
   target: "axum_tracing_opentelemetry::middleware::trace_extractor"
@@ -31,14 +31,14 @@ expression: tracing_events
     http.flavor: "1.1"
     http.host: ""
     http.method: GET
-    http.route: /*__private__axum_fallback
+    http.route: ""
     http.scheme: HTTP
     http.status_code: "404"
     http.target: /idontexist/123
     http.user_agent: ""
     name: HTTP request
     otel.kind: server
-    otel.name: GET /*__private__axum_fallback
+    otel.name: GET
     otel.status_code: OK
     trace_id: "[trace_id:lg32]"
   spans: []
