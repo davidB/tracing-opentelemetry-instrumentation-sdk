@@ -18,6 +18,7 @@ use tower_http::{
     trace::{MakeSpan, OnBodyChunk, OnEos, OnFailure, OnRequest, OnResponse, TraceLayer},
 };
 use tracing::{field::Empty, Span};
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 /// OpenTelemetry tracing middleware.
 ///
@@ -156,8 +157,8 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             .unwrap_or_default();
         let http_method_v = http_method(req.method());
         let name = format!("{http_method_v} {http_route}").trim().to_string();
-        let (trace_id, otel_context) =
-            create_context_with_trace(extract_remote_context(req.headers()));
+        let remote_context = extract_remote_context(req.headers());
+        let (trace_id, otel_context) = create_context_with_trace(remote_context.clone());
         let span = tracing::info_span!(
             "HTTP request",
             otel.name= %name,
@@ -178,11 +179,61 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             OtelContext::Remote(cx) => {
                 tracing_opentelemetry::OpenTelemetrySpanExt::set_parent(&span, cx)
             }
+            // OtelContext::Local(cx) => with_span_context(&span, cx),
             OtelContext::Local(cx) => {
-                tracing_opentelemetry::OpenTelemetrySpanExt::add_link(&span, cx)
+                remote_context.with_remote_span_context(cx);
+                tracing_opentelemetry::OpenTelemetrySpanExt::set_parent(&span, remote_context)
             }
         }
         span
+    }
+}
+
+// HACK based on tracing-opentelemetry to be able to attach trace_id, span_id without being a parent context
+pub(crate) struct WithContext(
+    fn(
+        &tracing::Dispatch,
+        &tracing::span::Id,
+        f: &mut dyn FnMut(
+            &mut tracing_opentelemetry::OtelData,
+            &dyn tracing_opentelemetry::PreSampledTracer,
+        ),
+    ),
+);
+
+impl WithContext {
+    // This function allows a function to be called in the context of the
+    // "remembered" subscriber.
+    pub(crate) fn with_context(
+        &self,
+        dispatch: &tracing::Dispatch,
+        id: &tracing::span::Id,
+        mut f: impl FnMut(
+            &mut tracing_opentelemetry::OtelData,
+            &dyn tracing_opentelemetry::PreSampledTracer,
+        ),
+    ) {
+        (self.0)(dispatch, id, &mut f)
+    }
+}
+
+fn with_span_context(tspan: &tracing::Span, cx: opentelemetry::trace::SpanContext) {
+    //tspan.context().with_span(span)
+    if cx.is_valid() {
+        let mut cx = Some(cx);
+        tspan.with_subscriber(move |(id, subscriber)| {
+            if let Some(get_context) = subscriber.downcast_ref::<WithContext>() {
+                get_context.with_context(subscriber, id, move |data, _tracer| {
+                    if let Some(cx) = cx.take() {
+                        data.builder = data
+                            .builder
+                            .clone()
+                            .with_span_id(cx.span_id())
+                            .with_trace_id(cx.trace_id());
+                    }
+                });
+            }
+        });
     }
 }
 
@@ -558,20 +609,34 @@ mod tests {
         otel_spans: Vec<crate::tools::mock_collector::ExportedSpan>,
         is_trace_id_constant: bool,
     ) {
+        let trace_id_0 = tracing_events
+            .get(0)
+            .and_then(|v| v.as_object())
+            .and_then(|v| v.get("span"))
+            .and_then(|v| v.as_object())
+            .and_then(|v| v.get("trace_id"))
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_owned();
+        let trace_id_1 = trace_id_0.clone();
+        let trace_id_2 = trace_id_0.clone();
+        let trace_id_3 = trace_id_0;
         insta::assert_yaml_snapshot!(name, tracing_events, {
             "[].timestamp" => "[timestamp]",
             "[].fields[\"time.busy\"]" => "[duration]",
             "[].fields[\"time.idle\"]" => "[duration]",
             "[].span.trace_id" => insta::dynamic_redaction(move |value, _path| {
                 let_assert!(Some(trace_id) = value.as_str());
+                check!(trace_id_1 == trace_id);
                 if is_trace_id_constant {
                     trace_id.to_string()
                 } else {
                     format!("[trace_id:lg{}]", trace_id.len())
                 }
             }),
-            "[].spans[0].trace_id" => insta::dynamic_redaction(move |value, _path| {
+            "[].spans[].trace_id" => insta::dynamic_redaction(move |value, _path| {
                 let_assert!(Some(trace_id) = value.as_str());
+                check!(trace_id_2 == trace_id);
                 if is_trace_id_constant {
                     trace_id.to_string()
                 } else {
@@ -583,8 +648,9 @@ mod tests {
             "[].start_time_unix_nano" => "[timestamp]",
             "[].end_time_unix_nano" => "[timestamp]",
             "[].events[].time_unix_nano" => "[timestamp]",
-            "[].trace_id" => insta::dynamic_redaction(|value, _path| {
+            "[].trace_id" => insta::dynamic_redaction(move |value, _path| {
                 assert2::let_assert!(Some(trace_id) = value.as_str());
+                // check!(trace_id_3 == trace_id);
                 format!("[trace_id:lg{}]", trace_id.len())
             }),
             "[].span_id" => insta::dynamic_redaction(|value, _path| {
