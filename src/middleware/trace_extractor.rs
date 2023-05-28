@@ -9,7 +9,8 @@ use axum::{
 };
 use http::{header, uri::Scheme, HeaderMap, Method, Request, Version};
 use opentelemetry::trace::{TraceContextExt, TraceId};
-use std::{borrow::Cow, net::SocketAddr, time::Duration};
+use std::{borrow::Cow, fmt, net::SocketAddr, time::Duration};
+use std::fmt::{Debug, Formatter};
 use tower_http::{
     classify::{
         GrpcErrorsAsFailures, GrpcFailureClass, ServerErrorsAsFailures, ServerErrorsFailureClass,
@@ -71,7 +72,7 @@ use tracing::{field::Empty, Span};
 ///
 /// [otel]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md
 /// [`Router::into_make_service_with_connect_info`]: axum::Router::into_make_service_with_connect_info
-pub fn opentelemetry_tracing_layer() -> TraceLayer<
+pub fn opentelemetry_tracing_layer(skipper: PathSkipper) -> TraceLayer<
     SharedClassifier<ServerErrorsAsFailures>,
     OtelMakeSpan,
     OtelOnRequest,
@@ -81,7 +82,7 @@ pub fn opentelemetry_tracing_layer() -> TraceLayer<
     OtelOnFailure,
 > {
     TraceLayer::new_for_http()
-        .make_span_with(OtelMakeSpan)
+        .make_span_with(OtelMakeSpan{skipper})
         .on_request(OtelOnRequest)
         .on_response(OtelOnResponse)
         .on_body_chunk(OtelOnBodyChunk)
@@ -112,7 +113,9 @@ pub fn opentelemetry_tracing_layer_grpc() -> TraceLayer<
 ///
 /// [otel]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md
 #[derive(Clone, Copy, Debug)]
-pub struct OtelMakeSpan;
+pub struct OtelMakeSpan{
+    skipper: PathSkipper,
+}
 
 impl<B> MakeSpan<B> for OtelMakeSpan {
     fn make_span(&mut self, req: &Request<B>) -> Span {
@@ -136,6 +139,10 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             .get::<MatchedPath>()
             .map_or_else(|| "", |mp| mp.as_str())
             .to_owned();
+
+        if (self.skipper.skip)(http_route.as_str()) {
+            return Span::none();
+        }
 
         let uri = if let Some(uri) = req.extensions().get::<OriginalUri>() {
             uri.0.clone()
@@ -444,6 +451,34 @@ impl OnFailure<GrpcFailureClass> for OtelOnGrpcFailure {
                 span.record("http.grpc_status", 1);
             }
         }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct PathSkipper {
+    skip: fn(&str) -> bool,
+}
+
+impl PathSkipper {
+    pub fn new(skip: fn(&str) -> bool) -> Self {
+        Self { skip }
+    }
+}
+
+impl Default for PathSkipper {
+    fn default() -> Self {
+        Self {
+            skip: |s| {
+                s.starts_with("/metrics")
+                || s.starts_with("/healthz")
+            },
+        }
+    }
+}
+
+impl Debug for PathSkipper {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PathSkipper").finish()
     }
 }
 
