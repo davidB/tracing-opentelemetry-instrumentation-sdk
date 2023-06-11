@@ -4,7 +4,7 @@ A set of rust crates to help working with tracing + opentelemetry
 
 - `init-tracing-opentelemetry`: A set of helpers to initialize (and more) tracing + opentelemetry (compose your own or use opinionated preset)
 - `axum-tracing-opentelemetry`: Middlewares and tools to integrate axum + tracing + opentelemetry.
-- `fake-opentelemetry-collector`
+- `fake-opentelemetry-collector`: A Fake (basic) opentelemetry collector, useful to test what is collected opentelemetry
 
 ## For local dev / demo
 
