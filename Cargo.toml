@@ -1,9 +1,19 @@
 [workspace]
 
-members = ["init-tracing-opentelemetry", "axum-tracing-opentelemetry"]
+members = [
+  "init-tracing-opentelemetry",
+  "fake-opentelemetry-collector",
+  "axum-tracing-opentelemetry",
+]
 
 [workspace.metadata.release]
 pre-release-commit-message = ":rocket: (cargo-release) version {{version}}"
 tag-prefix = ""
 tag-name = "{{prefix}}{{version}}"
 tag-message = ":bookmark: {{version}}"
+
+[profile.dev.package.insta]
+opt-level = 3
+
+[profile.dev.package.similar]
+opt-level = 3

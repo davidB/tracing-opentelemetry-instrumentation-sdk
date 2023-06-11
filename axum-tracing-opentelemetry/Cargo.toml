@@ -81,9 +81,3 @@ tracer = ["dep:opentelemetry-semantic-conventions"]
 xray = ["dep:opentelemetry-aws"]
 zipkin = ["dep:opentelemetry-zipkin"]
 tracing_subscriber_ext = ["dep:tracing-subscriber", "otlp"]
-
-[profile.dev.package.insta]
-opt-level = 3
-
-[profile.dev.package.similar]
-opt-level = 3
