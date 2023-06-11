@@ -19,23 +19,23 @@ axum = "0.6"
 # axum-core = "0.3"
 futures = "0.3"
 http = "0.2"
-opentelemetry = { version = "0.18", features = [
+opentelemetry = { version = "0.19", features = [
   "rt-tokio",
   "trace",
 ], default-features = false }
-opentelemetry-aws = { version = "0.6", optional = true }
-opentelemetry-jaeger = { version = "0.17", features = [
+opentelemetry-aws = { version = "0.7", optional = true }
+opentelemetry-jaeger = { version = "0.18", features = [
   "rt-tokio",
 ], optional = true }
-opentelemetry-otlp = { version = "0.11", optional = true, features = [
+opentelemetry-otlp = { version = "0.12", optional = true, features = [
   "http-proto",
 ] }
-opentelemetry-semantic-conventions = { version = "0.10", optional = true }
-opentelemetry-zipkin = { version = "0.16", features = [], optional = true }
+opentelemetry-semantic-conventions = { version = "0.11", optional = true }
+opentelemetry-zipkin = { version = "0.17", features = [], optional = true }
 tower = "0.4"
 tower-http = { version = "0.4", features = ["trace"] }
 tracing = "0.1"
-tracing-opentelemetry = "0.18"
+tracing-opentelemetry = "0.19"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "ansi",
   "env-filter",
@@ -47,12 +47,12 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 assert2 = "0.3"
 hyper = "0.14"
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }
-opentelemetry-otlp = { version = "0.11", features = [
+opentelemetry-otlp = { version = "0.12", features = [
   "http-proto",
   "reqwest-client",
   "reqwest-rustls",
 ] }
-opentelemetry_api = "0.18"
+opentelemetry_api = "0.19"
 opentelemetry-proto = { version = "0.2", features = ["gen-tonic", "traces"] }
 rstest = "0.17"
 serde = { version = "1.0.136", features = ["derive"] }
@@ -70,7 +70,7 @@ opentelemetry_sdk = { features = [
   "trace",
   "rt-tokio",
   "testing",
-], version = "0.18" }
+], version = "0.19" }
 time = { version = "0.3", features = ["macros"] }
 hex = "0.4"
 
