@@ -161,11 +161,15 @@ fn propagator_from_string(
 ///
 /// ```
 pub fn find_current_trace_id() -> Option<String> {
+    find_trace_id(&tracing::Span::current())
+}
+
+pub fn find_trace_id(span: &tracing::Span) -> Option<String> {
     use opentelemetry::trace::TraceContextExt;
     use tracing_opentelemetry::OpenTelemetrySpanExt;
     // let context = opentelemetry::Context::current();
     // OpenTelemetry Context is propagation inside code is done via tracing crate
-    let context = tracing::Span::current().context();
+    let context = span.context();
     let span = context.span();
     let span_context = span.span_context();
     span_context

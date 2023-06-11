@@ -15,7 +15,10 @@ axum = "0.6"
 # axum-core = "0.3"
 futures = "0.3"
 http = "0.2"
-opentelemetry = { version = "0.18", features = ["rt-tokio"] }
+opentelemetry = { version = "0.18", features = [
+  "rt-tokio",
+  "trace",
+], default-features = false }
 opentelemetry-aws = { version = "0.6", optional = true }
 opentelemetry-jaeger = { version = "0.17", features = [
   "rt-tokio",
