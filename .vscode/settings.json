@@ -1,4 +1,7 @@
 {
   "cSpell.words": ["opentelemetry", "OTEL", "OTLP", "sdktrace", "semcov"],
-  "rust-analyzer.linkedProjects": ["./Cargo.toml"]
+  "rust-analyzer.linkedProjects": [
+    "./Cargo.toml",
+    "./axum-tracing-opentelemetry/Cargo.toml"
+  ]
 }
