@@ -44,7 +44,6 @@ rstest = "0.17"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 tokio = { version = "1.27", features = ["full"] }
-tonic = "0.8"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "env-filter",
   "fmt",
@@ -57,5 +56,3 @@ opentelemetry_sdk = { features = [
   "rt-tokio",
   "testing",
 ], version = "0.19" }
-time = { version = "0.3", features = ["macros"] }
-hex = "0.4"
