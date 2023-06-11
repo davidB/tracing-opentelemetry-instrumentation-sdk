@@ -7,7 +7,7 @@ use std::net::SocketAddr;
 #[tokio::main]
 async fn main() -> Result<(), BoxError> {
     // very opinionated init of tracing, look as is source to make your own
-    axum_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+    init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
 
     let app = app();
     // run it

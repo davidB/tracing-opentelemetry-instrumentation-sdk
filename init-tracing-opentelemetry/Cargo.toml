@@ -1,6 +1,6 @@
 [package]
 name = "init-tracing-opentelemetry"
-description = "Tools to initialize tracing + opentelemetry"
+description = "A set of helpers to initialize (and more) tracing + opentelemetry (compose your own or use opinionated preset)"
 version = "0.11.0"
 edition = "2021"
 readme = "README.md"

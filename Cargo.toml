@@ -1,5 +1,7 @@
 [workspace]
 
+members = ["init-tracing-opentelemetry", "axum-tracing-opentelemetry"]
+
 [workspace.metadata.release]
 pre-release-commit-message = ":rocket: (cargo-release) version {{version}}"
 tag-prefix = ""
