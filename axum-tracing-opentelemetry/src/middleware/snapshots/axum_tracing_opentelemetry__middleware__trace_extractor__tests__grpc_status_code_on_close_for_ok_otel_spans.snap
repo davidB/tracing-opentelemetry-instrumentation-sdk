@@ -1,5 +1,5 @@
 ---
-source: src/middleware/trace_extractor.rs
+source: axum-tracing-opentelemetry/src/middleware/trace_extractor.rs
 expression: otel_spans
 ---
 - trace_id: "[trace_id:lg32]"

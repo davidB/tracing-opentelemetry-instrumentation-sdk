@@ -43,14 +43,14 @@ async fn health() -> impl IntoResponse {
 }
 
 async fn index() -> impl IntoResponse {
-    let trace_id = axum_tracing_opentelemetry::find_current_trace_id();
+    let trace_id = init_tracing_opentelemetry::find_current_trace_id();
     axum::Json(json!({ "my_trace_id": trace_id }))
 }
 
 async fn proxy_handler(Path((service, path)): Path<(String, String)>) -> impl IntoResponse {
     // Overwrite the otel.name of the span
     tracing::Span::current().record("otel.name", format!("proxy {service}"));
-    let trace_id = axum_tracing_opentelemetry::find_current_trace_id();
+    let trace_id = init_tracing_opentelemetry::find_current_trace_id();
     axum::Json(
         json!({ "my_trace_id": trace_id, "fake_proxy": { "service": service, "path": path } }),
     )

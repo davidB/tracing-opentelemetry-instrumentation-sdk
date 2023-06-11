@@ -155,7 +155,7 @@ fn propagator_from_string(
 /// This function can be used to report the trace id into the error message send back to user.
 ///
 /// ```rust
-/// let trace_id = axum_tracing_opentelemetry::find_current_trace_id();
+/// let trace_id = init_tracing_opentelemetry::find_current_trace_id();
 /// // json!({ "error" :  "xxxxxx", "trace_id": trace_id})
 ///
 /// ```

@@ -23,27 +23,13 @@ opentelemetry = { version = "0.19", features = [
   "rt-tokio",
   "trace",
 ], default-features = false }
-opentelemetry-aws = { version = "0.7", optional = true }
-opentelemetry-jaeger = { version = "0.18", features = [
-  "rt-tokio",
-], optional = true }
-opentelemetry-otlp = { version = "0.12", optional = true, features = [
-  "http-proto",
-] }
-opentelemetry-semantic-conventions = { version = "0.11", optional = true }
-opentelemetry-zipkin = { version = "0.17", features = [], optional = true }
 tower = "0.4"
 tower-http = { version = "0.4", features = ["trace"] }
 tracing = "0.1"
 tracing-opentelemetry = "0.19"
-tracing-subscriber = { version = "0.3", default-features = false, features = [
-  "ansi",
-  "env-filter",
-  "fmt",
-  "json",
-], optional = true }
 
 [dev-dependencies]
+fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
 assert2 = "0.3"
 hyper = "0.14"
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }
@@ -73,11 +59,3 @@ opentelemetry_sdk = { features = [
 ], version = "0.19" }
 time = { version = "0.3", features = ["macros"] }
 hex = "0.4"
-
-[features]
-jaeger = ["dep:opentelemetry-jaeger", "tracer"]
-otlp = ["dep:opentelemetry-otlp", "tracer"]
-tracer = ["dep:opentelemetry-semantic-conventions"]
-xray = ["dep:opentelemetry-aws"]
-zipkin = ["dep:opentelemetry-zipkin"]
-tracing_subscriber_ext = ["dep:tracing-subscriber", "otlp"]

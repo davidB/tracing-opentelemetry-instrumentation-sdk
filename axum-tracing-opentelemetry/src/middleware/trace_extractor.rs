@@ -609,7 +609,7 @@ mod tests {
     fn assert_trace(
         name: &str,
         tracing_events: Vec<Value>,
-        otel_spans: Vec<crate::tools::mock_collector::ExportedSpan>,
+        otel_spans: Vec<fake_opentelemetry_collector::ExportedSpan>,
         is_trace_id_constant: bool,
     ) {
         let trace_id_0 = tracing_events
@@ -684,17 +684,17 @@ mod tests {
     async fn span_event_for_request(
         mut router: Router,
         req: Request<Body>,
-    ) -> (Vec<Value>, Vec<crate::tools::mock_collector::ExportedSpan>) {
+    ) -> (Vec<Value>, Vec<fake_opentelemetry_collector::ExportedSpan>) {
         use axum::body::HttpBody as _;
         use tower::{Service, ServiceExt};
         use tracing_subscriber::layer::SubscriberExt;
 
         // setup a non Noop OpenTelemetry tracer to have non-empty trace_id
-        let mock_collector = crate::tools::mock_collector::MockCollectorServer::start()
+        let fake_collector = fake_opentelemetry_collector::FakeCollectorServer::start()
             .await
             .unwrap();
-        let tracer = crate::tools::mock_collector::setup_tracer(&mock_collector).await;
-        //let (tracer, mut req_rx) = crate::tools::mock_collector::setup_tracer().await;
+        let tracer = fake_opentelemetry_collector::setup_tracer(&fake_collector).await;
+        //let (tracer, mut req_rx) = fake_opentelemetry_collector::setup_tracer().await;
         opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
@@ -717,7 +717,7 @@ mod tests {
 
         opentelemetry_api::global::shutdown_tracer_provider();
 
-        let otel_span = mock_collector.exported_spans();
+        let otel_span = fake_collector.exported_spans();
         // insta::assert_debug_snapshot!(first_span);
         let tracing_events = std::iter::from_fn(|| rx.try_recv().ok())
             .map(|bytes| serde_json::from_slice::<Value>(&bytes).unwrap())
