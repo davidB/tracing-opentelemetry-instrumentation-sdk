@@ -2,9 +2,12 @@
 
 members = [
   "axum-tracing-opentelemetry",
+  "examples/*",
   "fake-opentelemetry-collector",
   "init-tracing-opentelemetry",
 ]
+
+exclude = ["target"]
 
 [workspace.metadata.release]
 pre-release-commit-message = "🚀 (cargo-release) version {{version}}"

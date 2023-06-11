@@ -5,7 +5,8 @@ edition = "2021"
 publish = false
 
 [dependencies]
-axum-tracing-opentelemetry = { path = "../../axum-tracing-opentelemetry", features = [
+axum-tracing-opentelemetry = { path = "../../axum-tracing-opentelemetry" }
+init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", features = [
   "otlp",
   "tracing_subscriber_ext",
 ] }
@@ -15,13 +16,14 @@ tonic = { version = "0.8.2", features = [
   "channel",
   "codegen",
 ], default-features = false }
+prost = "0.11.2"
 
 [build-dependencies]
 tonic-build = { version = "0.8.2", default-features = false, features = [
   "transport",
   "prost",
 ] }
-prost = "0.11.2"
+
 
 [[bin]]
 name = "server"

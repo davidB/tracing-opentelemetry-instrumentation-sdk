@@ -28,7 +28,7 @@ impl Greeter for MyGreeter {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // very opinionated init of tracing, look as is source to make your own
-    axum_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()
+    init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()
         .expect("init subscribers");
 
     let addr = "[::1]:50051".parse().unwrap();
