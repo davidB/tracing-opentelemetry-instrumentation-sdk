@@ -6,9 +6,13 @@ edition = "2021"
 readme = "README.md"
 license = "CC0-1.0"
 keywords = ["axum", "tracing", "opentelemetry"]
-categories = ["web-programming"]
-repository = "https://github.com/davidB/axum-tracing-opentelemetry"
-homepage = "https://github.com/davidB/axum-tracing-opentelemetry"
+categories = [
+  "development-tools::debugging",
+  "development-tools::profiling",
+  "web-programming",
+]
+repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
+homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/axum-tracing-opentelemetry"
 
 [dependencies]
 axum = "0.6"
