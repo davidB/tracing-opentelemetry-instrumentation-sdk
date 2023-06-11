@@ -5,30 +5,9 @@ use opentelemetry::sdk::{
 use opentelemetry_semantic_conventions as semcov;
 use std::time::Duration;
 
-/// call with service name and version
-///
-/// ```rust
-/// use axum_tracing_opentelemetry::make_resource;
-/// # fn main() {
-/// let r = make_resource(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-/// # }
-///
-/// ```
-#[deprecated(since = "0.9.0", note = "replace by `DetectResource` builder")]
-pub fn make_resource<S1, S2>(service_name: S1, service_version: S2) -> Resource
-where
-    S1: Into<String>,
-    S2: Into<String>,
-{
-    Resource::new(vec![
-        semcov::resource::SERVICE_NAME.string(service_name.into()),
-        semcov::resource::SERVICE_VERSION.string(service_version.into()),
-    ])
-}
-
 /// To log detected value set environement variable RUST_LOG="...,otel::setup::resource=debug"
 /// ```rust
-/// use axum_tracing_opentelemetry::resource::DetectResource;
+/// use init_tracing_opentelemetry::resource::DetectResource;
 /// # fn main() {
 /// let otel_rsrc = DetectResource::default()
 ///     .with_fallback_service_name(env!("CARGO_PKG_NAME"))
