@@ -1,10 +1,13 @@
-use axum_tracing_opentelemetry::opentelemetry_tracing_layer_grpc;
 use hello_world::greeter_server::{Greeter, GreeterServer};
 use hello_world::{HelloReply, HelloRequest};
 use tonic::{transport::Server, Request, Response, Status};
+use tonic_tracing_opentelemetry::opentelemetry_tracing_layer_server;
 
 pub mod hello_world {
     tonic::include_proto!("helloworld");
+
+    pub(crate) const FILE_DESCRIPTOR_SET: &[u8] =
+        tonic::include_file_descriptor_set!("helloworld_descriptor");
 }
 
 #[derive(Default)]
@@ -34,10 +37,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:50051".parse().unwrap();
     let greeter = MyGreeter::default();
 
+    let (_, health_service) = tonic_health::server::health_reporter();
+    let reflection_service = tonic_reflection::server::Builder::configure()
+        .register_encoded_file_descriptor_set(hello_world::FILE_DESCRIPTOR_SET)
+        .build()?;
+
     println!("GreeterServer listening on {}", addr);
 
     Server::builder()
-        .layer(opentelemetry_tracing_layer_grpc())
+        // FIXME: trace for everything except health_service, metrics, refelection
+        .layer(opentelemetry_tracing_layer_server())
+        .add_service(health_service)
+        .add_service(reflection_service)
         .add_service(GreeterServer::new(greeter))
         .serve(addr)
         .await?;

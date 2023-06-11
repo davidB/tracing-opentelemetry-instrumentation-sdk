@@ -5,6 +5,7 @@ members = [
   "examples/*",
   "fake-opentelemetry-collector",
   "init-tracing-opentelemetry",
+  "tonic-tracing-opentelemetry",
 ]
 
 exclude = ["target"]

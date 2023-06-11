@@ -5,21 +5,23 @@ edition = "2021"
 publish = false
 
 [dependencies]
-axum-tracing-opentelemetry = { path = "../../axum-tracing-opentelemetry" }
 init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", features = [
   "otlp",
   "tracing_subscriber_ext",
 ] }
+prost = "0.11.2"
 tokio = { version = "1.0", features = ["full"] }
-tonic = { version = "0.8.2", features = [
+tonic = { version = "0.9", features = [
   "transport",
   "channel",
   "codegen",
 ], default-features = false }
-prost = "0.11.2"
+tonic-health = "0.9"
+tonic-reflection = "0.9"
+tonic-tracing-opentelemetry = { path = "../../tonic-tracing-opentelemetry" }
 
 [build-dependencies]
-tonic-build = { version = "0.8.2", default-features = false, features = [
+tonic-build = { version = "0.9", default-features = false, features = [
   "transport",
   "prost",
 ] }
