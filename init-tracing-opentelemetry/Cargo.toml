@@ -1,24 +1,17 @@
 [package]
-name = "axum-tracing-opentelemetry"
-description = "Middlewares and tools to integrate axum + tracing + opentelemetry"
+name = "init-tracing-opentelemetry"
+description = "Tools to initialize tracing + opentelemetry"
 version = "0.11.0"
 edition = "2021"
 readme = "README.md"
 license = "CC0-1.0"
-keywords = ["axum", "tracing", "opentelemetry"]
-categories = [
-  "development-tools::debugging",
-  "development-tools::profiling",
-  "web-programming",
-]
+keywords = ["tracing", "opentelemetry"]
+categories = ["development-tools::debugging", "development-tools::profiling"]
 repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
 homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/axum-tracing-opentelemetry"
 
 [dependencies]
-axum = "0.6"
-# axum-core = "0.3"
 futures = "0.3"
-http = "0.2"
 opentelemetry = { version = "0.19", features = [
   "rt-tokio",
   "trace",
@@ -32,8 +25,7 @@ opentelemetry-otlp = { version = "0.12", optional = true, features = [
 ] }
 opentelemetry-semantic-conventions = { version = "0.11", optional = true }
 opentelemetry-zipkin = { version = "0.17", features = [], optional = true }
-tower = "0.4"
-tower-http = { version = "0.4", features = ["trace"] }
+thiserror = "1.0"
 tracing = "0.1"
 tracing-opentelemetry = "0.19"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
@@ -57,8 +49,6 @@ opentelemetry-proto = { version = "0.2", features = ["gen-tonic", "traces"] }
 rstest = "0.17"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
-tokio = { version = "1.27", features = ["full"] }
-tonic = "0.8"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "env-filter",
   "fmt",
