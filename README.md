@@ -40,3 +40,9 @@ Then :
 - send the request
 - copy trace_id from log (or response header)
 - paste into Jaeger web UI
+
+## To release
+
+```sh
+cargo ws publish --tag-prefix "" "prepatch" --all --no-individual-tags
+```
