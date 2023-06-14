@@ -11,10 +11,7 @@ use http::{header, uri::Scheme, HeaderMap, Method, Request, Version};
 use opentelemetry::trace::{TraceContextExt, TraceId};
 use std::{borrow::Cow, net::SocketAddr, time::Duration};
 use tower_http::{
-    classify::{
-        GrpcErrorsAsFailures, GrpcFailureClass, ServerErrorsAsFailures, ServerErrorsFailureClass,
-        SharedClassifier,
-    },
+    classify::{ServerErrorsAsFailures, ServerErrorsFailureClass, SharedClassifier},
     trace::{MakeSpan, OnBodyChunk, OnEos, OnFailure, OnRequest, OnResponse, TraceLayer},
 };
 use tracing::{field::Empty, Span};
@@ -87,25 +84,6 @@ pub fn opentelemetry_tracing_layer() -> TraceLayer<
         .on_body_chunk(OtelOnBodyChunk)
         .on_eos(OtelOnEos)
         .on_failure(OtelOnFailure)
-}
-
-/// OpenTelemetry tracing middleware for gRPC.
-pub fn opentelemetry_tracing_layer_grpc() -> TraceLayer<
-    SharedClassifier<GrpcErrorsAsFailures>,
-    OtelMakeGrpcSpan,
-    OtelOnRequest,
-    OtelOnResponse,
-    OtelOnBodyChunk,
-    OtelOnEos,
-    OtelOnGrpcFailure,
-> {
-    TraceLayer::new_for_grpc()
-        .make_span_with(OtelMakeGrpcSpan)
-        .on_request(OtelOnRequest)
-        .on_response(OtelOnResponse)
-        .on_body_chunk(OtelOnBodyChunk)
-        .on_eos(OtelOnEos)
-        .on_failure(OtelOnGrpcFailure)
 }
 
 /// A [`MakeSpan`] that creates tracing spans using [OpenTelemetry's conventional field names][otel].
@@ -236,84 +214,6 @@ fn with_span_context(tspan: &tracing::Span, cx: opentelemetry::trace::SpanContex
                 });
             }
         });
-    }
-}
-
-/// A [`MakeSpan`] that creates tracing spans using [OpenTelemetry's conventional field names][otel] for gRPC services.
-///
-/// [otel]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md
-#[derive(Clone, Copy, Debug)]
-pub struct OtelMakeGrpcSpan;
-
-impl<B> MakeSpan<B> for OtelMakeGrpcSpan {
-    fn make_span(&mut self, req: &Request<B>) -> Span {
-        let user_agent = req
-            .headers()
-            .get(header::USER_AGENT)
-            .map_or("", |h| h.to_str().unwrap_or(""));
-
-        let host = req
-            .headers()
-            .get(header::HOST)
-            .map_or("", |h| h.to_str().unwrap_or(""));
-
-        let scheme = req
-            .uri()
-            .scheme()
-            .map_or_else(|| "HTTP".into(), http_scheme);
-
-        let http_route = req
-            .extensions()
-            .get::<MatchedPath>()
-            .map_or("", |mp| mp.as_str())
-            .to_owned();
-
-        let uri = if let Some(uri) = req.extensions().get::<OriginalUri>() {
-            uri.0.clone()
-        } else {
-            req.uri().clone()
-        };
-        let http_target = uri
-            .path_and_query()
-            .map(|path_and_query| path_and_query.to_string())
-            .unwrap_or_else(|| uri.path().to_owned());
-
-        let client_ip = parse_x_forwarded_for(req.headers())
-            .or_else(|| {
-                req.extensions()
-                    .get::<ConnectInfo<SocketAddr>>()
-                    .map(|ConnectInfo(client_ip)| Cow::from(client_ip.to_string()))
-            })
-            .unwrap_or_default();
-        let http_method_v = http_method(req.method());
-        let (trace_id, otel_context) =
-            create_context_with_trace(extract_remote_context(req.headers()));
-        let span = tracing::info_span!(
-            "grpc request",
-            otel.name = %http_target, // Convetion in gRPC tracing.
-            http.client_ip = %client_ip,
-            http.flavor = %http_flavor(req.version()),
-            http.grpc_status = Empty,
-            http.host = %host,
-            http.method = %http_method_v,
-            http.route = %http_route,
-            http.scheme = %scheme,
-            http.status_code = Empty,
-            http.target = %http_target,
-            http.user_agent = %user_agent,
-            otel.kind = %"server", //opentelemetry::trace::SpanKind::Server
-            otel.status_code = Empty,
-            trace_id = %trace_id,
-        );
-        match otel_context {
-            OtelContext::Remote(cx) => {
-                tracing_opentelemetry::OpenTelemetrySpanExt::set_parent(&span, cx)
-            }
-            OtelContext::Local(cx) => {
-                tracing_opentelemetry::OpenTelemetrySpanExt::add_link(&span, cx)
-            }
-        }
-        span
     }
 }
 
@@ -482,45 +382,15 @@ impl OnFailure<ServerErrorsFailureClass> for OtelOnFailure {
     }
 }
 
-/// Callback that [`Trace`] will call when a response or end-of-stream is classified as a failure.
-///
-/// [`Trace`]: tower_http::trace::Trace
-#[derive(Clone, Copy, Debug)]
-pub struct OtelOnGrpcFailure;
-
-impl OnFailure<GrpcFailureClass> for OtelOnGrpcFailure {
-    fn on_failure(&mut self, failure: GrpcFailureClass, _latency: Duration, span: &Span) {
-        match failure {
-            GrpcFailureClass::Code(code) => {
-                span.record("http.grpc_status", code);
-            }
-            GrpcFailureClass::Error(_) => {
-                span.record("http.grpc_status", 1);
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert2::*;
-    use axum::{
-        body::Body,
-        routing::{get, post},
-        Router,
-    };
+    use axum::body::HttpBody as _;
+    use axum::{body::Body, routing::get, Router};
     use http::{Request, StatusCode};
-    use opentelemetry::sdk::propagation::TraceContextPropagator;
     use rstest::*;
-    use serde_json::Value;
-    use std::sync::mpsc::{self, Receiver, SyncSender};
-
-    use tracing_subscriber::{
-        fmt::{format::FmtSpan, MakeWriter},
-        util::SubscriberInitExt,
-        EnvFilter,
-    };
+    use testing_tracing_opentelemetry::*;
+    use tower::{Service, ServiceExt};
 
     #[rstest]
     #[case("filled_http_route_for_existing_route", "/users/123", &[], false)]
@@ -542,215 +412,45 @@ mod tests {
         #[case] headers: &[(&str, &str)],
         #[case] is_trace_id_constant: bool,
     ) {
-        let svc = Router::new()
-            .route("/users/:id", get(|| async { StatusCode::OK }))
-            .route(
-                "/status/500",
-                get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
-            )
-            .route(
-                "/with_child_span",
-                get(|| async {
-                    let span = tracing::span!(tracing::Level::INFO, "my child span");
-                    span.in_scope(|| {
-                        // Any trace events in this closure or code called by it will occur within
-                        // the span.
-                    });
-                    StatusCode::OK
-                }),
-            )
-            .nest(
-                "/nest",
-                Router::new()
-                    .route("/:nest_id", get(|| async {}))
-                    .fallback(|| async { (StatusCode::NOT_FOUND, "inner fallback") }),
-            )
-            .fallback(|| async { (StatusCode::NOT_FOUND, "outer fallback") })
-            .layer(opentelemetry_tracing_layer());
-        let mut builder = Request::builder();
-        for (key, value) in headers.iter() {
-            builder = builder.header(*key, *value);
+        let fake_env = FakeEnvironment::setup().await;
+        {
+            let mut svc = Router::new()
+                .route("/users/:id", get(|| async { StatusCode::OK }))
+                .route(
+                    "/status/500",
+                    get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
+                )
+                .route(
+                    "/with_child_span",
+                    get(|| async {
+                        let span = tracing::span!(tracing::Level::INFO, "my child span");
+                        span.in_scope(|| {
+                            // Any trace events in this closure or code called by it will occur within
+                            // the span.
+                        });
+                        StatusCode::OK
+                    }),
+                )
+                .nest(
+                    "/nest",
+                    Router::new()
+                        .route("/:nest_id", get(|| async {}))
+                        .fallback(|| async { (StatusCode::NOT_FOUND, "inner fallback") }),
+                )
+                .fallback(|| async { (StatusCode::NOT_FOUND, "outer fallback") })
+                .layer(opentelemetry_tracing_layer());
+            let mut builder = Request::builder();
+            for (key, value) in headers.iter() {
+                builder = builder.header(*key, *value);
+            }
+            let req = builder.uri(uri).body(Body::empty()).unwrap();
+            let mut res = svc.ready().await.unwrap().call(req).await.unwrap();
+
+            while res.data().await.is_some() {}
+            res.trailers().await.unwrap();
+            drop(res);
         }
-        let req = builder.uri(uri).body(Body::empty()).unwrap();
-        let (tracing_events, otel_spans) = span_event_for_request(svc, req).await;
+        let (tracing_events, otel_spans) = fake_env.collect_traces().await;
         assert_trace(name, tracing_events, otel_spans, is_trace_id_constant);
-    }
-
-    #[rstest]
-    #[case("grpc_status_code_on_close_for_ok", "/module.service/endpoint1", &[])]
-    #[tokio::test(flavor = "multi_thread")]
-    async fn check_span_event_grpc(
-        #[case] name: &str,
-        #[case] uri: &str,
-        #[case] headers: &[(&str, &str)],
-    ) {
-        let svc = Router::new()
-            .route(
-                "/module.service/endpoint1",
-                post(|| async {
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .header("grpc-status", 2)
-                        .body(Body::empty())
-                        .unwrap()
-                }),
-            )
-            .layer(opentelemetry_tracing_layer_grpc());
-        let mut builder = Request::builder();
-        for (key, value) in headers.iter() {
-            builder = builder.header(*key, *value);
-        }
-        builder = builder.method("POST");
-        let req = builder.uri(uri).body(Body::empty()).unwrap();
-        let (tracing_events, otel_spans) = span_event_for_request(svc, req).await;
-        assert_trace(name, tracing_events, otel_spans, false);
-    }
-
-    fn assert_trace(
-        name: &str,
-        tracing_events: Vec<Value>,
-        otel_spans: Vec<fake_opentelemetry_collector::ExportedSpan>,
-        is_trace_id_constant: bool,
-    ) {
-        let trace_id_0 = tracing_events
-            .get(0)
-            .and_then(|v| v.as_object())
-            .and_then(|v| v.get("span"))
-            .and_then(|v| v.as_object())
-            .and_then(|v| v.get("trace_id"))
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_owned();
-        // let trace_id_3 = trace_id_0.clone();
-        let trace_id_1 = trace_id_0.clone();
-        let trace_id_2 = trace_id_0;
-        insta::assert_yaml_snapshot!(name, tracing_events, {
-            "[].timestamp" => "[timestamp]",
-            "[].fields[\"time.busy\"]" => "[duration]",
-            "[].fields[\"time.idle\"]" => "[duration]",
-            "[].span.trace_id" => insta::dynamic_redaction(move |value, _path| {
-                let_assert!(Some(tracing_trace_id) = value.as_str());
-                check!(trace_id_1 == tracing_trace_id);
-                if is_trace_id_constant {
-                    tracing_trace_id.to_string()
-                } else {
-                    format!("[trace_id:lg{}]", tracing_trace_id.len())
-                }
-            }),
-            "[].spans[].trace_id" => insta::dynamic_redaction(move |value, _path| {
-                let_assert!(Some(tracing_trace_id) = value.as_str());
-                check!(trace_id_2 == tracing_trace_id);
-                if is_trace_id_constant {
-                    tracing_trace_id.to_string()
-                } else {
-                    format!("[trace_id:lg{}]", tracing_trace_id.len())
-                }
-            }),
-        });
-        insta::assert_yaml_snapshot!(format!("{}_otel_spans", name), otel_spans, {
-            "[].start_time_unix_nano" => "[timestamp]",
-            "[].end_time_unix_nano" => "[timestamp]",
-            "[].events[].time_unix_nano" => "[timestamp]",
-            "[].trace_id" => insta::dynamic_redaction(move |value, _path| {
-                assert2::let_assert!(Some(otel_trace_id) = value.as_str());
-                //FIXME check!(trace_id_3 == otel_trace_id);
-                format!("[trace_id:lg{}]", otel_trace_id.len())
-            }),
-            "[].span_id" => insta::dynamic_redaction(|value, _path| {
-                assert2::let_assert!(Some(span_id) = value.as_str());
-                format!("[span_id:lg{}]", span_id.len())
-            }),
-            "[].parent_span_id" => insta::dynamic_redaction(|value, _path| {
-                assert2::let_assert!(Some(span_id) = value.as_str());
-                format!("[span_id:lg{}]", span_id.len())
-            }),
-            "[].links[].trace_id" => insta::dynamic_redaction(|value, _path| {
-                assert2::let_assert!(Some(otel_trace_id) = value.as_str());
-                format!("[trace_id:lg{}]", otel_trace_id.len())
-            }),
-            "[].links[].span_id" => insta::dynamic_redaction(|value, _path| {
-                assert2::let_assert!(Some(span_id) = value.as_str());
-                format!("[span_id:lg{}]", span_id.len())
-            }),
-            "[].attributes.busy_ns" => "ignore",
-            "[].attributes.idle_ns" => "ignore",
-            "[].attributes.trace_id" => "ignore",
-            "[].attributes[\"code.lineno\"]" => "ignore",
-            "[].attributes[\"code.filepath\"]" => "ignore",
-            "[].attributes[\"thread.id\"]" => "ignore",
-        });
-    }
-
-    async fn span_event_for_request(
-        mut router: Router,
-        req: Request<Body>,
-    ) -> (Vec<Value>, Vec<fake_opentelemetry_collector::ExportedSpan>) {
-        use axum::body::HttpBody as _;
-        use tower::{Service, ServiceExt};
-        use tracing_subscriber::layer::SubscriberExt;
-
-        // setup a non Noop OpenTelemetry tracer to have non-empty trace_id
-        let fake_collector = fake_opentelemetry_collector::FakeCollectorServer::start()
-            .await
-            .unwrap();
-        let tracer = fake_opentelemetry_collector::setup_tracer(&fake_collector).await;
-        //let (tracer, mut req_rx) = fake_opentelemetry_collector::setup_tracer().await;
-        opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
-        let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-
-        let (make_writer, rx) = duplex_writer();
-        let fmt_layer = tracing_subscriber::fmt::layer()
-            .json()
-            .with_writer(make_writer)
-            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
-        let subscriber = tracing_subscriber::registry()
-            .with(EnvFilter::try_new("axum_extra=trace,info").unwrap())
-            .with(fmt_layer)
-            .with(otel_layer);
-        let _guard = subscriber.set_default();
-
-        let mut res = router.ready().await.unwrap().call(req).await.unwrap();
-
-        while res.data().await.is_some() {}
-        res.trailers().await.unwrap();
-        drop(res);
-
-        opentelemetry_api::global::shutdown_tracer_provider();
-
-        let otel_span = fake_collector.exported_spans();
-        // insta::assert_debug_snapshot!(first_span);
-        let tracing_events = std::iter::from_fn(|| rx.try_recv().ok())
-            .map(|bytes| serde_json::from_slice::<Value>(&bytes).unwrap())
-            .collect::<Vec<_>>();
-        (tracing_events, otel_span)
-    }
-
-    fn duplex_writer() -> (DuplexWriter, Receiver<Vec<u8>>) {
-        let (tx, rx) = mpsc::sync_channel(1024);
-        (DuplexWriter { tx }, rx)
-    }
-
-    #[derive(Clone)]
-    struct DuplexWriter {
-        tx: SyncSender<Vec<u8>>,
-    }
-
-    impl<'a> MakeWriter<'a> for DuplexWriter {
-        type Writer = Self;
-
-        fn make_writer(&'a self) -> Self::Writer {
-            self.clone()
-        }
-    }
-
-    impl std::io::Write for DuplexWriter {
-        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-            self.tx.send(buf.to_vec()).unwrap();
-            Ok(buf.len())
-        }
-
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
     }
 }

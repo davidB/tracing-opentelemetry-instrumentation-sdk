@@ -1,5 +1,5 @@
 ---
-source: axum-tracing-opentelemetry/src/middleware/trace_extractor.rs
+source: testing-tracing-opentelemetry/src/lib.rs
 expression: tracing_events
 ---
 - fields:

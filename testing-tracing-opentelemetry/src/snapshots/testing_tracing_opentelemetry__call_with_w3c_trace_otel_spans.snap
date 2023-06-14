@@ -1,0 +1,6 @@
+---
+source: testing-tracing-opentelemetry/src/lib.rs
+expression: otel_spans
+---
+[]
+

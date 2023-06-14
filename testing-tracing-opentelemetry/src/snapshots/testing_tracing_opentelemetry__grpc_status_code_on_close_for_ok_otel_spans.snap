@@ -1,5 +1,5 @@
 ---
-source: axum-tracing-opentelemetry/src/middleware/trace_extractor.rs
+source: testing-tracing-opentelemetry/src/lib.rs
 expression: otel_spans
 ---
 - trace_id: "[trace_id:lg32]"
@@ -14,18 +14,13 @@ expression: otel_spans
     busy_ns: ignore
     code.filepath: ignore
     code.lineno: ignore
-    code.namespace: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor\")) })"
-    http.client_ip: "Some(AnyValue { value: Some(StringValue(\"\")) })"
-    http.flavor: "Some(AnyValue { value: Some(StringValue(\"1.1\")) })"
-    http.grpc_status: "Some(AnyValue { value: Some(IntValue(2)) })"
-    http.host: "Some(AnyValue { value: Some(StringValue(\"\")) })"
-    http.method: "Some(AnyValue { value: Some(StringValue(\"POST\")) })"
-    http.route: "Some(AnyValue { value: Some(StringValue(\"/module.service/endpoint1\")) })"
-    http.scheme: "Some(AnyValue { value: Some(StringValue(\"HTTP\")) })"
-    http.status_code: "Some(AnyValue { value: Some(StringValue(\"200\")) })"
-    http.target: "Some(AnyValue { value: Some(StringValue(\"/module.service/endpoint1\")) })"
+    code.namespace: "Some(AnyValue { value: Some(StringValue(\"tonic_tracing_opentelemetry::middleware::trace_extractor\")) })"
     http.user_agent: "Some(AnyValue { value: Some(StringValue(\"\")) })"
     idle_ns: ignore
+    rpc.method: "Some(AnyValue { value: Some(StringValue(\"endpoint1\")) })"
+    rpc.service: "Some(AnyValue { value: Some(StringValue(\"module.service\")) })"
+    rpc.system: "Some(AnyValue { value: Some(StringValue(\"grpc\")) })"
+    server.address: "Some(AnyValue { value: Some(StringValue(\"\")) })"
     thread.id: ignore
     thread.name: "Some(AnyValue { value: Some(StringValue(\"middleware::trace_extractor::tests::check_span_event_grpc::case_1\")) })"
     trace_id: ignore

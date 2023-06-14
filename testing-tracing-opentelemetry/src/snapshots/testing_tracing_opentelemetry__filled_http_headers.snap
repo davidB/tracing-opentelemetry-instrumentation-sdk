@@ -1,23 +1,23 @@
 ---
-source: axum-tracing-opentelemetry/src/middleware/trace_extractor.rs
+source: testing-tracing-opentelemetry/src/lib.rs
 expression: tracing_events
 ---
 - fields:
     message: new
   level: INFO
   span:
-    http.client_ip: ""
+    http.client_ip: 127.0.0.1
     http.flavor: "1.1"
     http.host: ""
     http.method: GET
     http.route: "/users/:id"
     http.scheme: HTTP
     http.target: /users/123
-    http.user_agent: ""
+    http.user_agent: tests
     name: HTTP request
     otel.kind: server
     otel.name: "GET /users/:id"
-    trace_id: b2611246a58fd7ea623d2264c5a1e226
+    trace_id: "[trace_id:lg32]"
   spans: []
   target: "axum_tracing_opentelemetry::middleware::trace_extractor"
   timestamp: "[timestamp]"
@@ -27,7 +27,7 @@ expression: tracing_events
     time.idle: "[duration]"
   level: INFO
   span:
-    http.client_ip: ""
+    http.client_ip: 127.0.0.1
     http.flavor: "1.1"
     http.host: ""
     http.method: GET
@@ -35,12 +35,12 @@ expression: tracing_events
     http.scheme: HTTP
     http.status_code: "200"
     http.target: /users/123
-    http.user_agent: ""
+    http.user_agent: tests
     name: HTTP request
     otel.kind: server
     otel.name: "GET /users/:id"
     otel.status_code: OK
-    trace_id: b2611246a58fd7ea623d2264c5a1e226
+    trace_id: "[trace_id:lg32]"
   spans: []
   target: "axum_tracing_opentelemetry::middleware::trace_extractor"
   timestamp: "[timestamp]"
