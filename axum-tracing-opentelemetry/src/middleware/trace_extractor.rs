@@ -78,7 +78,7 @@ pub fn opentelemetry_tracing_layer() -> TraceLayer<
     OtelOnFailure,
 > {
     TraceLayer::new_for_http()
-        .make_span_with(OtelMakeSpan)
+        .make_span_with(OtelMakeSpan { filter: None })
         .on_request(OtelOnRequest)
         .on_response(OtelOnResponse)
         .on_body_chunk(OtelOnBodyChunk)
@@ -86,11 +86,29 @@ pub fn opentelemetry_tracing_layer() -> TraceLayer<
         .on_failure(OtelOnFailure)
 }
 
+pub type Filter = fn(&str) -> bool;
+
+pub trait WithFilter {
+    fn with_filter(self, filter: Filter) -> Self;
+}
+
+impl<M, OnRequest, OnResponse, OnBodyChunk, OnEos, OnFailure> WithFilter
+    for TraceLayer<M, OtelMakeSpan, OnRequest, OnResponse, OnBodyChunk, OnEos, OnFailure>
+{
+    fn with_filter(self, filter: Filter) -> Self {
+        self.make_span_with(OtelMakeSpan {
+            filter: Some(filter),
+        })
+    }
+}
+
 /// A [`MakeSpan`] that creates tracing spans using [OpenTelemetry's conventional field names][otel].
 ///
 /// [otel]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md
-#[derive(Clone, Copy, Debug)]
-pub struct OtelMakeSpan;
+#[derive(Clone, Copy, Debug, Default)]
+pub struct OtelMakeSpan {
+    filter: Option<Filter>,
+}
 
 impl<B> MakeSpan<B> for OtelMakeSpan {
     fn make_span(&mut self, req: &Request<B>) -> Span {
@@ -124,6 +142,12 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
             .path_and_query()
             .map(|path_and_query| path_and_query.to_string())
             .unwrap_or_else(|| uri.path().to_owned());
+
+        if let Some(filter) = self.filter {
+            if !filter(&http_target) {
+                return Span::none();
+            }
+        }
 
         let client_ip = parse_x_forwarded_for(req.headers())
             .or_else(|| {

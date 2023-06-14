@@ -12,8 +12,6 @@ use tower_http::{
 };
 use tracing::{field::Empty, Span};
 
-pub type Filter = fn(&str, &str) -> bool;
-
 /// OpenTelemetry tracing middleware for gRPC server.
 pub fn opentelemetry_tracing_layer_server() -> TraceLayer<
     SharedClassifier<GrpcErrorsAsFailures>,
@@ -32,6 +30,8 @@ pub fn opentelemetry_tracing_layer_server() -> TraceLayer<
         .on_eos(OtelOnEos)
         .on_failure(OtelOnFailure)
 }
+
+pub type Filter = fn(&str, &str) -> bool;
 
 pub trait WithFilter {
     fn with_filter(self, filter: Filter) -> Self;
