@@ -15,19 +15,21 @@ repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
 homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/tonic-tracing-opentelemetry"
 
 [dependencies]
-tonic = "0.9"
-futures = "0.3"
+# tonic = "0.9"
+# futures = "0.3"
 http = "0.2"
 opentelemetry = { version = "0.19", features = [
   "rt-tokio",
   "trace",
 ], default-features = false }
-tower = "0.4"
+#
 tower-http = { version = "0.4", features = ["trace"] }
 tracing = "0.1"
 tracing-opentelemetry = "0.19"
 
 [dev-dependencies]
+axum = "0.6"
+testing-tracing-opentelemetry = { path = "../testing-tracing-opentelemetry" }
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
 assert2 = "0.3"
 hyper = "0.14"
@@ -43,6 +45,7 @@ rstest = "0.17"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 tokio = { version = "1.27", features = ["full"] }
+tower = "0.4"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "env-filter",
   "fmt",

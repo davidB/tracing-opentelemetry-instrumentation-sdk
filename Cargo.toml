@@ -5,6 +5,7 @@ members = [
   "examples/*",
   "fake-opentelemetry-collector",
   "init-tracing-opentelemetry",
+  "testing-tracing-opentelemetry",
   "tonic-tracing-opentelemetry",
 ]
 

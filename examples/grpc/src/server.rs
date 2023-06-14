@@ -1,7 +1,9 @@
 use hello_world::greeter_server::{Greeter, GreeterServer};
 use hello_world::{HelloReply, HelloRequest};
 use tonic::{transport::Server, Request, Response, Status};
-use tonic_tracing_opentelemetry::opentelemetry_tracing_layer_server;
+use tonic_tracing_opentelemetry::middleware::{
+    filters, opentelemetry_tracing_layer_server, WithFilter,
+};
 
 pub mod hello_world {
     tonic::include_proto!("helloworld");
@@ -34,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()
         .expect("init subscribers");
 
-    let addr = "[::1]:50051".parse().unwrap();
+    let addr = "127.0.0.1:50051".parse().unwrap();
     let greeter = MyGreeter::default();
 
     let (_, health_service) = tonic_health::server::health_reporter();
@@ -45,10 +47,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("GreeterServer listening on {}", addr);
 
     Server::builder()
-        // FIXME: trace for everything except health_service, metrics, refelection
-        .layer(opentelemetry_tracing_layer_server())
+        // create trace for every request including health_service, metrics, refelection
+        .layer(opentelemetry_tracing_layer_server().with_filter(filters::reject_healthcheck))
         .add_service(health_service)
         .add_service(reflection_service)
+        //.add_service(GreeterServer::new(greeter))
         .add_service(GreeterServer::new(greeter))
         .serve(addr)
         .await?;

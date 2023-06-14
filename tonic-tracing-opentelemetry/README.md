@@ -26,3 +26,4 @@ Middlewares and tools to integrate tonic + tracing + opentelemetry.
 ### 0.12
 
 - 💥 extracted from axum-tracing-opentelemetry 0.11
+- add filter (eg to not trace on healthcheck)
