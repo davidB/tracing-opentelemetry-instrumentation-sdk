@@ -15,17 +15,17 @@ repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
 homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/tonic-tracing-opentelemetry"
 
 [dependencies]
-# tonic = "0.9"
-# futures = "0.3"
 http = "0.2"
 opentelemetry = { version = "0.19", features = [
-  "rt-tokio",
   "trace",
 ], default-features = false }
-#
+opentelemetry-http = "0.8"
+tonic = { version = "0.9", default-features = false }
+tower = { version = "0.4", default-features = false }
 tower-http = { version = "0.4", features = ["trace"] }
 tracing = "0.1"
 tracing-opentelemetry = "0.19"
+init-tracing-opentelemetry = { path = "../init-tracing-opentelemetry" }
 
 [dev-dependencies]
 axum = "0.6"
