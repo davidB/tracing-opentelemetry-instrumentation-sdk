@@ -5,10 +5,6 @@ use opentelemetry::propagation::TextMapPropagator;
 use opentelemetry::sdk::propagation::{
     BaggagePropagator, TextMapCompositePropagator, TraceContextPropagator,
 };
-#[cfg(feature = "tracer")]
-use opentelemetry::sdk::trace::Tracer;
-#[cfg(feature = "tracer")]
-use opentelemetry::sdk::Resource;
 use opentelemetry::trace::TraceError;
 
 #[cfg(feature = "jaeger")]
@@ -21,48 +17,6 @@ pub mod resource;
 pub mod stdio;
 #[cfg(feature = "tracing_subscriber_ext")]
 pub mod tracing_subscriber_ext;
-
-#[cfg(feature = "tracer")]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum CollectorKind {
-    #[cfg(feature = "otlp")]
-    Otlp,
-    #[cfg(feature = "jaeger")]
-    Jaeger,
-    Stdout,
-    Stderr,
-    NoWrite,
-}
-
-#[cfg(feature = "tracer")]
-#[deprecated(
-    since = "0.10.0",
-    note = "call `init_tracer` from sub sub package directly"
-)]
-pub fn init_tracer(kind: CollectorKind, resource: Resource) -> Result<Tracer, TraceError> {
-    match kind {
-        CollectorKind::Stdout => stdio::init_tracer(resource, stdio::identity, std::io::stdout()),
-        CollectorKind::Stderr => stdio::init_tracer(resource, stdio::identity, std::io::stderr()),
-        CollectorKind::NoWrite => {
-            stdio::init_tracer(resource, stdio::identity, stdio::WriteNoWhere::default())
-        }
-        #[cfg(feature = "otlp")]
-        CollectorKind::Otlp => {
-            // if let Some(url) = std::env::var_os("OTEL_COLLECTOR_URL")
-            // "http://localhost:14499/otlp/v1/traces"
-            // let collector_url = url.to_str().ok_or(TraceError::Other(
-            //     anyhow!("failed to parse OTEL_COLLECTOR_URL").into(),
-            // ))?;
-            otlp::init_tracer(resource, otlp::identity)
-        }
-        #[cfg(feature = "jaeger")]
-        CollectorKind::Jaeger => {
-            // Or "OTEL_EXPORTER_JAEGER_ENDPOINT"
-            // or now variable
-            jaeger::init_tracer(resource, jaeger::identity)
-        }
-    }
-}
 
 /// Configure the global propagator based on content of the env variable [OTEL_PROPAGATORS](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_propagators)
 /// Specifies Propagators to be used in a comma-separated list.
