@@ -161,6 +161,7 @@ impl<B> MakeSpan<B> for OtelMakeSpan {
         let remote_context = extract_remote_context(req.headers());
         let (trace_id, otel_context) = create_context_with_trace(remote_context.clone());
         let span = tracing::info_span!(
+            target: "otel::tracing",
             "HTTP request",
             otel.name= %name,
             http.client_ip = %client_ip,
