@@ -1,0 +1,67 @@
+[package]
+name = "tracing-opentelemetry-instrumentation-sdk"
+description = "A set of helpers to build OpenTelemetry instrumentation based on `tracing` crate."
+version = "0.12.0-alpha.1"
+edition = "2021"
+readme = "README.md"
+license = "CC0-1.0"
+keywords = ["tracing", "opentelemetry"]
+categories = [
+  "development-tools::debugging",
+  "development-tools::profiling",
+  "web-programming",
+]
+repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
+homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/tracing-opentelemetry-instrumentation-sdk"
+
+[dependencies]
+# futures = "0.3"
+http = { version = "^0.2", optional = true }
+opentelemetry_api = { version = "0.19", features = [
+  "trace",
+], default-features = false }
+# opentelemetry-semantic-conventions = { version = "0.11" }
+opentelemetry-http = "0.8"
+# tonic = { version = "0.9", default-features = false }
+# tower = { version = "0.4", default-features = false }
+# tower-http = { version = "0.4", features = ["trace"] }
+tracing = "0.1"
+tracing-opentelemetry = "0.19"
+# init-tracing-opentelemetry = { path = "../init-tracing-opentelemetry" }
+
+[dev-dependencies]
+# axum = "0.6"
+# testing-tracing-opentelemetry = { path = "../testing-tracing-opentelemetry" }
+# fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
+assert2 = "0.3"
+# hyper = "0.14"
+# insta = { version = "1.29.0", features = ["yaml", "redactions"] }
+# opentelemetry-otlp = { version = "0.12", features = [
+#   "http-proto",
+#   "reqwest-client",
+#   "reqwest-rustls",
+# ] }
+# opentelemetry_api = "0.19"
+# opentelemetry-proto = { version = "0.2", features = ["gen-tonic", "traces"] }
+rstest = "0.17"
+# serde = { version = "1.0.136", features = ["derive"] }
+# serde_json = "1.0.79"
+# tokio = { version = "1.27", features = ["full"] }
+# tower = "0.4"
+# tracing-subscriber = { version = "0.3", default-features = false, features = [
+#   "env-filter",
+#   "fmt",
+#   "json",
+# ] }
+# tokio-stream = { version = "0.1", features = ["net"] }
+# # need tokio runtime to run smoke tests.
+# opentelemetry_sdk = { features = [
+#   "trace",
+#   "rt-tokio",
+#   "testing",
+# ], version = "0.19" }
+
+[features]
+
+default = []
+http = ["dep:http"]

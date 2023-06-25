@@ -7,6 +7,7 @@ members = [
   "init-tracing-opentelemetry",
   "testing-tracing-opentelemetry",
   "tonic-tracing-opentelemetry",
+  "tracing-opentelemetry-instrumentation-sdk",
 ]
 
 exclude = ["target"]

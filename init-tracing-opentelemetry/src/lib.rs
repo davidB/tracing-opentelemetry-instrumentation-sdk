@@ -105,31 +105,6 @@ fn propagator_from_string(
     }
 }
 
-/// Search the current opentelemetry trace id into the Context from the current tracing'span.
-/// This function can be used to report the trace id into the error message send back to user.
-///
-/// ```rust
-/// let trace_id = init_tracing_opentelemetry::find_current_trace_id();
-/// // json!({ "error" :  "xxxxxx", "trace_id": trace_id})
-///
-/// ```
-pub fn find_current_trace_id() -> Option<String> {
-    find_trace_id(&tracing::Span::current())
-}
-
-pub fn find_trace_id(span: &tracing::Span) -> Option<String> {
-    use opentelemetry::trace::TraceContextExt;
-    use tracing_opentelemetry::OpenTelemetrySpanExt;
-    // let context = opentelemetry::Context::current();
-    // OpenTelemetry Context is propagation inside code is done via tracing crate
-    let context = span.context();
-    let span = context.span();
-    let span_context = span.span_context();
-    span_context
-        .is_valid()
-        .then(|| span_context.trace_id().to_string())
-}
-
 #[cfg(test)]
 #[cfg(feature = "tracer")]
 mod tests {

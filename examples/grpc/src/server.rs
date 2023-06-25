@@ -1,9 +1,7 @@
 use hello_world::greeter_server::{Greeter, GreeterServer};
 use hello_world::{HelloReply, HelloRequest};
 use tonic::{transport::Server, Request, Response, Status};
-use tonic_tracing_opentelemetry::middleware::{
-    filters, server::opentelemetry_tracing_layer_server, server::WithFilter,
-};
+use tonic_tracing_opentelemetry::middleware::{filters, server};
 
 pub mod hello_world {
     tonic::include_proto!("helloworld");
@@ -48,7 +46,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Server::builder()
         // create trace for every request including health_service, metrics, refelection
-        .layer(opentelemetry_tracing_layer_server().with_filter(filters::reject_healthcheck))
+        // .layer(opentelemetry_tracing_layer_server().with_filter(filters::reject_healthcheck))
+        .layer(server::OtelGrpcLayer::default())
         .add_service(health_service)
         .add_service(reflection_service)
         //.add_service(GreeterServer::new(greeter))
