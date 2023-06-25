@@ -33,6 +33,7 @@ fn parse_x_forwarded_for(headers: &HeaderMap) -> Option<&str> {
     Some(ips.next()?.trim())
 }
 
+#[inline]
 pub fn client_ip<B>(req: &http::Request<B>) -> &str {
     parse_x_forwarded_for(req.headers())
         // .or_else(|| {
@@ -43,10 +44,12 @@ pub fn client_ip<B>(req: &http::Request<B>) -> &str {
         .unwrap_or_default()
 }
 
+#[inline]
 pub fn http_target(uri: &Uri) -> &str {
     uri.path_and_query().map(|p| p.as_str()).unwrap_or("")
 }
 
+#[inline]
 pub fn http_method(method: &Method) -> Cow<'static, str> {
     match method {
         &Method::CONNECT => "CONNECT".into(),
@@ -62,6 +65,7 @@ pub fn http_method(method: &Method) -> Cow<'static, str> {
     }
 }
 
+#[inline]
 pub fn http_flavor(version: Version) -> Cow<'static, str> {
     match version {
         Version::HTTP_09 => "0.9".into(),
@@ -73,22 +77,29 @@ pub fn http_flavor(version: Version) -> Cow<'static, str> {
     }
 }
 
+#[inline]
 pub fn http_scheme(uri: &Uri) -> &str {
     uri.scheme().map(|s| s.as_str()).unwrap_or_default()
 }
 
+#[inline]
 pub fn user_agent<B>(req: &http::Request<B>) -> &str {
     req.headers()
         .get(http::header::USER_AGENT)
         .map_or("", |h| h.to_str().unwrap_or(""))
 }
 
+#[inline]
 pub fn http_host<B>(req: &http::Request<B>) -> &str {
     req.headers()
         .get(http::header::HOST)
         .map_or(req.uri().host(), |h| h.to_str().ok())
         .unwrap_or("")
 }
+
+// if let Some(host_name) = SYSTEM.host_name() {
+//     attributes.push(NET_HOST_NAME.string(host_name));
+// }
 
 #[cfg(test)]
 mod tests {

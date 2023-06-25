@@ -15,6 +15,7 @@ pub const TRACING_TARGET: &str = "otel::tracing";
 // const FIELD_EXCEPTION_STACKTRACE: &str = "exception.stacktrace";
 // const HTTP_TARGET: &str = opentelemetry_semantic_conventions::trace::HTTP_TARGET.as_str();
 
+#[inline]
 pub fn find_current_context() -> Context {
     use tracing_opentelemetry::OpenTelemetrySpanExt;
     // let context = opentelemetry::Context::current();
@@ -30,10 +31,12 @@ pub fn find_current_context() -> Context {
 /// // json!({ "error" :  "xxxxxx", "trace_id": trace_id})
 ///
 /// ```
+#[inline]
 pub fn find_current_trace_id() -> Option<String> {
     find_trace_id(find_current_context())
 }
 
+#[inline]
 pub fn find_context_from_tracing(span: &tracing::Span) -> Context {
     use tracing_opentelemetry::OpenTelemetrySpanExt;
     // let context = opentelemetry::Context::current();
@@ -41,6 +44,7 @@ pub fn find_context_from_tracing(span: &tracing::Span) -> Context {
     span.context()
 }
 
+#[inline]
 pub fn find_trace_id_from_tracing(span: &tracing::Span) -> Option<String> {
     use tracing_opentelemetry::OpenTelemetrySpanExt;
     // let context = opentelemetry::Context::current();
@@ -48,6 +52,7 @@ pub fn find_trace_id_from_tracing(span: &tracing::Span) -> Option<String> {
     find_trace_id(span.context())
 }
 
+#[inline]
 pub fn find_trace_id(context: Context) -> Option<String> {
     use opentelemetry_api::trace::TraceContextExt;
 
