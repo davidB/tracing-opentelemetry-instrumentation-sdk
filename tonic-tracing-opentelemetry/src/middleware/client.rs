@@ -1,6 +1,7 @@
 //! code based on [tonic/examples/src/tower/client.rs at master · hyperium/tonic · GitHub](https://github.com/hyperium/tonic/blob/master/examples/src/tower/client.rs)
 use http::{Request, Response};
 use std::task::{Context, Poll};
+use tonic::client::GrpcService;
 use tower::{BoxError, Layer, Service};
 use tracing_opentelemetry_instrumentation_sdk::{find_context_from_tracing, http as otel_http};
 
@@ -26,23 +27,26 @@ pub struct OtelGrpcService<S> {
     inner: S,
 }
 
-impl<S, B, B2> Service<Request<B>> for OtelGrpcService<S>
+impl<S, B, B2> GrpcService<B> for OtelGrpcService<S>
 where
-    S: Service<Request<B>, Response = Response<B2>, Error = BoxError> + Clone + Send + 'static,
+    S: GrpcService<B, ResponseBody = B2> + Clone + Send + 'static,
     S::Future: Send + 'static,
     B: Send + 'static,
+    B2: tonic::codegen::Body,
 {
-    type Response = S::Response;
-    type Error = S::Error;
+    type ResponseBody = B2;
+    type Error = BoxError;
     #[allow(clippy::type_complexity)]
     // type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
-    type Future = futures::future::BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future =
+        futures::future::BoxFuture<'static, Result<http::Response<S::ResponseBody>, Self::Error>>;
+    // type Future: Future<Output = Result<http::Response<S::ResponseBody>, Self::Error>>;
     //type Future = Pin<Box<S::Future>>;
     //type Future = S::Future;
     //type Future = Inspect<S::Future, Box<dyn FnOnce(S::Response)>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx).map_err(Into::into)
+        self.inner.poll_ready(cx).map_err(|e| e.into())
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
@@ -57,9 +61,10 @@ where
         // let _ = span.enter();
         Box::pin(async move {
             let _ = span.enter();
-            let response = inner.call(req).await;
+            let response: Result<Response<Self::ResponseBody>, BoxError> =
+                inner.call(req).await.map_err(|e| e.into());
             otel_http::grpc_client::update_span_from_response_or_error(&mut span, &response);
-            response
+            response //.map_err(|e| e.)
         })
     }
 }
