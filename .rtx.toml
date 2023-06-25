@@ -1,0 +1,8 @@
+[env]
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "http://127.0.0.1:4317"
+OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "grpc"
+OTEL_TRACES_SAMPLER = "always_on"
+
+[tools]
+rust = '1.70'
+just = '1'
