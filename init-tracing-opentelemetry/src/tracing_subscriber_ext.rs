@@ -26,7 +26,7 @@ where
         Box::new(
             tracing_subscriber::fmt::layer()
                 .json()
-                .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+                //.with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
                 .with_timer(tracing_subscriber::fmt::time::uptime()),
         )
     }
@@ -40,7 +40,7 @@ pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
         format!(
             // `otel::tracing` should be a level info to emit opentelemetry trace & span
             // `otel::setup` set to debug to log detected resources, configuration read and infered
-            "{},otel::tracing=info,otel=debug",
+            "{},otel::tracing=trace,otel=debug",
             std::env::var("RUST_LOG")
                 .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
                 .unwrap_or_else(|_| "info".to_string())
@@ -70,7 +70,9 @@ where
     // let otel_tracer =
     //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())?;
     init_propagator()?;
-    Ok(tracing_opentelemetry::layer().with_tracer(otel_tracer))
+    Ok(tracing_opentelemetry::layer()
+        .with_exception_field_propagation(true)
+        .with_tracer(otel_tracer))
 }
 
 pub fn init_subscribers() -> Result<(), Error> {
