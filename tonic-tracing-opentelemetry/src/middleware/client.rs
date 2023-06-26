@@ -2,7 +2,7 @@
 use http::{Request, Response};
 use std::task::{Context, Poll};
 use tonic::client::GrpcService;
-use tower::{BoxError, Layer, Service};
+use tower::{BoxError, Layer};
 use tracing_opentelemetry_instrumentation_sdk::{find_context_from_tracing, http as otel_http};
 
 /// layer for grpc (tonic client):

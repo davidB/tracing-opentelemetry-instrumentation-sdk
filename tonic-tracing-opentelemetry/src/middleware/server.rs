@@ -4,6 +4,8 @@ use std::task::{Context, Poll};
 use tower::{BoxError, Layer, Service};
 use tracing_opentelemetry_instrumentation_sdk::http as otel_http;
 
+pub type Filter = fn(&str) -> bool;
+
 /// layer for grpc (tonic client):
 ///
 /// - propagate OpenTelemetry context (trace_id,...) to server
@@ -13,6 +15,15 @@ use tracing_opentelemetry_instrumentation_sdk::http as otel_http;
 #[derive(Default, Debug, Clone)]
 pub struct OtelGrpcLayer {
     filter: Option<Filter>,
+}
+
+// add a builder like api
+impl OtelGrpcLayer {
+    pub fn filter(self, filter: Filter) -> Self {
+        OtelGrpcLayer {
+            filter: Some(filter),
+        }
+    }
 }
 
 impl<S> Layer<S> for OtelGrpcLayer {
@@ -25,8 +36,6 @@ impl<S> Layer<S> for OtelGrpcLayer {
         }
     }
 }
-
-pub type Filter = fn(&str, &str) -> bool;
 
 #[derive(Debug, Clone)]
 pub struct OtelGrpcService<S> {
@@ -61,13 +70,13 @@ where
         let clone = self.inner.clone();
         let mut inner = std::mem::replace(&mut self.inner, clone);
         let req = req;
-        // if let Some(filter) = self.filter {
-        //     if !filter(service, method) {
-        //         return Span::none();
-        //     }
-        // }
-        let mut span = otel_http::grpc_server::make_span_from_request(&req);
-        span.set_parent(otel_http::extract_context(req.headers()));
+        let mut span = if self.filter.map(|f| f(req.uri().path())).unwrap_or(true) {
+            let span = otel_http::grpc_server::make_span_from_request(&req);
+            span.set_parent(otel_http::extract_context(req.headers()));
+            span
+        } else {
+            tracing::Span::none()
+        };
         // span.enter();
         Box::pin(async move {
             let _ = span.enter();

@@ -46,8 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Server::builder()
         // create trace for every request including health_service, metrics, refelection
-        // .layer(opentelemetry_tracing_layer_server().with_filter(filters::reject_healthcheck))
-        .layer(server::OtelGrpcLayer::default())
+        .layer(server::OtelGrpcLayer::default().filter(filters::reject_healthcheck))
         .add_service(health_service)
         .add_service(reflection_service)
         //.add_service(GreeterServer::new(greeter))
