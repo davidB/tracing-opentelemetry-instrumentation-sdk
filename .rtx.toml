@@ -6,3 +6,5 @@ OTEL_TRACES_SAMPLER = "always_on"
 [tools]
 rust = '1.70'
 just = '1'
+grpcurl = '*'
+grpc-health-probe = "*"
