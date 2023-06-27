@@ -19,7 +19,7 @@ expression: tracing_events
     otel.name: "GET /users/:id"
     trace_id: b2611246a58fd7ea623d2264c5a1e226
   spans: []
-  target: "axum_tracing_opentelemetry::middleware::trace_extractor"
+  target: "otel::tracing"
   timestamp: "[timestamp]"
 - fields:
     message: close
@@ -42,6 +42,6 @@ expression: tracing_events
     otel.status_code: OK
     trace_id: b2611246a58fd7ea623d2264c5a1e226
   spans: []
-  target: "axum_tracing_opentelemetry::middleware::trace_extractor"
+  target: "otel::tracing"
   timestamp: "[timestamp]"
 

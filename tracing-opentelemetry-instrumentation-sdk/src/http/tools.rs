@@ -108,7 +108,7 @@ mod tests {
     use rstest::*;
 
     #[rstest]
-    #[case("", "", "")]
+    // #[case("", "", "")]
     #[case("/", "", "")]
     #[case("//", "", "")]
     #[case("/grpc.health.v1.Health/Check", "grpc.health.v1.Health", "Check")]

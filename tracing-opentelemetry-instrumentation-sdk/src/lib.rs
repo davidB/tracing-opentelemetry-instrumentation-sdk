@@ -27,7 +27,7 @@ pub fn find_current_context() -> Context {
 /// This function can be used to report the trace id into the error message send back to user.
 ///
 /// ```rust
-/// let trace_id = init_tracing_opentelemetry::find_current_trace_id();
+/// let trace_id = tracing_opentelemetry_instrumentation_sdk::find_current_trace_id();
 /// // json!({ "error" :  "xxxxxx", "trace_id": trace_id})
 ///
 /// ```

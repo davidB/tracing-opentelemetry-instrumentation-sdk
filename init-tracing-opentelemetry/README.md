@@ -69,13 +69,13 @@ where
 To retrieve the current `trace_id` (eg to add it into error message (as header or attributes))
 
 ```rust
-  let trace_id = init_tracing_opentelemetry::find_current_trace_id();
+  let trace_id = tracing_opentelemetry_instrumentation_sdk::find_current_trace_id();
   json!({ "error" :  "xxxxxx", "trace_id": trace_id})
 ```
 
 ## Configuration based on environment variable
 
-To ease setup and compliancy with [Opentelemetry SDK configuration](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/), the configuration can be done with the following environment variables (see sample `init_tracing()` above):
+To ease setup and compliancy with [OpenTelemetry SDK configuration](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/), the configuration can be done with the following environment variables (see sample `init_tracing()` above):
 
 - `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` fallback to `OTEL_EXPORTER_OTLP_ENDPOINT` for the url of the exporter / collector
 - `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` fallback to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to auto-detection based on ENDPOINT port

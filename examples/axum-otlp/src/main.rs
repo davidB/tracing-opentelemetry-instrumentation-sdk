@@ -3,6 +3,7 @@ use axum::{response::IntoResponse, routing::get, BoxError, Router};
 use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trace_layer};
 use serde_json::json;
 use std::net::SocketAddr;
+use tracing_opentelemetry_instrumentation_sdk::find_current_trace_id;
 
 #[tokio::main]
 async fn main() -> Result<(), BoxError> {
@@ -43,14 +44,14 @@ async fn health() -> impl IntoResponse {
 }
 
 async fn index() -> impl IntoResponse {
-    let trace_id = init_tracing_opentelemetry::find_current_trace_id();
+    let trace_id = find_current_trace_id();
     axum::Json(json!({ "my_trace_id": trace_id }))
 }
 
 async fn proxy_handler(Path((service, path)): Path<(String, String)>) -> impl IntoResponse {
     // Overwrite the otel.name of the span
     tracing::Span::current().record("otel.name", format!("proxy {service}"));
-    let trace_id = init_tracing_opentelemetry::find_current_trace_id();
+    let trace_id = find_current_trace_id();
     axum::Json(
         json!({ "my_trace_id": trace_id, "fake_proxy": { "service": service, "path": path } }),
     )
