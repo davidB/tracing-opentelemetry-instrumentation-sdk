@@ -1,5 +1,5 @@
-use axum::{body::Body, http::Request, response::Response};
 use futures_core::future::BoxFuture;
+use http::{Request, Response};
 use std::task::{Context, Poll};
 use tower::{Layer, Service};
 use tracing_opentelemetry_instrumentation_sdk as otel;
@@ -29,9 +29,9 @@ pub struct OtelInResponseService<S> {
     inner: S,
 }
 
-impl<S> Service<Request<Body>> for OtelInResponseService<S>
+impl<S, B, B2> Service<Request<B>> for OtelInResponseService<S>
 where
-    S: Service<Request<Body>, Response = Response> + Send + 'static,
+    S: Service<Request<B>, Response = Response<B2>> + Send + 'static,
     S::Future: Send + 'static,
 {
     type Response = S::Response;
@@ -44,11 +44,11 @@ where
     }
 
     #[allow(unused_mut)]
-    fn call(&mut self, mut request: Request<Body>) -> Self::Future {
+    fn call(&mut self, mut request: Request<B>) -> Self::Future {
         let future = self.inner.call(request);
 
         Box::pin(async move {
-            let mut response: Response = future.await?;
+            let mut response = future.await?;
             // inject the trace context into the response (optional but useful for debugging and client)
             otel_http::inject_context(otel::find_current_context(), response.headers_mut());
             Ok(response)

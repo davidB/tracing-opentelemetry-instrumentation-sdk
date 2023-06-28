@@ -16,7 +16,6 @@ homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/axum-tracing
 
 [dependencies]
 axum = "0.6"
-# axum-core = "0.3"
 futures-core = "0.3"
 futures-util = { version = "0.3", default_features = false, features = [] }
 http = "0.2"

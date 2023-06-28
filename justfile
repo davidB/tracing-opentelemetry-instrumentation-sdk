@@ -21,7 +21,7 @@ test:
   cargo test --doc
 
 release *arguments:
-  cargo ws publish {{arguments}}
+  cargo ws publish --all {{arguments}}
 
 _container *arguments:
   if [ -x "$(command -v podman)" ]; then \
