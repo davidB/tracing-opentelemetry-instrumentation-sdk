@@ -1,19 +1,20 @@
 [package]
 name = "testing-tracing-opentelemetry"
 description = "helpers to help testing app + tracing + opentelemetry."
-version = "0.12.0-alpha.0"
-edition = "2021"
 readme = "README.md"
-license = "CC0-1.0"
 keywords = ["tracing", "opentelemetry"]
 categories = ["development-tools::testing"]
-repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
 homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/testing-tracing-opentelemetry"
 publish = false
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 assert2 = "0.3"
-fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
+fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector", version = "0.12.0-alpha.6" }
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }
 opentelemetry = "0.19"
 opentelemetry_api = "0.19"

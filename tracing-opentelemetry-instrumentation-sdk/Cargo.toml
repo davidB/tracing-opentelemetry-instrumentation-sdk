@@ -1,18 +1,19 @@
 [package]
 name = "tracing-opentelemetry-instrumentation-sdk"
 description = "A set of helpers to build OpenTelemetry instrumentation based on `tracing` crate."
-version = "0.12.0-alpha.6"
-edition = "2021"
 readme = "README.md"
-license = "CC0-1.0"
 keywords = ["tracing", "opentelemetry"]
 categories = [
   "development-tools::debugging",
   "development-tools::profiling",
   "web-programming",
 ]
-repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
 homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/tracing-opentelemetry-instrumentation-sdk"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 http = { version = "^0.2", optional = true }

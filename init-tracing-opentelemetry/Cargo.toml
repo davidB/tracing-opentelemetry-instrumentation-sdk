@@ -1,14 +1,15 @@
 [package]
 name = "init-tracing-opentelemetry"
 description = "A set of helpers to initialize (and more) tracing + opentelemetry (compose your own or use opinionated preset)"
-version = "0.12.0-alpha.6"
-edition = "2021"
 readme = "README.md"
-license = "CC0-1.0"
 keywords = ["tracing", "opentelemetry"]
 categories = ["development-tools::debugging", "development-tools::profiling"]
-repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
 homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/axum-tracing-opentelemetry"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 opentelemetry = { version = "0.19", features = [

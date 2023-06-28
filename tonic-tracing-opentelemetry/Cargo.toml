@@ -1,18 +1,20 @@
 [package]
 name = "tonic-tracing-opentelemetry"
 description = "Middlewares and tools to integrate tonic + tracing + opentelemetry."
-version = "0.12.0-alpha.6"
-edition = "2021"
 readme = "README.md"
-license = "CC0-1.0"
 keywords = ["axum", "tracing", "opentelemetry"]
 categories = [
   "development-tools::debugging",
   "development-tools::profiling",
   "web-programming",
 ]
-repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
 homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/tonic-tracing-opentelemetry"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+
 
 [dependencies]
 futures-core = "0.3"
@@ -30,7 +32,7 @@ tracing = "0.1"
 tracing-opentelemetry = "0.19"
 tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
   "http",
-] }
+], version = "0.12.0-alpha.6" }
 
 [dev-dependencies]
 axum = "0.6"

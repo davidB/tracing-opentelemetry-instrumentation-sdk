@@ -1,14 +1,15 @@
 [package]
 name = "fake-opentelemetry-collector"
 description = "A Fake (basic) opentelemetry collector, useful to test what is collected opentelemetry"
-version = "0.12.0-alpha.6"
-edition = "2021"
 readme = "README.md"
-license = "CC0-1.0"
 keywords = ["tracing", "opentelemetry", "faker", "mock"]
 categories = ["development-tools::testing"]
-repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
 homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/fake-opentelemetry-collector"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 futures = "0.3"

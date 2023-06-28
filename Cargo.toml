@@ -12,6 +12,13 @@ members = [
 
 exclude = ["target"]
 
+[workspace.package]
+edition = "2021"
+version = "0.12.0-alpha.6"
+authors = ["David Bernard"]
+license = "CC0-1.0"
+repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
+
 [workspace.metadata.release]
 pre-release-commit-message = "🚀 (cargo-release) version {{version}}"
 tag-prefix = ""
