@@ -78,8 +78,8 @@ pub fn http_flavor(version: Version) -> Cow<'static, str> {
 }
 
 #[inline]
-pub fn http_scheme(uri: &Uri) -> &str {
-    uri.scheme().map(|s| s.as_str()).unwrap_or_default()
+pub fn url_scheme(uri: &Uri) -> &str {
+    uri.scheme_str().unwrap_or_default()
 }
 
 #[inline]
@@ -118,5 +118,14 @@ mod tests {
         #[case] method: &str,
     ) {
         check!(extract_service_method(&path.parse::<Uri>().unwrap()) == (service, method));
+    }
+
+    #[rstest]
+    #[case("http://example.org/hello/world", "http")]
+    #[case("https://example.org/hello/world", "https")]
+    #[case("foo://example.org/hello/world", "foo")]
+    fn test_extract_url_scheme(#[case] input: &str, #[case] expected: &str) {
+        let uri: Uri = input.parse().unwrap();
+        check!(url_scheme(&uri) == expected);
     }
 }

@@ -5,47 +5,52 @@ use crate::TRACING_TARGET;
 use tracing::field::Empty;
 
 pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
-    // [opentelemetry-specification/.../rpc.md](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md)
+    // [opentelemetry-specification/.../http.md](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md)
+    // [opentelemetry-specification/.../span-general.md](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md)
     // Can not use const or opentelemetry_semantic_conventions::trace::* for name of records
     let http_method = http_method(req.method());
     tracing::trace_span!(
         target: TRACING_TARGET,
         "HTTP request",
-        http.method = %http_method,
+        http.request.method = %http_method,
         http.route = Empty, // to set by router of "webframework" after
-        http.flavor = %http_flavor(req.version()),
-        http.scheme = %http_scheme(req.uri()),
-        http.host = %http_host(req),
-        http.client_ip = Empty, //%$request.connection_info().realip_remote_addr().unwrap_or(""),
-        http.user_agent = %user_agent(req),
-        http.target = %http_target(req.uri()),
-        http.status_code = Empty, // to set on response
-        otel.name = %format!("HTTP {}", http_method), // to set by router of "webframework" after
+        network.protocol.version = %http_flavor(req.version()),
+        server.address = http_host(req),
+        // server.port = req.uri().port(),
+        http.client.address = Empty, //%$request.connection_info().realip_remote_addr().unwrap_or(""),
+        user_agent.original = user_agent(req),
+        http.response.status_code = Empty, // to set on response
+        url.path = req.uri().path(),
+        url.query = req.uri().query(),
+        url.scheme = url_scheme(req.uri()),
+        otel.name = %http_method, // to set by router of "webframework" after
         otel.kind = ?opentelemetry_api::trace::SpanKind::Server,
-        otel.status_code =Empty, // to set on response
-        // trace_id = Empty, // to set on response
+        otel.status_code = Empty, // to set on response
+        trace_id = Empty, // to set on response
         request_id = Empty, // to set
         exception.message = Empty, // to set on response
-        // Not proper OpenTelemetry, but their terminology is fairly exception-centric
-        exception.details = Empty, // to set on response
     )
 }
 
-pub fn update_span_from_response<B>(span: &mut tracing::Span, response: &http::Response<B>) {
+pub fn update_span_from_response<B>(span: &tracing::Span, response: &http::Response<B>) {
     let status = response.status();
     span.record(
-        "http.status_code",
+        "http.response.status_code",
         &tracing::field::display(status.as_u16()),
     );
 
     if status.is_server_error() {
         span.record("otel.status_code", "ERROR");
-    } else {
-        span.record("otel.status_code", "OK");
+        // see[](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.22.0/specification/trace/semantic_conventions/http.md#status)
+        // Span Status MUST be left unset if HTTP status code was in the 1xx, 2xx or 3xx ranges,
+        // unless there was another error (e.g., network error receiving the response body;
+        // or 3xx codes with max redirects exceeded), in which case status MUST be set to Error.
+        // } else {
+        //     span.record("otel.status_code", "OK");
     }
 }
 
-pub fn update_span_from_error<E>(span: &mut tracing::Span, error: &E)
+pub fn update_span_from_error<E>(span: &tracing::Span, error: &E)
 where
     E: Error,
 {
@@ -58,7 +63,7 @@ where
 }
 
 pub fn update_span_from_response_or_error<B, E>(
-    span: &mut tracing::Span,
+    span: &tracing::Span,
     response: &Result<http::Response<B>, E>,
 ) where
     E: Error,

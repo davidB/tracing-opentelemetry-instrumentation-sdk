@@ -4,20 +4,17 @@ expression: tracing_events
 ---
 - fields:
     message: new
-  level: INFO
+  level: TRACE
   span:
-    http.client_ip: 127.0.0.1
-    http.flavor: "1.1"
-    http.host: ""
-    http.method: GET
-    http.route: "/users/:id"
-    http.scheme: HTTP
-    http.target: /users/123
-    http.user_agent: tests
+    http.request.method: GET
     name: HTTP request
-    otel.kind: server
-    otel.name: "GET /users/:id"
-    trace_id: "[trace_id:lg32]"
+    network.protocol.version: "1.1"
+    otel.kind: Server
+    otel.name: GET
+    server.address: ""
+    url.path: /users/123
+    url.scheme: ""
+    user_agent.original: tests
   spans: []
   target: "otel::tracing"
   timestamp: "[timestamp]"
@@ -25,22 +22,19 @@ expression: tracing_events
     message: close
     time.busy: "[duration]"
     time.idle: "[duration]"
-  level: INFO
+  level: TRACE
   span:
-    http.client_ip: 127.0.0.1
-    http.flavor: "1.1"
-    http.host: ""
-    http.method: GET
+    http.request.method: GET
+    http.response.status_code: "200"
     http.route: "/users/:id"
-    http.scheme: HTTP
-    http.status_code: "200"
-    http.target: /users/123
-    http.user_agent: tests
     name: HTTP request
-    otel.kind: server
+    network.protocol.version: "1.1"
+    otel.kind: Server
     otel.name: "GET /users/:id"
-    otel.status_code: OK
-    trace_id: "[trace_id:lg32]"
+    server.address: ""
+    url.path: /users/123
+    url.scheme: ""
+    user_agent.original: tests
   spans: []
   target: "otel::tracing"
   timestamp: "[timestamp]"

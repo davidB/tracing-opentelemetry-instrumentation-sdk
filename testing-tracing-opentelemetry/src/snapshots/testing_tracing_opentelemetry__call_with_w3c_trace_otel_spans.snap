@@ -14,20 +14,18 @@ expression: otel_spans
     busy_ns: ignore
     code.filepath: ignore
     code.lineno: ignore
-    code.namespace: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor\")) })"
-    http.client_ip: "Some(AnyValue { value: Some(StringValue(\"\")) })"
-    http.flavor: "Some(AnyValue { value: Some(StringValue(\"1.1\")) })"
-    http.host: "Some(AnyValue { value: Some(StringValue(\"\")) })"
-    http.method: "Some(AnyValue { value: Some(StringValue(\"GET\")) })"
+    code.namespace: "Some(AnyValue { value: Some(StringValue(\"tracing_opentelemetry_instrumentation_sdk::http::http_server\")) })"
+    http.request.method: "Some(AnyValue { value: Some(StringValue(\"GET\")) })"
+    http.response.status_code: "Some(AnyValue { value: Some(StringValue(\"200\")) })"
     http.route: "Some(AnyValue { value: Some(StringValue(\"/users/:id\")) })"
-    http.scheme: "Some(AnyValue { value: Some(StringValue(\"HTTP\")) })"
-    http.status_code: "Some(AnyValue { value: Some(StringValue(\"200\")) })"
-    http.target: "Some(AnyValue { value: Some(StringValue(\"/users/123\")) })"
-    http.user_agent: "Some(AnyValue { value: Some(StringValue(\"\")) })"
     idle_ns: ignore
+    network.protocol.version: "Some(AnyValue { value: Some(StringValue(\"1.1\")) })"
+    server.address: "Some(AnyValue { value: Some(StringValue(\"\")) })"
     thread.id: ignore
     thread.name: "Some(AnyValue { value: Some(StringValue(\"middleware::trace_extractor::tests::check_span_event::case_6\")) })"
-    trace_id: ignore
+    url.path: "Some(AnyValue { value: Some(StringValue(\"/users/123\")) })"
+    url.scheme: "Some(AnyValue { value: Some(StringValue(\"\")) })"
+    user_agent.original: "Some(AnyValue { value: Some(StringValue(\"\")) })"
   dropped_attributes_count: 0
   events: []
   dropped_events_count: 0
@@ -35,5 +33,5 @@ expression: otel_spans
   dropped_links_count: 0
   status:
     message: ""
-    code: STATUS_CODE_OK
+    code: STATUS_CODE_UNSET
 

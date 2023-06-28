@@ -111,7 +111,7 @@ impl FakeEnvironment {
             .with_writer(make_writer)
             .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
         let subscriber = tracing_subscriber::registry()
-            .with(EnvFilter::try_new("info").unwrap())
+            .with(EnvFilter::try_new("trace").unwrap())
             .with(fmt_layer)
             .with(otel_layer);
         let _subsciber_guard = subscriber.set_default();

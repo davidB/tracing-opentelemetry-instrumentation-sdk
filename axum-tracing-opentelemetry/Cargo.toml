@@ -17,16 +17,20 @@ homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/axum-tracing
 [dependencies]
 axum = "0.6"
 # axum-core = "0.3"
-futures = "0.3"
+futures-core = "0.3"
+futures-util = { version = "0.3", default_features = false, features = [] }
 http = "0.2"
 opentelemetry = { version = "0.19", features = [
   "rt-tokio",
   "trace",
 ], default-features = false }
+pin-project-lite = "0.2"
 tower = "0.4"
-tower-http = { version = "0.4", features = ["trace"] }
 tracing = "0.1"
 tracing-opentelemetry = "0.19"
+tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
+  "http",
+] }
 
 [dev-dependencies]
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }

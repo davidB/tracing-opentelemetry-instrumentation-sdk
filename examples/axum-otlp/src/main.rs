@@ -1,6 +1,6 @@
 use axum::extract::Path;
 use axum::{response::IntoResponse, routing::get, BoxError, Router};
-use axum_tracing_opentelemetry::{opentelemetry_tracing_layer, response_with_trace_layer};
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use serde_json::json;
 use std::net::SocketAddr;
 use tracing_opentelemetry_instrumentation_sdk::find_current_trace_id;
@@ -32,10 +32,9 @@ fn app() -> Router {
         )
         .route("/", get(index)) // request processed inside span
         // include trace context as header into the response
-        .layer(response_with_trace_layer())
-        // opentelemetry_tracing_layer setup `TraceLayer`,
-        // that is provided by tower-http so you have to add that as a dependency.
-        .layer(opentelemetry_tracing_layer())
+        .layer(OtelInResponseLayer::default())
+        //start OpenTelemetry trace on incoming request
+        .layer(OtelAxumLayer::default())
         .route("/health", get(health)) // request processed without span / trace
 }
 
@@ -43,8 +42,11 @@ async fn health() -> impl IntoResponse {
     axum::Json(json!({ "status" : "UP" }))
 }
 
+#[tracing::instrument]
 async fn index() -> impl IntoResponse {
     let trace_id = find_current_trace_id();
+    dbg!(&trace_id);
+    //std::thread::sleep(std::time::Duration::from_secs(1));
     axum::Json(json!({ "my_trace_id": trace_id }))
 }
 

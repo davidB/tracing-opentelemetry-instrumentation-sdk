@@ -1,6 +1,6 @@
 # tracing-opentelemetry-instrumentation-sdk
 
-Provide a set of helpers to build [OpenTelemetry] instrumentation based on [`tracing`] crate.
+Provide a set of helpers to build [OpenTelemetry] instrumentation based on [`tracing`] crate, and following the [OpenTelemetry Trace Semantic Conventions](https://github.com/open-telemetry/opentelemetry-specification/tree/v1.22.0/specification/trace/semantic_conventions).
 
 PS: Contributions are welcome (bug report, improvements, features, ...)
 
