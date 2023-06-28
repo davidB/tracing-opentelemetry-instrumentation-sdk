@@ -40,7 +40,8 @@ where
     S::Future: Send + 'static,
     S::Error: Error + 'static,
     B: Send + 'static,
-    B2: tonic::codegen::Body,
+    // B2: tonic::codegen::Body,
+    B2: http_body::Body,
 {
     type ResponseBody = B2;
     type Error = S::Error;

@@ -21,6 +21,8 @@ tonic-health = "0.9"
 tonic-reflection = "0.9"
 tonic-tracing-opentelemetry = { path = "../../tonic-tracing-opentelemetry" }
 tower = "0.4"
+tracing = "0.1"
+tracing-opentelemetry-instrumentation-sdk = { path = "../../tracing-opentelemetry-instrumentation-sdk" }
 
 [build-dependencies]
 tonic-build = { version = "0.9", default-features = false, features = [

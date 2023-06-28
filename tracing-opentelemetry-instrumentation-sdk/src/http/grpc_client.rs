@@ -13,7 +13,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
         "GRPC request",
         http.user_agent = %user_agent(req),
         http.status_code = Empty, // to set on response
-        otel.name = format!("GRPC {}", req.uri().path()),
+        otel.name = format!("{service}/{method}"),
         otel.kind = ?opentelemetry_api::trace::SpanKind::Client,
         otel.status_code = Empty,
         rpc.system ="grpc",

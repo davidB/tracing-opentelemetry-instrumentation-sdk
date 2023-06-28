@@ -15,14 +15,20 @@ pub struct MyGreeter {}
 
 #[tonic::async_trait]
 impl Greeter for MyGreeter {
+    #[tracing::instrument(skip(self, request))]
     async fn say_hello(
         &self,
         request: Request<HelloRequest>,
     ) -> Result<Response<HelloReply>, Status> {
-        println!("Got a request from {:?}", request.remote_addr());
+        let trace_id = tracing_opentelemetry_instrumentation_sdk::find_current_trace_id();
+        println!(
+            "Got a request from {:?} ({:?})",
+            request.remote_addr(),
+            trace_id
+        );
 
         let reply = hello_world::HelloReply {
-            message: format!("Hello {}!", request.into_inner().name),
+            message: format!("Hello {}! ({:?})", request.into_inner().name, trace_id),
         };
         Ok(Response::new(reply))
     }

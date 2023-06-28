@@ -11,7 +11,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
         "GRPC request",
         http.user_agent = %user_agent(req),
         http.status_code = Empty, // to set on response
-        otel.name = format!("GRPC {}", req.uri().path()),
+        otel.name = format!("{service}/{method}"),
         otel.kind = ?opentelemetry_api::trace::SpanKind::Server,
         otel.status_code = Empty,
         rpc.system ="grpc",
@@ -25,7 +25,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
 
 //TODO update behavior for grpc
 //TODO create similar but with tonic::Response<B> ?
-pub fn update_span_from_response<B>(span: &mut tracing::Span, response: &http::Response<B>) {
+pub fn update_span_from_response<B>(span: &tracing::Span, response: &http::Response<B>) {
     let status = response.status();
     span.record(
         "http.status_code",
@@ -39,7 +39,7 @@ pub fn update_span_from_response<B>(span: &mut tracing::Span, response: &http::R
     }
 }
 
-pub fn update_span_from_error(span: &mut tracing::Span, error: &BoxError) {
+pub fn update_span_from_error(span: &tracing::Span, error: &BoxError) {
     span.record("otel.status_code", "ERROR");
     span.record("http.grpc_status", 1);
     span.record("exception.message", error.to_string());
@@ -49,7 +49,7 @@ pub fn update_span_from_error(span: &mut tracing::Span, error: &BoxError) {
 }
 
 pub fn update_span_from_response_or_error<B>(
-    span: &mut tracing::Span,
+    span: &tracing::Span,
     response: &Result<http::Response<B>, BoxError>,
 ) {
     match response {

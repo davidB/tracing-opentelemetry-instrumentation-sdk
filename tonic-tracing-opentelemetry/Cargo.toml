@@ -18,6 +18,7 @@ homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/tonic-tracin
 futures-core = "0.3"
 futures-util = { version = "0.3", default_features = false, features = [] }
 http = "^0.2"
+http-body = "0.4"
 hyper = "0.14"
 opentelemetry_api = { version = "0.19", features = [
   "trace",
