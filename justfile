@@ -1,24 +1,27 @@
 # Format the code and sort dependencies
 format:
-    cargo fmt
-    cargo sort --workspace --grouped
+  cargo fmt
+  cargo sort --workspace --grouped
 
 _check_format:
-    cargo fmt --all -- --check
-    cargo sort --workspace --grouped --check
+  cargo fmt --all -- --check
+  cargo sort --workspace --grouped --check
 
 deny:
-    cargo deny check advisories
-    cargo deny check bans licenses sources
+  cargo deny check advisories
+  cargo deny check bans licenses sources
 
 # Lint the rust code
 lint:
-    cargo clippy --workspace --all-features --all-targets -- --deny warnings
+  cargo clippy --workspace --all-features --all-targets -- --deny warnings
 
 # Launch tests
 test:
-    cargo nextest run
-    cargo test --doc
+  cargo nextest run
+  cargo test --doc
+
+release *arguments:
+  cargo ws publish {{arguments}}
 
 _container *arguments:
   if [ -x "$(command -v podman)" ]; then \
