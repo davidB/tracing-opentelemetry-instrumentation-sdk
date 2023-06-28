@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::http::*;
 use crate::TRACING_TARGET;
 use tracing::field::Empty;
@@ -40,5 +42,33 @@ pub fn update_span_from_response<B>(span: &mut tracing::Span, response: &http::R
         span.record("otel.status_code", "ERROR");
     } else {
         span.record("otel.status_code", "OK");
+    }
+}
+
+pub fn update_span_from_error<E>(span: &mut tracing::Span, error: &E)
+where
+    E: Error,
+{
+    span.record("otel.status_code", "ERROR");
+    //span.record("http.status_code", 500);
+    span.record("exception.message", error.to_string());
+    error
+        .source()
+        .map(|s| span.record("exception.message", s.to_string()));
+}
+
+pub fn update_span_from_response_or_error<B, E>(
+    span: &mut tracing::Span,
+    response: &Result<http::Response<B>, E>,
+) where
+    E: Error,
+{
+    match response {
+        Ok(response) => {
+            update_span_from_response(span, response);
+        }
+        Err(err) => {
+            update_span_from_error(span, err);
+        }
     }
 }

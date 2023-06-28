@@ -81,7 +81,7 @@ where
         Box::pin(async move {
             let _ = span.enter();
             let response = inner.call(req).await;
-            otel_http::grpc_client::update_span_from_response_or_error(&mut span, &response);
+            otel_http::grpc_server::update_span_from_response_or_error(&mut span, &response);
             response
         })
     }
