@@ -53,7 +53,7 @@ where
     type Error = S::Error;
     #[allow(clippy::type_complexity)]
     // type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
-    type Future = futures::future::BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future = futures_core::future::BoxFuture<'static, Result<Self::Response, Self::Error>>;
     //type Future = Pin<Box<S::Future>>;
     //type Future = S::Future;
     //type Future = Inspect<S::Future, Box<dyn FnOnce(S::Response)>>;

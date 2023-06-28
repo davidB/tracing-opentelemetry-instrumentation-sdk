@@ -1,5 +1,6 @@
+use std::error::Error;
+
 use crate::http::*;
-use crate::BoxError;
 use crate::TRACING_TARGET;
 use tracing::field::Empty;
 
@@ -27,7 +28,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
 //TODO update behavior for grpc
 //TODO create similar but with tonic::Response<B> ?
 //TODO set `http.grpc_status`
-pub fn update_span_from_response<B>(span: &mut tracing::Span, response: &http::Response<B>) {
+pub fn update_span_from_response<B>(span: &tracing::Span, response: &http::Response<B>) {
     let status = response.status();
     span.record(
         "http.status_code",
@@ -41,7 +42,10 @@ pub fn update_span_from_response<B>(span: &mut tracing::Span, response: &http::R
     }
 }
 
-pub fn update_span_from_error(span: &mut tracing::Span, error: &BoxError) {
+pub fn update_span_from_error<E>(span: &tracing::Span, error: &E)
+where
+    E: Error,
+{
     span.record("otel.status_code", "ERROR");
     span.record("http.grpc_status", 1);
     span.record("exception.message", error.to_string());
@@ -50,10 +54,12 @@ pub fn update_span_from_error(span: &mut tracing::Span, error: &BoxError) {
         .map(|s| span.record("exception.message", s.to_string()));
 }
 
-pub fn update_span_from_response_or_error<B>(
-    span: &mut tracing::Span,
-    response: &Result<http::Response<B>, BoxError>,
-) {
+pub fn update_span_from_response_or_error<B, E>(
+    span: &tracing::Span,
+    response: &Result<http::Response<B>, E>,
+) where
+    E: Error,
+{
     match response {
         Ok(response) => {
             update_span_from_response(span, response);

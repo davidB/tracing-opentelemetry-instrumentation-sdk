@@ -15,12 +15,14 @@ repository = "https://github.com/davidB/toolkit-tracing-opentelemetry"
 homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/tonic-tracing-opentelemetry"
 
 [dependencies]
-futures = "0.3"
+futures-core = "0.3"
+futures-util = { version = "0.3", default_features = false, features = [] }
 http = "^0.2"
 hyper = "0.14"
 opentelemetry_api = { version = "0.19", features = [
   "trace",
 ], default-features = false }
+pin-project-lite = "0.2"
 tonic = { version = "0.9", default-features = false }
 tower = { version = "0.4", default-features = false }
 tower-http = { version = "0.4", features = ["trace"] }
