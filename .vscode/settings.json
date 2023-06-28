@@ -9,6 +9,7 @@
   ],
   "rust-analyzer.linkedProjects": [
     "./Cargo.toml",
+    "./axum-tracing-opentelemetry/Cargo.toml",
     "./axum-tracing-opentelemetry/Cargo.toml"
   ]
 }

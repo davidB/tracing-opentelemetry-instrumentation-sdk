@@ -1,7 +1,7 @@
 [package]
 name = "tracing-opentelemetry-instrumentation-sdk"
 description = "A set of helpers to build OpenTelemetry instrumentation based on `tracing` crate."
-version = "0.12.0-alpha.1"
+version = "0.12.0-alpha.2"
 edition = "2021"
 readme = "README.md"
 license = "CC0-1.0"

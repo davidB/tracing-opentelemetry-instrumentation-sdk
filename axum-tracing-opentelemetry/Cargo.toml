@@ -1,7 +1,7 @@
 [package]
 name = "axum-tracing-opentelemetry"
 description = "Middlewares and tools to integrate axum + tracing + opentelemetry"
-version = "0.12.0-alpha.1"
+version = "0.12.0-alpha.2"
 edition = "2021"
 readme = "README.md"
 license = "CC0-1.0"
