@@ -3,7 +3,7 @@ use crate::TRACING_TARGET;
 use tracing::field::Empty;
 
 pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
-    // [opentelemetry-specification/specification/trace/semantic\_conventions/rpc.md at main · open-telemetry/opentelemetry-specification · GitHub](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md)
+    // [opentelemetry-specification/.../rpc.md](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md)
     // Can not use const or opentelemetry_semantic_conventions::trace::* for name of records
     let http_method = http_method(req.method());
     tracing::trace_span!(

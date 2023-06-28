@@ -3,7 +3,7 @@ use crate::BoxError;
 use crate::TRACING_TARGET;
 use tracing::field::Empty;
 
-// [opentelemetry-specification/specification/trace/semantic\_conventions/rpc.md at main · open-telemetry/opentelemetry-specification · GitHub](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md)
+// [opentelemetry-specification/.../rpc.md](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md)
 //TODO create similar but with tonic::Request<B> ?
 pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
     let (service, method) = extract_service_method(req.uri());
