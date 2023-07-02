@@ -5,7 +5,7 @@
 
 A set of helpers to initialize (and more) tracing + opentelemetry (compose your own or use opinionated preset)
 
-```rust
+```txt
 //...
 use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
 
@@ -24,7 +24,7 @@ AND Call `opentelemetry_api::global::shutdown_tracer_provider();` on shutdown of
 
 To configure opentelemetry tracer & tracing, you can use the functions from `init_tracing_opentelemetry::tracing_subscriber_ext`, but they are very opinionated (and WIP to make them more customizable and friendly), so we recommend making your composition, but look at the code (to avoid some issue) and share your feedback.
 
-```rust
+```txt
 pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
     // filter what is output on log (fmt)
     // std::env::set_var("RUST_LOG", "warn,axum_tracing_opentelemetry=info,otel=debug");
@@ -70,8 +70,10 @@ where
 To retrieve the current `trace_id` (eg to add it into error message (as header or attributes))
 
 ```rust
+  # use tracing_opentelemetry_instrumentation_sdk;
+
   let trace_id = tracing_opentelemetry_instrumentation_sdk::find_current_trace_id();
-  json!({ "error" :  "xxxxxx", "trace_id": trace_id})
+  //json!({ "error" :  "xxxxxx", "trace_id": trace_id})
 ```
 
 ## Configuration based on the environment variables

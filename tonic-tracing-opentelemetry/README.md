@@ -17,7 +17,7 @@ For examples, you can look at the [examples](https://github.com/davidB/tracing-o
 
 Extract of `client.rs`:
 
-```rust
+```txt
     let channel = Channel::from_static("http://127.0.0.1:50051")
         .connect()
         .await?; //Devskim: ignore DS137138
@@ -34,7 +34,7 @@ Extract of `client.rs`:
 
 Extract of `server.rs`:
 
-```rust
+```txt
     Server::builder()
         // create trace for every request including health_service
         .layer(server::OtelGrpcLayer::default().filter(filters::reject_healthcheck))

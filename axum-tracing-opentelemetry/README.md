@@ -14,7 +14,7 @@ Middlewares to integrate axum + tracing + opentelemetry.
 
 For examples, you can look at the [examples](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/examples/) folder.
 
-```rust
+```txt
 //...
 use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
 

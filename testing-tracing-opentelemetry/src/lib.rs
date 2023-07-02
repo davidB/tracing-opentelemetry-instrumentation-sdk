@@ -1,4 +1,4 @@
-use assert2::*;
+use assert2::{check, let_assert};
 use opentelemetry::sdk::propagation::TraceContextPropagator;
 use serde_json::Value;
 use std::sync::mpsc::{self, Receiver, SyncSender};
@@ -55,24 +55,24 @@ pub fn assert_trace(
         "[].end_time_unix_nano" => "[timestamp]",
         "[].events[].time_unix_nano" => "[timestamp]",
         "[].trace_id" => insta::dynamic_redaction(move |value, _path| {
-            assert2::let_assert!(Some(otel_trace_id) = value.as_str());
+            let_assert!(Some(otel_trace_id) = value.as_str());
             //FIXME check!(trace_id_3 == otel_trace_id);
             format!("[trace_id:lg{}]", otel_trace_id.len())
         }),
         "[].span_id" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(span_id) = value.as_str());
+            let_assert!(Some(span_id) = value.as_str());
             format!("[span_id:lg{}]", span_id.len())
         }),
         "[].parent_span_id" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(span_id) = value.as_str());
+            let_assert!(Some(span_id) = value.as_str());
             format!("[span_id:lg{}]", span_id.len())
         }),
         "[].links[].trace_id" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(otel_trace_id) = value.as_str());
+            let_assert!(Some(otel_trace_id) = value.as_str());
             format!("[trace_id:lg{}]", otel_trace_id.len())
         }),
         "[].links[].span_id" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(span_id) = value.as_str());
+            let_assert!(Some(span_id) = value.as_str());
             format!("[span_id:lg{}]", span_id.len())
         }),
         "[].attributes.busy_ns" => "ignore",

@@ -19,7 +19,14 @@ Instrumentation on the callee side of a call is  composed of steps:
 - do the processing
 - update attributes of the span with response (status,...)
 
-The crates provide helper (or inspiration) to extract/inject context info, start & update span and retrieve context or trace_id during processing (eg to inject trace_id into log, error message,...). The helpers could be used as is or into middleware build on it (eg: [`axum-tracing-opentelemetry`], [`tonic-tracing-opentelemetry`] are middlewares build on top of the helpers provide for `http` (feature & crate))
+The crates provide helper (or inspiration) to extract/inject context info, start & update span and retrieve context or trace_id during processing (eg to inject trace_id into log, error message,...).
+
+```rust
+  let trace_id = tracing_opentelemetry_instrumentation_sdk::find_current_trace_id();
+  //json!({ "error" :  "xxxxxx", "trace_id": trace_id})
+```
+
+The helpers could be used as is or into middleware build on it (eg: [`axum-tracing-opentelemetry`], [`tonic-tracing-opentelemetry`] are middlewares build on top of the helpers provide for `http` (feature & crate))
 
 ## Notes
 
@@ -36,7 +43,7 @@ Until every crates are instrumented
 
 Use `tracing::instrumented` (no propagation & no update on response)
 
-```rust
+```txt
 // basic handmade span far to be compliant with
 //[opentelemetry-specification/.../database.md](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.22.0/specification/trace/semantic_conventions/database.md)
 fn make_otel_span(db_operation: &str) -> tracing::Span {
