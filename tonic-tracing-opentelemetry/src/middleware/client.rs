@@ -14,10 +14,10 @@ use tracing_opentelemetry_instrumentation_sdk::{find_context_from_tracing, http 
 
 /// layer for grpc (tonic client):
 ///
-/// - propagate OpenTelemetry context (trace_id,...) to server
-/// - create a Span for OpenTelemetry (and tracing) on call
+/// - propagate `OpenTelemetry` context (`trace_id`,...) to server
+/// - create a Span for `OpenTelemetry` (and tracing) on call
 ///
-/// OpenTelemetry context are extracted frim tracing's span.
+/// `OpenTelemetry` context are extracted frim tracing's span.
 #[derive(Default, Debug, Clone)]
 pub struct OtelGrpcLayer;
 
@@ -62,7 +62,7 @@ where
         // let mut inner = std::mem::replace(&mut self.inner, clone);
         let mut req = req;
         let span = otel_http::grpc_client::make_span_from_request(&req);
-        otel_http::inject_context(find_context_from_tracing(&span), req.headers_mut());
+        otel_http::inject_context(&find_context_from_tracing(&span), req.headers_mut());
         let future = {
             let _ = span.enter();
             self.inner.call(req)

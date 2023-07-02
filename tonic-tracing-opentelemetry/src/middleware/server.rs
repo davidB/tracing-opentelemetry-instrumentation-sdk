@@ -14,10 +14,10 @@ pub type Filter = fn(&str) -> bool;
 
 /// layer for grpc (tonic client):
 ///
-/// - propagate OpenTelemetry context (trace_id,...) to server
-/// - create a Span for OpenTelemetry (and tracing) on call
+/// - propagate `OpenTelemetry` context (`trace_id`, ...) to server
+/// - create a Span for `OpenTelemetry` (and tracing) on call
 ///
-/// OpenTelemetry context are extracted frim tracing's span.
+/// `OpenTelemetry` context are extracted frim tracing's span.
 #[derive(Default, Debug, Clone)]
 pub struct OtelGrpcLayer {
     filter: Option<Filter>,
@@ -25,6 +25,7 @@ pub struct OtelGrpcLayer {
 
 // add a builder like api
 impl OtelGrpcLayer {
+    #[must_use]
     pub fn filter(self, filter: Filter) -> Self {
         OtelGrpcLayer {
             filter: Some(filter),
@@ -77,7 +78,7 @@ where
         // let clone = self.inner.clone();
         // let mut inner = std::mem::replace(&mut self.inner, clone);
         let req = req;
-        let span = if self.filter.map(|f| f(req.uri().path())).unwrap_or(true) {
+        let span = if self.filter.map_or(true, |f| f(req.uri().path())) {
             let span = otel_http::grpc_server::make_span_from_request(&req);
             span.set_parent(otel_http::extract_context(req.headers()));
             span

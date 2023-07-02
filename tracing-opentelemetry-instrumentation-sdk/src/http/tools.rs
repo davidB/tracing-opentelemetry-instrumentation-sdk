@@ -3,15 +3,16 @@ use std::borrow::Cow;
 use http::{HeaderMap, Method, Uri, Version};
 use opentelemetry_api::Context;
 
-pub fn inject_context(context: Context, headers: &mut http::HeaderMap) {
+pub fn inject_context(context: &Context, headers: &mut http::HeaderMap) {
     use opentelemetry_http::HeaderInjector;
     let mut injector = HeaderInjector(headers);
     opentelemetry_api::global::get_text_map_propagator(|propagator| {
-        propagator.inject_context(&context, &mut injector)
-    })
+        propagator.inject_context(context, &mut injector);
+    });
 }
 
 // If remote request has no span data the propagator defaults to an unsampled context
+#[must_use]
 pub fn extract_context(headers: &http::HeaderMap) -> Context {
     use opentelemetry_http::HeaderExtractor;
     let extractor = HeaderExtractor(headers);
@@ -46,10 +47,12 @@ pub fn client_ip<B>(req: &http::Request<B>) -> &str {
 
 #[inline]
 pub fn http_target(uri: &Uri) -> &str {
-    uri.path_and_query().map(|p| p.as_str()).unwrap_or("")
+    uri.path_and_query()
+        .map_or("", http::uri::PathAndQuery::as_str)
 }
 
 #[inline]
+#[must_use]
 pub fn http_method(method: &Method) -> Cow<'static, str> {
     match method {
         &Method::CONNECT => "CONNECT".into(),
@@ -66,6 +69,7 @@ pub fn http_method(method: &Method) -> Cow<'static, str> {
 }
 
 #[inline]
+#[must_use]
 pub fn http_flavor(version: Version) -> Cow<'static, str> {
     match version {
         Version::HTTP_09 => "0.9".into(),
@@ -104,8 +108,8 @@ pub fn http_host<B>(req: &http::Request<B>) -> &str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert2::*;
-    use rstest::*;
+    use assert2::check;
+    use rstest::rstest;
 
     #[rstest]
     // #[case("", "", "")]

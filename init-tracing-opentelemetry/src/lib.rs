@@ -1,3 +1,11 @@
+//#![warn(missing_docs)]
+#![forbid(unsafe_code)]
+#![warn(clippy::perf)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::missing_errors_doc)]
+#![doc = include_str!("../README.md")]
+
 mod error;
 pub use error::Error;
 
@@ -32,6 +40,10 @@ pub mod tracing_subscriber_ext;
 /// - "xray": AWS X-Ray (require feature "xray")
 /// - "ottrace": OT Trace (third party) (not supported)
 /// - "none": No automatically configured propagator.
+///
+/// # Errors
+///
+/// Will return `TraceError` if issue in reading or instanciate propagator.
 pub fn init_propagator() -> Result<(), TraceError> {
     let value_from_env =
         std::env::var("OTEL_PROPAGATORS").unwrap_or_else(|_| "tracecontext,baggage".to_string());
@@ -108,7 +120,7 @@ fn propagator_from_string(
 #[cfg(test)]
 #[cfg(feature = "tracer")]
 mod tests {
-    use assert2::*;
+    use assert2::let_assert;
 
     #[test]
     fn init_tracing_failed_on_invalid_propagator() {

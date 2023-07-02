@@ -3,6 +3,7 @@ use opentelemetry::{sdk::trace as sdktrace, trace::TraceError};
 use opentelemetry_jaeger::config::agent::AgentPipeline;
 use opentelemetry_semantic_conventions as semcov;
 
+#[must_use]
 pub fn identity(v: AgentPipeline) -> AgentPipeline {
     v
 }

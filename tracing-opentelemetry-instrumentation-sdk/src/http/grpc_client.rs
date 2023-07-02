@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use crate::http::*;
+use crate::http::{extract_service_method, http_host, user_agent};
 use crate::TRACING_TARGET;
 use tracing::field::Empty;
 

@@ -1,3 +1,10 @@
+//#![warn(missing_docs)]
+#![forbid(unsafe_code)]
+#![warn(clippy::perf)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
+#![doc = include_str!("../README.md")]
+
 #[cfg(feature = "http")]
 pub mod http;
 
@@ -16,6 +23,7 @@ pub const TRACING_TARGET: &str = "otel::tracing";
 // const HTTP_TARGET: &str = opentelemetry_semantic_conventions::trace::HTTP_TARGET.as_str();
 
 #[inline]
+#[must_use]
 pub fn find_current_context() -> Context {
     use tracing_opentelemetry::OpenTelemetrySpanExt;
     // let context = opentelemetry::Context::current();
@@ -32,11 +40,13 @@ pub fn find_current_context() -> Context {
 ///
 /// ```
 #[inline]
+#[must_use]
 pub fn find_current_trace_id() -> Option<String> {
-    find_trace_id(find_current_context())
+    find_trace_id(&find_current_context())
 }
 
 #[inline]
+#[must_use]
 pub fn find_context_from_tracing(span: &tracing::Span) -> Context {
     use tracing_opentelemetry::OpenTelemetrySpanExt;
     // let context = opentelemetry::Context::current();
@@ -45,15 +55,17 @@ pub fn find_context_from_tracing(span: &tracing::Span) -> Context {
 }
 
 #[inline]
+#[must_use]
 pub fn find_trace_id_from_tracing(span: &tracing::Span) -> Option<String> {
     use tracing_opentelemetry::OpenTelemetrySpanExt;
     // let context = opentelemetry::Context::current();
     // OpenTelemetry Context is propagation inside code is done via tracing crate
-    find_trace_id(span.context())
+    find_trace_id(&span.context())
 }
 
 #[inline]
-pub fn find_trace_id(context: Context) -> Option<String> {
+#[must_use]
+pub fn find_trace_id(context: &Context) -> Option<String> {
     use opentelemetry_api::trace::TraceContextExt;
 
     let span = context.span();

@@ -1,4 +1,4 @@
-use crate::http::*;
+use crate::http::{extract_service_method, http_host, user_agent};
 use crate::BoxError;
 use crate::TRACING_TARGET;
 use tracing::field::Empty;

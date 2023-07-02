@@ -9,6 +9,7 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::Layer;
 
+#[must_use]
 pub fn build_logger_text<S>() -> Box<dyn Layer<S> + Send + Sync + 'static>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
@@ -32,6 +33,7 @@ where
     }
 }
 
+#[must_use]
 pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
     // filter what is output on log (fmt)
     // std::env::set_var("RUST_LOG", "warn,otel::tracing=info,otel=debug");

@@ -9,6 +9,7 @@ use tracing_opentelemetry_instrumentation_sdk::http as otel_http;
     since = "0.12.0",
     note = "keep for transition, replaced by OtelInResponseLayer"
 )]
+#[must_use]
 pub fn response_with_trace_layer() -> OtelInResponseLayer {
     OtelInResponseLayer {}
 }
@@ -50,7 +51,7 @@ where
         Box::pin(async move {
             let mut response = future.await?;
             // inject the trace context into the response (optional but useful for debugging and client)
-            otel_http::inject_context(otel::find_current_context(), response.headers_mut());
+            otel_http::inject_context(&otel::find_current_context(), response.headers_mut());
             Ok(response)
         })
     }

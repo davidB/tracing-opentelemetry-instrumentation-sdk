@@ -1,7 +1,7 @@
 //
-//! OpenTelemetry tracing middleware.
+//! `OpenTelemetry` tracing middleware.
 //!
-//! This returns a [`TraceLayer`] configured to use [OpenTelemetry's conventional span field
+//! This returns a [`OtelAxumLayer`] configured to use [`OpenTelemetry`'s conventional span field
 //! names][otel].
 //!
 //! # Span fields
@@ -50,6 +50,7 @@ use tracing_opentelemetry_instrumentation_sdk::http as otel_http;
     since = "0.12.0",
     note = "keep for transition, replaced by OtelAxumLayer"
 )]
+#[must_use]
 pub fn opentelemetry_tracing_layer() -> OtelAxumLayer {
     OtelAxumLayer::default()
 }
@@ -58,10 +59,10 @@ pub type Filter = fn(&str) -> bool;
 
 /// layer/middleware for axum:
 ///
-/// - propagate OpenTelemetry context (trace_id,...) to server
-/// - create a Span for OpenTelemetry (and tracing) on call
+/// - propagate `OpenTelemetry` context (`trace_id`,...) to server
+/// - create a Span for `OpenTelemetry` (and tracing) on call
 ///
-/// OpenTelemetry context are extracted from tracing's span.
+/// `OpenTelemetry` context are extracted from tracing's span.
 #[derive(Default, Debug, Clone)]
 pub struct OtelAxumLayer {
     filter: Option<Filter>,
@@ -69,6 +70,7 @@ pub struct OtelAxumLayer {
 
 // add a builder like api
 impl OtelAxumLayer {
+    #[must_use]
     pub fn filter(self, filter: Filter) -> Self {
         OtelAxumLayer {
             filter: Some(filter),
@@ -113,7 +115,7 @@ where
     fn call(&mut self, req: Request<B>) -> Self::Future {
         use tracing_opentelemetry::OpenTelemetrySpanExt;
         let req = req;
-        let span = if self.filter.map(|f| f(req.uri().path())).unwrap_or(true) {
+        let span = if self.filter.map_or(true, |f| f(req.uri().path())) {
             let span = otel_http::http_server::make_span_from_request(&req);
             let route = http_route(&req);
             let method = otel_http::http_method(req.method());
@@ -185,8 +187,8 @@ mod tests {
     use axum::body::HttpBody as _;
     use axum::{body::Body, routing::get, Router};
     use http::{Request, StatusCode};
-    use rstest::*;
-    use testing_tracing_opentelemetry::*;
+    use rstest::rstest;
+    use testing_tracing_opentelemetry::{assert_trace, FakeEnvironment};
     use tower::{Service, ServiceExt};
 
     #[rstest]

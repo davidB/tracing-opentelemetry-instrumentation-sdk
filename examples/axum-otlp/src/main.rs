@@ -1,3 +1,5 @@
+#![allow(clippy::let_with_type_underscore)]
+
 use axum::extract::Path;
 use axum::{response::IntoResponse, routing::get, BoxError, Router};
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
