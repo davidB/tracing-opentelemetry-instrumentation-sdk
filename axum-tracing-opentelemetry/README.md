@@ -5,16 +5,14 @@
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
-Middlewares and tools to integrate axum + tracing + opentelemetry.
+Middlewares to integrate axum + tracing + opentelemetry.
 
 - Read OpenTelemetry header from incoming request
 - Start a new trace if no trace found in the incoming request
 - Trace is attached into tracing'span
+- OpenTelemetry Span is created on close of the tracing's span (behavior from [tracing-opentelemetry])
 
-For examples, you can look at:
-
-- the [examples](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk /examples/) folder
-- [davidB/sandbox_axum_observability: Sandbox to experiment axum and observability](https://github.com/davidB/sandbox_axum_observability). This example shows also propagation of the trace between tracing span and service (via reqwest).
+For examples, you can look at the [examples](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/examples/) folder.
 
 ```rust
 //...
@@ -37,11 +35,12 @@ async fn main() -> Result<(), axum::BoxError> {
 }
 
 fn app() -> Router {
-    // build our application with a route
     Router::new()
-        .route("/", get(health)) // request processed inside span
-        // opentelemetry_tracing_layer setup `TraceLayer`, that is provided by tower-http so you have to add that as a dependency.
-        .layer(opentelemetry_tracing_layer())
+        .route("/", get(index)) // request processed inside span
+        // include trace context as header into the response
+        .layer(OtelInResponseLayer::default())
+        //start OpenTelemetry trace on incoming request
+        .layer(OtelAxumLayer::default())
         .route("/health", get(health)) // request processed without span / trace
 }
 
@@ -51,17 +50,7 @@ async fn shutdown_signal() {
 }
 ```
 
-To also inject the trace id into the response (could be useful for debugging) uses the layer `response_with_trace_layer`
-
-```rust
-    // build our application with a route
-    Router::new()
-        ...
-        // include trace context as header into the response
-        .layer(response_with_trace_layer())
-```
-
-For more info about how to setup, you can look at crate `init-tracing-opentelemetry` or `tracing-opentelemetry`.
+For more info about how to initialize, you can look at crate [`init-tracing-opentelemetry`] or [`tracing-opentelemetry`].
 
 ## Compatibility
 
@@ -74,7 +63,12 @@ For more info about how to setup, you can look at crate `init-tracing-openteleme
 
 ### 0.12
 
-- 💥 extract tools, tonic,... into separated crates
+- 💥 upgrade opentelemetry attributes to follow semantic 1.22
+- 💥 extract tools, tonic,... into separate crates [`init-tracing-opentelemetry`], [`tonic-tracing-opentelemetry`], [`tracing-opentelemetry-instrumentation-sdk`], without re-export and features
+- 💥 remove `trace_id` from attributes (opnetelemetry) and field in trace (log,...) on creation
+  because the previous workaround created invalid states in some context
+- deprecate factory `opentelemetry_tracing_layer`, `response_with_trace_layer`
+- full rewrite without tower-http/Tracing
 
 ### 0.11
 
@@ -130,3 +124,8 @@ For more info about how to setup, you can look at crate `init-tracing-openteleme
 - Code originally created at part of axum-extra [Add OpenTelemetry middleware by davidpdrsn · Pull Request #769 · tokio-rs/axum](https://github.com/tokio-rs/axum/pull/769)
 - Code copied and modified as part of [davidB/sandbox_axum_observability: Sandbox to experiment axum and observability](https://github.com/davidB/sandbox_axum_observability)
 - Published as a standalone crate with OK from original author
+
+[`tracing-opentelemetry`]: https://crates.io/crates/tracing-opentelemetry
+[`init-tracing-opentelemetry`]: https://crates.io/crates/init-tracing-opentelemetry
+[`tonic-tracing-opentelemetry`]: https://crates.io/crates/tonic-tracing-opentelemetry
+[`tracing-opentelemetry-instrumentation-sdk`]: https://crates.io/crates/tracing-opentelemetry-instrumentation-sdk

@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("GreeterServer listening on {}", addr);
 
     Server::builder()
-        // create trace for every request including health_service, metrics, refelection
+        // create trace for every request including health_service
         .layer(server::OtelGrpcLayer::default().filter(filters::reject_healthcheck))
         .add_service(health_service)
         .add_service(reflection_service)

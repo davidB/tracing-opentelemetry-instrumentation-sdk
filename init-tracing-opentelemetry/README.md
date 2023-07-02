@@ -18,10 +18,11 @@ async fn main() -> Result<(), axum::BoxError> {
 
     Ok(())
 }
-
 ```
 
-To configure opentelemetry tracer & tracing, you can use function fom `init_tracing_opentelemetry::tracing_subscriber_ext`, but they are very opinionated (and WIP to make them more customizable and friendly), so we recommend to make your own composition, but look at the code (to avoid some issue) and share your feedback.
+AND Call `opentelemetry_api::global::shutdown_tracer_provider();` on shutdown of the app to be sure to send the pending trace,...
+
+To configure opentelemetry tracer & tracing, you can use the functions from `init_tracing_opentelemetry::tracing_subscriber_ext`, but they are very opinionated (and WIP to make them more customizable and friendly), so we recommend making your composition, but look at the code (to avoid some issue) and share your feedback.
 
 ```rust
 pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
@@ -30,9 +31,9 @@ pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
     std::env::set_var(
         "RUST_LOG",
         format!(
-            // `axum_tracing_opentelemetry` should be a level info to emit opentelemetry trace & span
+            // `otel::tracing` should be a level trace to emit opentelemetry trace & span
             // `otel::setup` set to debug to log detected resources, configuration read and infered
-            "{},axum_tracing_opentelemetry=info,otel=debug",
+            "{},otel::tracing=trace,otel=debug",
             std::env::var("RUST_LOG")
                 .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
                 .unwrap_or_else(|_| "info".to_string())
@@ -73,17 +74,17 @@ To retrieve the current `trace_id` (eg to add it into error message (as header o
   json!({ "error" :  "xxxxxx", "trace_id": trace_id})
 ```
 
-## Configuration based on environment variable
+## Configuration based on the environment variables
 
-To ease setup and compliancy with [OpenTelemetry SDK configuration](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/), the configuration can be done with the following environment variables (see sample `init_tracing()` above):
+To ease setup and compliance with [OpenTelemetry SDK configuration](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/), the configuration can be done with the following environment variables (see sample `init_tracing()` above):
 
 - `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` fallback to `OTEL_EXPORTER_OTLP_ENDPOINT` for the url of the exporter / collector
 - `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` fallback to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to auto-detection based on ENDPOINT port
 - `OTEL_SERVICE_NAME` for the name of the service
-- `OTEL_PROPAGATORS` for the configuration of propagator
+- `OTEL_PROPAGATORS` for the configuration of the propagators
 - `OTEL_TRACES_SAMPLER` & `OTEL_TRACES_SAMPLER_ARG` for configuration of the sampler
 
-In the context of kubernetes, the above environment variable can be injected by the Opentelemetry operator (via inject-sdk):
+In the context of kubernetes, the above environment variable can be injected by the Opentelemetry operator (via `inject-sdk`):
 
 ```yaml
 apiVersion: apps/v1
@@ -99,7 +100,7 @@ spec:
         - name: app
 ```
 
-Or if you don't setup inject-sdk, you can manually set the environment variable eg
+Or if you don't setup `inject-sdk`, you can manually set the environment variable eg
 
 ```yaml
 apiVersion: apps/v1
