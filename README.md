@@ -1,4 +1,4 @@
-# toolkit-tracing-opentelemetry
+# tracing-opentelemetry-instrumentation-sdk
 
 A set of rust crates to help working with tracing + opentelemetry
 

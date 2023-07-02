@@ -8,7 +8,7 @@ categories = [
   "development-tools::profiling",
   "web-programming",
 ]
-homepage = "https://github.com/davidB/toolkit-tracing-opentelemetry/axum-tracing-opentelemetry"
+homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/axum-tracing-opentelemetry"
 edition.workspace = true
 version.workspace = true
 authors.workspace = true

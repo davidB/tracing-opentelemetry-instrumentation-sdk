@@ -13,7 +13,7 @@ Middlewares and tools to integrate axum + tracing + opentelemetry.
 
 For examples, you can look at:
 
-- the [examples](https://github.com/davidB/toolkit-tracing-opentelemetry/examples/) folder
+- the [examples](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk /examples/) folder
 - [davidB/sandbox_axum_observability: Sandbox to experiment axum and observability](https://github.com/davidB/sandbox_axum_observability). This example shows also propagation of the trace between tracing span and service (via reqwest).
 
 ```rust
