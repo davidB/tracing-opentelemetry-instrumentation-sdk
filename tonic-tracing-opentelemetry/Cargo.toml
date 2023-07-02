@@ -32,7 +32,7 @@ tracing = "0.1"
 tracing-opentelemetry = "0.19"
 tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
   "http",
-], version = "0.12.0-alpha.6" }
+], version = "0.12" }
 
 [dev-dependencies]
 axum = "0.6"
