@@ -1,3 +1,10 @@
+requirements:
+  cargo install  cargo-binstall
+  cargo binstall cargo-nextest
+  cargo binstall cargo-sort
+  cargo binstall cargo-insta
+  cargo binstall cargo-workspaces
+
 # Format the code and sort dependencies
 format:
   cargo fmt
@@ -14,6 +21,9 @@ deny:
 # Lint the rust code
 lint:
   cargo clippy --workspace --all-features --all-targets -- --deny warnings
+
+megalinter:
+  @just _container run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "megalinter/megalinter:v7"
 
 # Launch tests
 test:
