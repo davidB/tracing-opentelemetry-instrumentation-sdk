@@ -30,7 +30,7 @@ opentelemetry_sdk = { features = [
 serde = { version = "1.0.136", features = ["derive"] }
 tokio = { version = "1.27", features = ["full"] }
 tokio-stream = { version = "0.1", features = ["net"] }
-tonic = "0.8" #should be sync with opentelemetry-proto
+tonic = "0.9" #should be sync with opentelemetry-proto
 tracing = "0.1"
 
 [dev-dependencies]
