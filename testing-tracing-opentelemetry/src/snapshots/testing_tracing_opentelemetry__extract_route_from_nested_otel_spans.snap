@@ -21,6 +21,7 @@ expression: otel_spans
     idle_ns: ignore
     network.protocol.version: "Some(AnyValue { value: Some(StringValue(\"1.1\")) })"
     server.address: "Some(AnyValue { value: Some(StringValue(\"\")) })"
+    span.type: "Some(AnyValue { value: Some(StringValue(\"web\")) })"
     thread.id: ignore
     thread.name: "Some(AnyValue { value: Some(StringValue(\"middleware::trace_extractor::tests::check_span_event::case_9\")) })"
     url.path: "Some(AnyValue { value: Some(StringValue(\"/nest/123\")) })"

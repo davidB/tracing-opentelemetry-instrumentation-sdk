@@ -12,6 +12,7 @@ expression: tracing_events
     otel.kind: Server
     otel.name: GET
     server.address: ""
+    span.type: web
     url.path: /status/500
     url.scheme: ""
     user_agent.original: ""
@@ -33,6 +34,7 @@ expression: tracing_events
     otel.name: GET /status/500
     otel.status_code: ERROR
     server.address: ""
+    span.type: web
     url.path: /status/500
     url.scheme: ""
     user_agent.original: ""
