@@ -29,6 +29,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
         trace_id = Empty, // to set on response
         request_id = Empty, // to set
         exception.message = Empty, // to set on response
+        "span.type" = "web",
     )
 }
 

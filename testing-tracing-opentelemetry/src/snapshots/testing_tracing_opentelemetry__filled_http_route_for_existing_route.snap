@@ -12,6 +12,7 @@ expression: tracing_events
     otel.kind: Server
     otel.name: GET
     server.address: example.com
+    span.type: web
     url.path: /users/123
     url.scheme: http
     user_agent.original: ""
@@ -32,6 +33,7 @@ expression: tracing_events
     otel.kind: Server
     otel.name: "GET /users/:id"
     server.address: example.com
+    span.type: web
     url.path: /users/123
     url.scheme: http
     user_agent.original: ""

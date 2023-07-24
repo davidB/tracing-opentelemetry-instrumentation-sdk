@@ -12,6 +12,7 @@ expression: tracing_events
     otel.kind: Server
     otel.name: GET
     server.address: ""
+    span.type: web
     url.path: /with_child_span
     url.scheme: ""
     user_agent.original: ""
@@ -31,6 +32,7 @@ expression: tracing_events
       otel.kind: Server
       otel.name: GET /with_child_span
       server.address: ""
+      span.type: web
       url.path: /with_child_span
       url.scheme: ""
       user_agent.original: ""
@@ -51,6 +53,7 @@ expression: tracing_events
       otel.kind: Server
       otel.name: GET /with_child_span
       server.address: ""
+      span.type: web
       url.path: /with_child_span
       url.scheme: ""
       user_agent.original: ""
@@ -70,6 +73,7 @@ expression: tracing_events
     otel.kind: Server
     otel.name: GET /with_child_span
     server.address: ""
+    span.type: web
     url.path: /with_child_span
     url.scheme: ""
     user_agent.original: ""
