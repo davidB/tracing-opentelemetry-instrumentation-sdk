@@ -7,6 +7,7 @@
 
 #[cfg(feature = "http")]
 pub mod http;
+mod span_type;
 
 use opentelemetry_api::Context;
 

@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use crate::http::{http_flavor, http_host, http_method, url_scheme, user_agent};
+use crate::span_type::SpanType;
 use crate::TRACING_TARGET;
 use tracing::field::Empty;
 
@@ -29,7 +30,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
         trace_id = Empty, // to set on response
         request_id = Empty, // to set
         exception.message = Empty, // to set on response
-        "span.type" = "web",
+        "span.type" = SpanType::Web.to_string(), // non-official open-telemetry key, only supported by Datadog
     )
 }
 
