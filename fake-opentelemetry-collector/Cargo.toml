@@ -19,7 +19,7 @@ opentelemetry = { version = "0.19", features = [
   "trace",
 ], default-features = false }
 opentelemetry-otlp = { version = "0.12" }
-opentelemetry-proto = { version = "0.2", features = ["gen-tonic", "traces"] }
+opentelemetry-proto = { version = "0.3", features = ["gen-tonic", "traces"] }
 opentelemetry_api = "0.19"
 # need tokio runtime to run smoke tests.
 opentelemetry_sdk = { features = [
