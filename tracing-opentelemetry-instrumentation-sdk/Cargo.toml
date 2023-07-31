@@ -21,7 +21,7 @@ opentelemetry_api = { version = "0.19", features = [
   "trace",
 ], default-features = false }
 # opentelemetry-semantic-conventions = { version = "0.11" }
-opentelemetry-http = "0.8"
+opentelemetry-http = "0.9"
 tracing = "0.1"
 tracing-opentelemetry = "0.19"
 
