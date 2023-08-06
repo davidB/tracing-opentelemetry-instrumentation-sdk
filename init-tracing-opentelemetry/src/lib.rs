@@ -21,7 +21,7 @@ pub mod jaeger;
 pub mod otlp;
 #[cfg(feature = "tracer")]
 pub mod resource;
-#[cfg(feature = "tracer")]
+#[cfg(feature = "stdout")]
 pub mod stdio;
 #[cfg(feature = "tracing_subscriber_ext")]
 pub mod tracing_subscriber_ext;

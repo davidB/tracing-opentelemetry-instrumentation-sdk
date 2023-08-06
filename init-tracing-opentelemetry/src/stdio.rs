@@ -1,12 +1,13 @@
-use opentelemetry::sdk::export::trace::stdout::PipelineBuilder;
+use opentelemetry::sdk::trace::BatchSpanProcessor;
 use opentelemetry::sdk::Resource;
-use opentelemetry::{
-    global, sdk::propagation::TraceContextPropagator, sdk::trace as sdktrace, trace::TraceError,
-};
+use opentelemetry::{sdk::trace as sdktrace, trace::TraceError};
+use opentelemetry::{sdk::trace::TracerProvider, trace::TracerProvider as _};
 use std::fmt::Debug;
 use std::io::Write;
 
-pub fn identity<W: Write>(v: PipelineBuilder<W>) -> PipelineBuilder<W> {
+pub fn identity<W: Write>(
+    v: opentelemetry::sdk::trace::Builder,
+) -> opentelemetry::sdk::trace::Builder {
     v
 }
 
@@ -16,18 +17,23 @@ pub fn init_tracer<F, W>(
     w: W,
 ) -> Result<sdktrace::Tracer, TraceError>
 where
-    F: FnOnce(PipelineBuilder<W>) -> PipelineBuilder<W>,
-    W: Write + Debug + Send + 'static,
+    F: FnOnce(opentelemetry::sdk::trace::Builder) -> opentelemetry::sdk::trace::Builder,
+    W: Write + Debug + Send + Sync + 'static,
 {
-    global::set_text_map_propagator(TraceContextPropagator::new());
-
-    let mut pipeline = PipelineBuilder::default().with_writer(w).with_trace_config(
-        sdktrace::config()
-            .with_resource(resource)
-            .with_sampler(sdktrace::Sampler::AlwaysOn),
-    );
-    pipeline = transform(pipeline);
-    Ok(pipeline.install_simple())
+    let exporter = opentelemetry_stdout::SpanExporter::builder()
+        .with_writer(w)
+        .build();
+    let processor =
+        BatchSpanProcessor::builder(exporter, opentelemetry::sdk::runtime::Tokio).build();
+    let mut provider_builder: opentelemetry::sdk::trace::Builder = TracerProvider::builder()
+        .with_span_processor(processor)
+        .with_config(
+            sdktrace::config()
+                .with_resource(resource)
+                .with_sampler(sdktrace::Sampler::AlwaysOn),
+        );
+    provider_builder = transform(provider_builder);
+    Ok(provider_builder.build().tracer(""))
 }
 
 #[derive(Debug, Default)]

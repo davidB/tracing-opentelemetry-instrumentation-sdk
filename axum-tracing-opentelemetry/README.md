@@ -61,6 +61,10 @@ For more info about how to initialize, you can look at crate [`init-tracing-open
 
 ## Changelog - History
 
+### 0.13
+
+- ⬆️ upgrade to opentelemetry 0.20 (and related dependencies)
+
 ### 0.12
 
 - 💥 upgrade opentelemetry attributes to follow semantic 1.22

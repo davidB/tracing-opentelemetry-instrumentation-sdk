@@ -1,6 +1,5 @@
 use std::str::FromStr;
 
-use opentelemetry::sdk::propagation::TraceContextPropagator;
 use opentelemetry::sdk::trace::{Sampler, Tracer};
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::TraceError;
@@ -18,7 +17,6 @@ where
 {
     use opentelemetry_otlp::WithExportConfig;
 
-    opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
     let (maybe_protocol, maybe_endpoint) = read_protocol_and_endpoint_from_env();
     let (protocol, endpoint) =
         infer_protocol_and_endpoint(maybe_protocol.as_deref(), maybe_endpoint.as_deref());

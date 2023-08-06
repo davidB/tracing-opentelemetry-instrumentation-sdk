@@ -16,9 +16,6 @@ pub fn init_tracer<F>(resource: Resource, transform: F) -> Result<sdktrace::Trac
 where
     F: FnOnce(AgentPipeline) -> AgentPipeline,
 {
-    opentelemetry::global::set_text_map_propagator(
-        opentelemetry::sdk::propagation::TraceContextPropagator::new(),
-    );
     let mut pipeline = opentelemetry_jaeger::new_agent_pipeline();
     if let Some(name) = resource.get(semcov::resource::SERVICE_NAME) {
         pipeline = pipeline.with_service_name(name.to_string());
