@@ -9,6 +9,7 @@ categories = [
   "web-programming",
 ]
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tonic-tracing-opentelemetry"
+rust-version = "1.70"
 edition.workspace = true
 version.workspace = true
 authors.workspace = true

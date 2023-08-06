@@ -5,6 +5,7 @@ use opentelemetry::{sdk::trace::TracerProvider, trace::TracerProvider as _};
 use std::fmt::Debug;
 use std::io::Write;
 
+#[must_use]
 pub fn identity<W: Write>(
     v: opentelemetry::sdk::trace::Builder,
 ) -> opentelemetry::sdk::trace::Builder {
