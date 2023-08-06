@@ -14,7 +14,7 @@ license.workspace = true
 
 [dependencies]
 assert2 = "0.3"
-fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector", version = "0.12" }
+fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector", version = "0.13.0" }
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }
 opentelemetry = "0.20"
 opentelemetry_api = "0.20"
