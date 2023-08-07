@@ -69,8 +69,11 @@ where
     // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
     // or to `std::io::stdout()` to print
     //
-    // let otel_tracer =
-    //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())?;
+    // let otel_tracer = stdio::init_tracer(
+    //     otel_rsrc,
+    //     stdio::identity::<stdio::WriteNoWhere>,
+    //     stdio::WriteNoWhere::default(),
+    // )?;
     init_propagator()?;
     Ok(tracing_opentelemetry::layer()
         .with_exception_field_propagation(true)
