@@ -4,6 +4,7 @@ use opentelemetry::sdk::trace::{Sampler, Tracer};
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::TraceError;
 use opentelemetry_otlp::SpanExporterBuilder;
+use tonic::transport::ClientTlsConfig;
 
 #[must_use]
 pub fn identity(v: opentelemetry_otlp::OtlpTracePipeline) -> opentelemetry_otlp::OtlpTracePipeline {
@@ -25,6 +26,11 @@ where
     let exporter: SpanExporterBuilder = match protocol.as_str() {
         "http/protobuf" => opentelemetry_otlp::new_exporter()
             .http()
+            .with_endpoint(endpoint)
+            .into(),
+        "grpc/tls" => opentelemetry_otlp::new_exporter()
+            .tonic()
+            .with_tls_config(ClientTlsConfig::new())
             .with_endpoint(endpoint)
             .into(),
         _ => opentelemetry_otlp::new_exporter()
@@ -97,13 +103,17 @@ fn infer_protocol_and_endpoint(
     maybe_protocol: Option<&str>,
     maybe_endpoint: Option<&str>,
 ) -> (String, String) {
-    let protocol = maybe_protocol.unwrap_or_else(|| {
+    let mut protocol = maybe_protocol.unwrap_or_else(|| {
         if maybe_endpoint.map_or(false, |e| e.contains(":4317")) {
             "grpc"
         } else {
             "http/protobuf"
         }
     });
+
+    if protocol == "grpc" && maybe_endpoint.unwrap_or("").starts_with("https") {
+        protocol = "grpc/tls";
+    }
 
     let endpoint = match protocol {
         "http/protobuf" => maybe_endpoint.unwrap_or("http://localhost:4318"), //Devskim: ignore DS137138
@@ -124,6 +134,18 @@ mod tests {
     #[case(Some("http/protobuf"), None, "http/protobuf", "http://localhost:4318")] //Devskim: ignore DS137138
     #[case(Some("grpc"), None, "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
     #[case(None, Some("http://localhost:4317"), "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
+    #[case(
+        None,
+        Some("https://localhost:4317"), //Devskim: ignore DS137138
+        "grpc/tls",
+        "https://localhost:4317" //Devskim: ignore DS137138
+    )]
+    #[case(
+        Some("grpc/tls"),
+        Some("https://localhost:4317"), //Devskim: ignore DS137138
+        "grpc/tls",
+        "https://localhost:4317" //Devskim: ignore DS137138
+    )]
     #[case(
         Some("http/protobuf"),
         Some("http://localhost:4318"), //Devskim: ignore DS137138
