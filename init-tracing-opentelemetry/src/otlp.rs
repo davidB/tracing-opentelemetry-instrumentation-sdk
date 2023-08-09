@@ -138,20 +138,18 @@ mod tests {
     #[case(Some("http/protobuf"), None, "http/protobuf", "http://localhost:4318")] //Devskim: ignore DS137138
     #[case(Some("grpc"), None, "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
     #[case(None, Some("http://localhost:4317"), "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
-    #[cfg_attr(not(feature = "tls"), ignore)]
-    #[case(
+    #[cfg_attr(feature = "tls", case(
         None,
-        Some("https://localhost:4317"), //Devskim: ignore DS137138
+        Some("https://localhost:4317"),
         "grpc/tls",
-        "https://localhost:4317" //Devskim: ignore DS137138
-    )]
-    #[cfg_attr(not(feature = "tls"), ignore)]
-    #[case(
+        "https://localhost:4317"
+    ))]
+    #[cfg_attr(feature = "tls", case(
         Some("grpc/tls"),
-        Some("https://localhost:4317"), //Devskim: ignore DS137138
+        Some("https://localhost:4317"),
         "grpc/tls",
-        "https://localhost:4317" //Devskim: ignore DS137138
-    )]
+        "https://localhost:4317"
+    ))]
     #[case(
         Some("http/protobuf"),
         Some("http://localhost:4318"), //Devskim: ignore DS137138
