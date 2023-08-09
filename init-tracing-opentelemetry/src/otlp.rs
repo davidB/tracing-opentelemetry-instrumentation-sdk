@@ -4,6 +4,7 @@ use opentelemetry::sdk::trace::{Sampler, Tracer};
 use opentelemetry::sdk::Resource;
 use opentelemetry::trace::TraceError;
 use opentelemetry_otlp::SpanExporterBuilder;
+#[cfg(feature = "tls")]
 use tonic::transport::ClientTlsConfig;
 
 #[must_use]
@@ -28,6 +29,7 @@ where
             .http()
             .with_endpoint(endpoint)
             .into(),
+        #[cfg(feature = "tls")]
         "grpc/tls" => opentelemetry_otlp::new_exporter()
             .tonic()
             .with_tls_config(ClientTlsConfig::new())
@@ -103,6 +105,7 @@ fn infer_protocol_and_endpoint(
     maybe_protocol: Option<&str>,
     maybe_endpoint: Option<&str>,
 ) -> (String, String) {
+    #[cfg_attr(not(feature = "tls"), allow(unused_mut))]
     let mut protocol = maybe_protocol.unwrap_or_else(|| {
         if maybe_endpoint.map_or(false, |e| e.contains(":4317")) {
             "grpc"
@@ -111,6 +114,7 @@ fn infer_protocol_and_endpoint(
         }
     });
 
+    #[cfg(feature = "tls")]
     if protocol == "grpc" && maybe_endpoint.unwrap_or("").starts_with("https") {
         protocol = "grpc/tls";
     }
@@ -134,12 +138,14 @@ mod tests {
     #[case(Some("http/protobuf"), None, "http/protobuf", "http://localhost:4318")] //Devskim: ignore DS137138
     #[case(Some("grpc"), None, "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
     #[case(None, Some("http://localhost:4317"), "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
+    #[cfg_attr(not(feature = "tls"), ignore)]
     #[case(
         None,
         Some("https://localhost:4317"), //Devskim: ignore DS137138
         "grpc/tls",
         "https://localhost:4317" //Devskim: ignore DS137138
     )]
+    #[cfg_attr(not(feature = "tls"), ignore)]
     #[case(
         Some("grpc/tls"),
         Some("https://localhost:4317"), //Devskim: ignore DS137138
