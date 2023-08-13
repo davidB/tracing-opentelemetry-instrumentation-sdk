@@ -17,4 +17,4 @@ FILEIO_REPORTER: false
 # DISABLE_ERRORS: true # Uncomment if you want MegaLinter to detect errors but not block CI to pass
 FILTER_REGEX_EXCLUDE: "(\\.lock)|(\\.ndjson)|(\\.pdf)|(\\.csv)|(\\.zip)|(\\.tar)|(\\.ipynb)|(license.*)|(LICENSE.*)"
 SPELL_FILTER_REGEX_INCLUDE: '\\.md$'
-RUST_CLIPPY_ARGUMENTS: --workspace --all-features --all-targets -- --deny warnings --allow deprecated
+RUST_CLIPPY_ARGUMENTS: --workspace --all-features --all-targets -- --deny warnings --allow deprecated --allow unknown-lints

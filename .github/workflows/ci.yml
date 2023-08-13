@@ -15,7 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        rust: [stable]
+        # rust: [stable]
+        rust: ["1.70"]
     env:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: full
@@ -46,5 +47,5 @@ jobs:
         with:
           tool: cargo-hack,protoc
       - run: cargo hack check --each-feature --no-dev-deps
-      - run: cargo clippy --workspace --all-features --all-targets -- --deny warnings --allow deprecated
+      - run: cargo clippy --workspace --all-features --all-targets -- --deny warnings --allow deprecated --allow unknown-lints
       - run: cargo hack test --each-feature -- --test-threads=1

@@ -1,4 +1,5 @@
 #![allow(clippy::let_with_type_underscore)]
+#![allow(clippy::default_constructed_unit_structs)] // warning since 1.71
 
 use axum::extract::Path;
 use axum::{response::IntoResponse, routing::get, BoxError, Router};
