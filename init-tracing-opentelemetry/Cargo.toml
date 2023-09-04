@@ -29,7 +29,7 @@ opentelemetry-zipkin = { version = "0.18", features = [], optional = true }
 thiserror = "1.0"
 tonic = { version = "0.9", optional = true, features = ["tls"] }
 tracing = "0.1"
-tracing-opentelemetry = "0.20"
+tracing-opentelemetry = "0.21"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "ansi",
   "env-filter",

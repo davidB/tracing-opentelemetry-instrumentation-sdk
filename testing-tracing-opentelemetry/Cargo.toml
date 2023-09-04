@@ -20,7 +20,7 @@ opentelemetry = "0.20"
 opentelemetry_api = "0.20"
 serde_json = "1.0.79"
 tracing = "0.1"
-tracing-opentelemetry = "0.20"
+tracing-opentelemetry = "0.21"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "env-filter",
   "fmt",
