@@ -18,7 +18,7 @@ tonic = { version = "0.9", features = [
   "codegen",
 ], default-features = false }
 tonic-health = "0.9"
-tonic-reflection = "0.9"
+tonic-reflection = "0.10"
 tonic-tracing-opentelemetry = { path = "../../tonic-tracing-opentelemetry" }
 tower = "0.4"
 tracing = "0.1"
