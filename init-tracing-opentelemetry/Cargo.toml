@@ -12,10 +12,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-opentelemetry = { version = "0.20", features = [
-  "rt-tokio",
-  "trace",
-], default-features = false }
+opentelemetry = { workspace = true }
 opentelemetry-aws = { version = "0.8", optional = true }
 opentelemetry-jaeger = { version = "0.19", features = [
   "rt-tokio",
@@ -28,8 +25,8 @@ opentelemetry-semantic-conventions = { version = "0.12", optional = true }
 opentelemetry-zipkin = { version = "0.18", features = [], optional = true }
 thiserror = "1.0"
 tonic = { version = "0.9", optional = true, features = ["tls"] }
-tracing = "0.1"
-tracing-opentelemetry = "0.20"
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "ansi",
   "env-filter",
@@ -40,7 +37,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 [dev-dependencies]
 assert2 = "0.3"
 rstest = "0.18"
-opentelemetry_api = "0.20"
+opentelemetry_api = { workspace = true }
 # need tokio runtime to run smoke tests.
 opentelemetry_sdk = { features = [
   "trace",

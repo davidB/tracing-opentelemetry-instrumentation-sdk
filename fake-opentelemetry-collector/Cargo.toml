@@ -14,24 +14,21 @@ license.workspace = true
 [dependencies]
 futures = "0.3"
 hex = "0.4"
-opentelemetry = { version = "0.20", features = [
-  "rt-tokio",
-  "trace",
-], default-features = false }
-opentelemetry-otlp = { version = "0.13" }
-opentelemetry-proto = { version = "0.3", features = ["gen-tonic", "traces"] }
-opentelemetry_api = "0.20"
+opentelemetry = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+opentelemetry-proto = { workspace = true, features = ["gen-tonic", "traces"] }
+opentelemetry_api = { workspace = true }
 # need tokio runtime to run smoke tests.
-opentelemetry_sdk = { features = [
+opentelemetry_sdk = { workspace = true, features = [
   "trace",
   "rt-tokio",
   "testing",
-], version = "0.20" }
+] }
 serde = { version = "1.0.136", features = ["derive"] }
 tokio = { version = "1.27", features = ["full"] }
 tokio-stream = { version = "0.1", features = ["net"] }
 tonic = "0.9" #should be sync with opentelemetry-proto
-tracing = "0.1"
+tracing = { workspace = true }
 
 [dev-dependencies]
 assert2 = "0.3"

@@ -16,11 +16,11 @@ license.workspace = true
 assert2 = "0.3"
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector", version = "0.13.0" }
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }
-opentelemetry = "0.20"
-opentelemetry_api = "0.20"
+opentelemetry = { workspace = true }
+opentelemetry_api = { workspace = true }
 serde_json = "1.0.79"
-tracing = "0.1"
-tracing-opentelemetry = "0.20"
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "env-filter",
   "fmt",

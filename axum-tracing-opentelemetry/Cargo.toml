@@ -20,15 +20,15 @@ license.workspace = true
 axum = "0.6"
 futures-core = "0.3"
 futures-util = { version = "0.3", default_features = false, features = [] }
-http = "0.2"
+http = { workspace = true }
 opentelemetry = { version = "0.20", features = [
   "rt-tokio",
   "trace",
 ], default-features = false }
 pin-project-lite = "0.2"
 tower = "0.4"
-tracing = "0.1"
-tracing-opentelemetry = "0.20"
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
 tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
   "http",
 ], version = "^0.13" }
@@ -44,7 +44,7 @@ opentelemetry-otlp = { version = "0.13", features = [
   "reqwest-client",
   "reqwest-rustls",
 ] }
-opentelemetry_api = "0.20"
+opentelemetry_api = { workspace = true }
 opentelemetry-proto = { version = "0.3", features = ["gen-tonic", "traces"] }
 rstest = "0.18"
 serde = { version = "1.0.136", features = ["derive"] }

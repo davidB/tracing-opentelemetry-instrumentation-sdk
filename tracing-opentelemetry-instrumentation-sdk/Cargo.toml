@@ -16,20 +16,17 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-http = { version = "^0.2", optional = true }
-opentelemetry_api = { version = "0.20", features = [
-  "trace",
-], default-features = false }
+http = { workspace = true, optional = true }
+opentelemetry_api = { workspace = true }
 # opentelemetry-semantic-conventions = { version = "0.11" }
 opentelemetry-http = "0.9"
-tracing = "0.1"
-tracing-opentelemetry = "0.20"
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
 
 [dev-dependencies]
 assert2 = "0.3"
 rstest = "0.18"
 
 [features]
-
 default = []
 http = ["dep:http"]

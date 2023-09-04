@@ -19,6 +19,21 @@ authors = ["David Bernard"]
 license = "CC0-1.0"
 repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
 
+[workspace.dependencies]
+http = "^0.2"
+opentelemetry = { version = "0.20", features = [
+  "rt-tokio",
+  "trace",
+], default-features = false }
+opentelemetry-otlp = { version = "0.13", default-features = false }
+opentelemetry-proto = { version = "0.3", default-features = false }
+opentelemetry_api = { version = "0.20", features = [
+  "trace",
+], default-features = false }
+opentelemetry_sdk = { version = "0.20", default-features = false }
+tracing = "0.1"
+tracing-opentelemetry = "0.20"
+
 [workspace.metadata.release]
 pre-release-commit-message = "🚀 (cargo-release) version {{version}}"
 tag-prefix = ""
