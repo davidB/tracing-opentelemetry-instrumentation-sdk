@@ -25,7 +25,7 @@ tracing = "0.1"
 tracing-opentelemetry-instrumentation-sdk = { path = "../../tracing-opentelemetry-instrumentation-sdk" }
 
 [build-dependencies]
-tonic-build = { version = "0.9", default-features = false, features = [
+tonic-build = { version = "0.10", default-features = false, features = [
   "transport",
   "prost",
 ] }
