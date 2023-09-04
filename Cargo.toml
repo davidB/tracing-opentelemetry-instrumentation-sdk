@@ -14,7 +14,7 @@ exclude = ["target"]
 
 [workspace.package]
 edition = "2021"
-version = "0.13.1"
+version = "0.14.0"
 authors = ["David Bernard"]
 license = "CC0-1.0"
 repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
