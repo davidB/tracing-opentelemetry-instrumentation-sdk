@@ -1,5 +1,5 @@
 [workspace]
-
+resolver = "2"
 members = [
   "axum-tracing-opentelemetry",
   "examples/*",
@@ -32,7 +32,7 @@ opentelemetry_api = { version = "0.20", features = [
 ], default-features = false }
 opentelemetry_sdk = { version = "0.20", default-features = false }
 tracing = "0.1"
-tracing-opentelemetry = "0.20"
+tracing-opentelemetry = "0.21"
 
 [workspace.metadata.release]
 pre-release-commit-message = "🚀 (cargo-release) version {{version}}"

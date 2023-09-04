@@ -5,7 +5,7 @@ OTEL_TRACES_SAMPLER = "always_on"
 RUSTC_WRAPPER = "sccache"
 
 [tools]
-rust = '1.70'
+rust = '1.72'
 just = '1'
 grpcurl = '*'
 grpc-health-probe = "*"
