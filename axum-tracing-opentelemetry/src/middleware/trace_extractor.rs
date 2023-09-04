@@ -239,7 +239,7 @@ mod tests {
                 .fallback(|| async { (StatusCode::NOT_FOUND, "outer fallback") })
                 .layer(opentelemetry_tracing_layer());
             let mut builder = Request::builder();
-            for (key, value) in headers.iter() {
+            for (key, value) in headers {
                 builder = builder.header(*key, *value);
             }
             let req = builder.uri(uri).body(Body::empty()).unwrap();

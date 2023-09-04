@@ -18,9 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let channel = Channel::from_static("http://127.0.0.1:50051")
         .connect()
         .await?; //Devskim: ignore DS137138
-    let channel = ServiceBuilder::new()
-        .layer(OtelGrpcLayer::default())
-        .service(channel);
+    let channel = ServiceBuilder::new().layer(OtelGrpcLayer).service(channel);
 
     let mut client = GreeterClient::new(channel);
 
