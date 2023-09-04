@@ -25,7 +25,7 @@ http-body = "0.4"
 hyper = "0.14"
 opentelemetry_api = { workspace = true }
 pin-project-lite = "0.2"
-tonic = { version = "0.9", default-features = false }
+tonic = { version = "0.10", default-features = false }
 tower = { version = "0.4", default-features = false }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
