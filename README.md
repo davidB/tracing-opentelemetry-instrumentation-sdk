@@ -44,5 +44,6 @@ Then :
 ## To release
 
 ```sh
-cargo ws publish --tag-prefix "" "prepatch" --all --no-individual-tags
+#cargo ws publish --tag-prefix "" "prepatch" --all --no-individual-tags
+just release "minor"
 ```

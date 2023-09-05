@@ -31,7 +31,7 @@ test:
   cargo test --doc
 
 release *arguments:
-  cargo ws publish --all {{arguments}}
+  cargo ws publish --tag-prefix "" --no-individual-tags --all --message "🔖 %v" {{arguments}}
 
 _container *arguments:
   if [ -x "$(command -v podman)" ]; then \
