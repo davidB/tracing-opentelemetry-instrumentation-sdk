@@ -21,7 +21,7 @@ jobs:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: full
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # - name: Install Protoc
       #   uses: arduino/setup-protoc@v1
       #   with:
