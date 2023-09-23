@@ -59,7 +59,7 @@ run_jaeger:
     -p 14268:14268 \
     -p 14269:14269 \
     -p 9411:9411 \
-    jaegertracing/all-in-one:latest
+    docker.io/jaegertracing/all-in-one:latest
 
   # echo "open http://localhost:16686"
 
