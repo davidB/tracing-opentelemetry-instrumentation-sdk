@@ -12,7 +12,16 @@ init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", featur
   "tracing_subscriber_ext",
 ] }
 opentelemetry = { version = "0.20", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.13", optional = true }
 serde_json = "1.0.79"
 tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1"
 tracing-opentelemetry-instrumentation-sdk = { path = "../../tracing-opentelemetry-instrumentation-sdk" }
+
+[features]
+otlp-over-http = [
+  "opentelemetry-otlp/reqwest-client",
+  "opentelemetry-otlp/reqwest-rustls",
+  "opentelemetry-otlp/http-proto",
+  "opentelemetry-otlp/tls",
+]

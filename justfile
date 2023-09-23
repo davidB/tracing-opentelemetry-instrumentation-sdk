@@ -64,16 +64,19 @@ run_jaeger:
   # echo "open http://localhost:16686"
 
 run_example_grpc_server:
-  cd examples/grpc; cargo run --bin server
+  cd examples/grpc; OTEL_SERVICE_NAME=grpc-server cargo run --bin server
 
 run_example_grpc_client:
   # grpcurl -plaintext  -d '{"service": "healthcheck"}' 127.0.0.1:50051 grpc.health.v1.Health/Check
   grpc-health-probe -addr 127.0.0.1:50051
   grpcurl -plaintext 127.0.0.1:50051 list
-  cd examples/grpc; cargo run --bin client
+  cd examples/grpc; OTEL_SERVICE_NAME=grpc-client cargo run --bin client
 
 run_example_axum-otlp_server:
-  cd examples/axum-otlp; cargo run
+  cd examples/axum-otlp; OTEL_SERVICE_NAME=axum-otlp-4317 cargo run
+
+run_example_axum-otlp_server_over_http:
+  cd examples/axum-otlp; OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://localhost:4318/v1/traces" OTEL_SERVICE_NAME=axum-otlp-4318 cargo run --features otlp-over-http
 
 run_example_http_server:
   @just run_example_axum-otlp_server
