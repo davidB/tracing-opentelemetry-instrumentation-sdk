@@ -12,7 +12,7 @@ To collect and visualize trace on local, one of the simplest solution:
 
 ```sh
 # launch Jaeger with OpenTelemetry, Jaeger, Zipking,... mode.
-# see https://www.jaegertracing.io/docs/1.41/getting-started/#all-in-one
+# see https://www.jaegertracing.io/docs/1.49/getting-started/#all-in-one
 
 # nerctl or docker or any container runner
 nerdctl run --rm --name jaeger \
@@ -28,7 +28,7 @@ nerdctl run --rm --name jaeger \
   -p 14268:14268 \
   -p 14269:14269 \
   -p 9411:9411 \
-  jaegertracing/all-in-one:1.41
+  jaegertracing/all-in-one:1.49
 
 open http://localhost:16686
 ```
