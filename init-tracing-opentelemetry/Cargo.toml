@@ -18,7 +18,7 @@ opentelemetry-jaeger = { version = "0.19", features = [
   "rt-tokio",
 ], optional = true }
 opentelemetry-otlp = { version = "0.13", optional = true }
-opentelemetry-stdout = { version = "0.1", features = [
+opentelemetry-stdout = { version = "0.2", features = [
   "trace",
 ], optional = true }
 opentelemetry-semantic-conventions = { version = "0.12", optional = true }
