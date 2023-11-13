@@ -40,7 +40,7 @@ fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
 assert2 = "0.3"
 hyper = "0.14"
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }
-opentelemetry-otlp = { version = "0.13", features = [
+opentelemetry-otlp = { version = "0.14", features = [
   "http-proto",
   "reqwest-client",
   "reqwest-rustls",

@@ -17,7 +17,7 @@ opentelemetry-aws = { version = "0.8", optional = true }
 opentelemetry-jaeger = { version = "0.19", features = [
   "rt-tokio",
 ], optional = true }
-opentelemetry-otlp = { version = "0.13", optional = true }
+opentelemetry-otlp = { version = "0.14", optional = true }
 opentelemetry-stdout = { version = "0.1", features = [
   "trace",
 ], optional = true }

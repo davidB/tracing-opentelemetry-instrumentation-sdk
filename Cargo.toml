@@ -25,7 +25,7 @@ opentelemetry = { version = "0.20", features = [
   "rt-tokio",
   "trace",
 ], default-features = false }
-opentelemetry-otlp = { version = "0.13", default-features = false }
+opentelemetry-otlp = { version = "0.14", default-features = false }
 opentelemetry-proto = { version = "0.3", default-features = false }
 opentelemetry_api = { version = "0.20", features = [
   "trace",
