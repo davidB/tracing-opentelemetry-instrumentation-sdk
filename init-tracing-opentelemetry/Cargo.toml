@@ -22,7 +22,7 @@ opentelemetry-stdout = { version = "0.1", features = [
   "trace",
 ], optional = true }
 opentelemetry-semantic-conventions = { version = "0.12", optional = true }
-opentelemetry-zipkin = { version = "0.18", features = [], optional = true }
+opentelemetry-zipkin = { version = "0.19", features = [], optional = true }
 thiserror = "1.0"
 tonic = { version = "0.9", optional = true, features = ["tls"] }
 tracing = { workspace = true }
