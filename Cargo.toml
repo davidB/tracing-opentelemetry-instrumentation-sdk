@@ -27,7 +27,9 @@ opentelemetry = { version = "0.21", features = [
 opentelemetry-http = { version = "0.10", default-features = false }
 opentelemetry-otlp = { version = "0.14", default-features = false }
 opentelemetry-proto = { version = "0.4", default-features = false }
-opentelemetry_sdk = { version = "0.21", default-features = false }
+opentelemetry_sdk = { version = "0.21", default-features = false, features = [
+  "rt-tokio",
+] }
 tracing = "0.1"
 tracing-opentelemetry = "0.22"
 
