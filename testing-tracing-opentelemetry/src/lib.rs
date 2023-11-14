@@ -1,5 +1,5 @@
 use assert2::{check, let_assert};
-use opentelemetry::sdk::propagation::TraceContextPropagator;
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use serde_json::Value;
 use std::sync::mpsc::{self, Receiver, SyncSender};
 
@@ -102,7 +102,7 @@ impl FakeEnvironment {
             .unwrap();
         let tracer = fake_opentelemetry_collector::setup_tracer(&fake_collector).await;
         //let (tracer, mut req_rx) = fake_opentelemetry_collector::setup_tracer().await;
-        opentelemetry_api::global::set_text_map_propagator(TraceContextPropagator::new());
+        opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
         let (make_writer, rx) = duplex_writer();
@@ -125,7 +125,7 @@ impl FakeEnvironment {
     pub async fn collect_traces(
         self,
     ) -> (Vec<Value>, Vec<fake_opentelemetry_collector::ExportedSpan>) {
-        opentelemetry_api::global::shutdown_tracer_provider();
+        opentelemetry::global::shutdown_tracer_provider();
 
         let otel_span = self.fake_collector.exported_spans();
         // insta::assert_debug_snapshot!(first_span);

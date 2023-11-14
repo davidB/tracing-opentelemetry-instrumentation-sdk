@@ -21,18 +21,15 @@ repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sd
 
 [workspace.dependencies]
 http = "^0.2"
-opentelemetry = { version = "0.20", features = [
-  "rt-tokio",
+opentelemetry = { version = "0.21", features = [
   "trace",
 ], default-features = false }
-opentelemetry-otlp = { version = "0.13", default-features = false }
-opentelemetry-proto = { version = "0.3", default-features = false }
-opentelemetry_api = { version = "0.20", features = [
-  "trace",
-], default-features = false }
-opentelemetry_sdk = { version = "0.20", default-features = false }
+opentelemetry-http = { version = "0.10", default-features = false }
+opentelemetry-otlp = { version = "0.14", default-features = false }
+opentelemetry-proto = { version = "0.4", default-features = false }
+opentelemetry_sdk = { version = "0.21", default-features = false }
 tracing = "0.1"
-tracing-opentelemetry = "0.21"
+tracing-opentelemetry = "0.22"
 
 [profile.dev.package.insta]
 opt-level = 3

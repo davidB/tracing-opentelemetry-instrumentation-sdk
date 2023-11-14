@@ -20,7 +20,7 @@ async fn main() -> Result<(), axum::BoxError> {
 }
 ```
 
-AND Call `opentelemetry_api::global::shutdown_tracer_provider();` on shutdown of the app to be sure to send the pending trace,...
+AND Call `opentelemetry::global::shutdown_tracer_provider();` on shutdown of the app to be sure to send the pending trace,...
 
 To configure opentelemetry tracer & tracing, you can use the functions from `init_tracing_opentelemetry::tracing_subscriber_ext`, but they are very opinionated (and WIP to make them more customizable and friendly), so we recommend making your composition, but look at the code (to avoid some issue) and share your feedback.
 

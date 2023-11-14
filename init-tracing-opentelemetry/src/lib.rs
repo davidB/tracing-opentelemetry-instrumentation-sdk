@@ -10,10 +10,10 @@ mod error;
 pub use error::Error;
 
 use opentelemetry::propagation::TextMapPropagator;
-use opentelemetry::sdk::propagation::{
+use opentelemetry::trace::TraceError;
+use opentelemetry_sdk::propagation::{
     BaggagePropagator, TextMapCompositePropagator, TraceContextPropagator,
 };
-use opentelemetry::trace::TraceError;
 
 #[cfg(feature = "jaeger")]
 pub mod jaeger;

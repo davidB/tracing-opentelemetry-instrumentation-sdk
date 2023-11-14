@@ -23,7 +23,7 @@ futures-util = { version = "0.3", default_features = false, features = [] }
 http = { workspace = true }
 http-body = "0.4"
 hyper = "0.14"
-opentelemetry_api = { workspace = true }
+opentelemetry-http = { workspace = true }
 pin-project-lite = "0.2"
 tonic = { version = "0.10", default-features = false }
 tower = { version = "0.4", default-features = false }
@@ -40,12 +40,12 @@ fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
 assert2 = "0.3"
 hyper = "0.14"
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }
-opentelemetry-otlp = { version = "0.13", features = [
+opentelemetry-otlp = { workspace = true, features = [
   "http-proto",
   "reqwest-client",
   "reqwest-rustls",
 ] }
-opentelemetry-proto = { version = "0.3", features = ["gen-tonic", "traces"] }
+opentelemetry-proto = { workspace = true, features = ["gen-tonic"] }
 rstest = "0.18"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
@@ -58,8 +58,8 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ] }
 tokio-stream = { version = "0.1", features = ["net"] }
 # need tokio runtime to run smoke tests.
-opentelemetry_sdk = { features = [
+opentelemetry_sdk = { workspace = true, features = [
   "trace",
   "rt-tokio",
   "testing",
-], version = "0.20" }
+] }

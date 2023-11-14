@@ -11,7 +11,7 @@ Middlewares and tools to integrate tonic + tracing + opentelemetry for client an
 
 - Read OpenTelemetry header from the incoming requests
 - Start a new trace if no trace is found in the incoming request
-- Trace is attached into tracing'span
+- Trace is attached into tracing's span
 
 For examples, you can look at the [examples](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/examples/) folder.
 
@@ -29,7 +29,7 @@ Extract of `client.rs`:
 
     //...
 
-    opentelemetry_api::global::shutdown_tracer_provider();
+    opentelemetry::global::shutdown_tracer_provider();
 ```
 
 Extract of `server.rs`:

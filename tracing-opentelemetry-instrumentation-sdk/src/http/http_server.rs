@@ -25,7 +25,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
         url.query = req.uri().query(),
         url.scheme = url_scheme(req.uri()),
         otel.name = %http_method, // to set by router of "webframework" after
-        otel.kind = ?opentelemetry_api::trace::SpanKind::Server,
+        otel.kind = ?opentelemetry::trace::SpanKind::Server,
         otel.status_code = Empty, // to set on response
         trace_id = Empty, // to set on response
         request_id = Empty, // to set

@@ -9,7 +9,7 @@
 pub mod http;
 mod span_type;
 
-use opentelemetry_api::Context;
+use opentelemetry::Context;
 
 /// tracing's target used by instrumentation library to create span
 pub const TRACING_TARGET: &str = "otel::tracing";
@@ -67,7 +67,7 @@ pub fn find_trace_id_from_tracing(span: &tracing::Span) -> Option<String> {
 #[inline]
 #[must_use]
 pub fn find_trace_id(context: &Context) -> Option<String> {
-    use opentelemetry_api::trace::TraceContextExt;
+    use opentelemetry::trace::TraceContextExt;
 
     let span = context.span();
     let span_context = span.span_context();
@@ -94,7 +94,7 @@ pub fn find_trace_id(context: &Context) -> Option<String> {
 }
 
 // pub(crate) fn set_otel_parent(parent_context: Context, span: &tracing::Span) {
-//     use opentelemetry_api::trace::TraceContextExt as _;
+//     use opentelemetry::trace::TraceContextExt as _;
 //     use tracing_opentelemetry::OpenTelemetrySpanExt as _;
 
 //     // let parent_context = opentelemetry::global::get_text_map_propagator(|propagator| {

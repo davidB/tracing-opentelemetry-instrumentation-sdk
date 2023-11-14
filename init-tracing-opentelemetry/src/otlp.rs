@@ -1,21 +1,25 @@
 use std::str::FromStr;
 
-use opentelemetry::sdk::trace::{Sampler, Tracer};
-use opentelemetry::sdk::Resource;
 use opentelemetry::trace::TraceError;
 use opentelemetry_otlp::SpanExporterBuilder;
+use opentelemetry_sdk::trace::{Sampler, Tracer};
+use opentelemetry_sdk::Resource;
 #[cfg(feature = "tls")]
 use tonic::transport::ClientTlsConfig;
 
 #[must_use]
-pub fn identity(v: opentelemetry_otlp::OtlpTracePipeline) -> opentelemetry_otlp::OtlpTracePipeline {
+pub fn identity(
+    v: opentelemetry_otlp::OtlpTracePipeline<SpanExporterBuilder>,
+) -> opentelemetry_otlp::OtlpTracePipeline<SpanExporterBuilder> {
     v
 }
 
 // see https://opentelemetry.io/docs/reference/specification/protocol/exporter/
 pub fn init_tracer<F>(resource: Resource, transform: F) -> Result<Tracer, TraceError>
 where
-    F: FnOnce(opentelemetry_otlp::OtlpTracePipeline) -> opentelemetry_otlp::OtlpTracePipeline,
+    F: FnOnce(
+        opentelemetry_otlp::OtlpTracePipeline<SpanExporterBuilder>,
+    ) -> opentelemetry_otlp::OtlpTracePipeline<SpanExporterBuilder>,
 {
     use opentelemetry_otlp::WithExportConfig;
 
@@ -45,12 +49,12 @@ where
         .tracing()
         .with_exporter(exporter)
         .with_trace_config(
-            opentelemetry::sdk::trace::config()
+            opentelemetry_sdk::trace::config()
                 .with_resource(resource)
                 .with_sampler(read_sampler_from_env()),
         );
     pipeline = transform(pipeline);
-    pipeline.install_batch(opentelemetry::runtime::Tokio)
+    pipeline.install_batch(opentelemetry_sdk::runtime::Tokio)
 }
 
 fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
@@ -138,18 +142,24 @@ mod tests {
     #[case(Some("http/protobuf"), None, "http/protobuf", "http://localhost:4318")] //Devskim: ignore DS137138
     #[case(Some("grpc"), None, "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
     #[case(None, Some("http://localhost:4317"), "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
-    #[cfg_attr(feature = "tls", case(
-        None,
-        Some("https://localhost:4317"),
-        "grpc/tls",
-        "https://localhost:4317"
-    ))]
-    #[cfg_attr(feature = "tls", case(
-        Some("grpc/tls"),
-        Some("https://localhost:4317"),
-        "grpc/tls",
-        "https://localhost:4317"
-    ))]
+    #[cfg_attr(
+        feature = "tls",
+        case(
+            None,
+            Some("https://localhost:4317"),
+            "grpc/tls",
+            "https://localhost:4317"
+        )
+    )]
+    #[cfg_attr(
+        feature = "tls",
+        case(
+            Some("grpc/tls"),
+            Some("https://localhost:4317"),
+            "grpc/tls",
+            "https://localhost:4317"
+        )
+    )]
     #[case(
         Some("http/protobuf"),
         Some("http://localhost:4318"), //Devskim: ignore DS137138

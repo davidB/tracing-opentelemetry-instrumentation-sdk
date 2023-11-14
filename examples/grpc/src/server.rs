@@ -87,5 +87,5 @@ async fn shutdown_signal() {
     }
 
     //tracing::warn!("signal received, starting graceful shutdown");
-    opentelemetry_api::global::shutdown_tracer_provider();
+    opentelemetry::global::shutdown_tracer_provider();
 }

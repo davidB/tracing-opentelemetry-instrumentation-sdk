@@ -209,7 +209,7 @@ impl FakeCollectorServer {
     }
 }
 
-pub async fn setup_tracer(fake_server: &FakeCollectorServer) -> opentelemetry::sdk::trace::Tracer {
+pub async fn setup_tracer(fake_server: &FakeCollectorServer) -> opentelemetry_sdk::trace::Tracer {
     use opentelemetry_otlp::WithExportConfig;
     // if the environment variable is set (in test or in caller), `with_endpoint` value is ignored
     std::env::remove_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
@@ -228,8 +228,8 @@ pub async fn setup_tracer(fake_server: &FakeCollectorServer) -> opentelemetry::s
 mod tests {
     use super::*;
     //use opentelemetry::{KeyValue, Value};
-    use opentelemetry_api::global::shutdown_tracer_provider;
-    use opentelemetry_api::trace::{Span, SpanKind, Tracer};
+    use opentelemetry::global::shutdown_tracer_provider;
+    use opentelemetry::trace::{Span, SpanKind, Tracer};
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_fake_tracer_and_collector() {

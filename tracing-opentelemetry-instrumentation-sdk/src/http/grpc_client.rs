@@ -14,7 +14,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
         http.user_agent = %user_agent(req),
         http.status_code = Empty, // to set on response
         otel.name = format!("{service}/{method}"),
-        otel.kind = ?opentelemetry_api::trace::SpanKind::Client,
+        otel.kind = ?opentelemetry::trace::SpanKind::Client,
         otel.status_code = Empty,
         rpc.system ="grpc",
         rpc.service = %service,

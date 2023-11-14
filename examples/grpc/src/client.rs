@@ -30,6 +30,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("RESPONSE={:?}", response);
 
-    opentelemetry_api::global::shutdown_tracer_provider();
+    opentelemetry::global::shutdown_tracer_provider();
     Ok(())
 }

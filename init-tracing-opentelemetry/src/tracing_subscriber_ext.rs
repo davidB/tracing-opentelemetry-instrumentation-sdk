@@ -1,6 +1,6 @@
 use crate::Error;
-use opentelemetry::sdk::trace::Tracer;
 use opentelemetry::trace::TraceError;
+use opentelemetry_sdk::trace::Tracer;
 use tracing::{info, Subscriber};
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::filter::EnvFilter;

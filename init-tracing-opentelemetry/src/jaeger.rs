@@ -1,6 +1,9 @@
-use opentelemetry::sdk::Resource;
-use opentelemetry::{sdk::trace as sdktrace, trace::TraceError};
+use opentelemetry::trace::TraceError;
 use opentelemetry_jaeger::config::agent::AgentPipeline;
+use opentelemetry_sdk::{
+    trace::{config, Sampler, Tracer},
+    Resource,
+};
 use opentelemetry_semantic_conventions as semcov;
 
 #[must_use]
@@ -12,7 +15,7 @@ pub fn identity(v: AgentPipeline) -> AgentPipeline {
 /// The jaeger pipeline builder can be configured dynamically via environment variables.
 /// All variables are optional, a full list of accepted options can be found in the
 /// [jaeger variables spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md#jaeger-exporter).
-pub fn init_tracer<F>(resource: Resource, transform: F) -> Result<sdktrace::Tracer, TraceError>
+pub fn init_tracer<F>(resource: Resource, transform: F) -> Result<Tracer, TraceError>
 where
     F: FnOnce(AgentPipeline) -> AgentPipeline,
 {
@@ -21,10 +24,10 @@ where
         pipeline = pipeline.with_service_name(name.to_string());
     }
     pipeline = pipeline.with_trace_config(
-        sdktrace::config()
+        config()
             .with_resource(resource)
-            .with_sampler(sdktrace::Sampler::AlwaysOn),
+            .with_sampler(Sampler::AlwaysOn),
     );
     pipeline = transform(pipeline);
-    pipeline.install_batch(opentelemetry::runtime::Tokio)
+    pipeline.install_batch(opentelemetry_sdk::runtime::Tokio)
 }

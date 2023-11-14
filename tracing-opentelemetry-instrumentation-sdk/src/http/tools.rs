@@ -1,12 +1,12 @@
 use std::borrow::Cow;
 
 use http::{HeaderMap, Method, Uri, Version};
-use opentelemetry_api::Context;
+use opentelemetry::Context;
 
 pub fn inject_context(context: &Context, headers: &mut http::HeaderMap) {
     use opentelemetry_http::HeaderInjector;
     let mut injector = HeaderInjector(headers);
-    opentelemetry_api::global::get_text_map_propagator(|propagator| {
+    opentelemetry::global::get_text_map_propagator(|propagator| {
         propagator.inject_context(context, &mut injector);
     });
 }
@@ -16,7 +16,7 @@ pub fn inject_context(context: &Context, headers: &mut http::HeaderMap) {
 pub fn extract_context(headers: &http::HeaderMap) -> Context {
     use opentelemetry_http::HeaderExtractor;
     let extractor = HeaderExtractor(headers);
-    opentelemetry_api::global::get_text_map_propagator(|propagator| propagator.extract(&extractor))
+    opentelemetry::global::get_text_map_propagator(|propagator| propagator.extract(&extractor))
 }
 
 pub fn extract_service_method(uri: &Uri) -> (&str, &str) {

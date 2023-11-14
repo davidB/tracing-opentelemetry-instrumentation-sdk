@@ -1,4 +1,4 @@
-use opentelemetry::sdk::{
+use opentelemetry_sdk::{
     resource::{OsResourceDetector, ResourceDetector},
     Resource,
 };
