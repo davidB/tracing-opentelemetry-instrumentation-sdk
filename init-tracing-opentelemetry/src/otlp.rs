@@ -1,9 +1,11 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use opentelemetry::trace::TraceError;
 use opentelemetry_otlp::SpanExporterBuilder;
-use opentelemetry_sdk::trace::{Sampler, Tracer};
-use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::{
+    trace::{Sampler, Tracer},
+    Resource,
+};
 #[cfg(feature = "tls")]
 use tonic::transport::ClientTlsConfig;
 
@@ -32,6 +34,7 @@ where
         "http/protobuf" => opentelemetry_otlp::new_exporter()
             .http()
             .with_endpoint(endpoint)
+            .with_headers(read_headers_from_env())
             .into(),
         #[cfg(feature = "tls")]
         "grpc/tls" => opentelemetry_otlp::new_exporter()
@@ -57,6 +60,25 @@ where
     pipeline.install_batch(opentelemetry_sdk::runtime::Tokio)
 }
 
+/// turn a string of "k1=v1,k2=v2,..." into an iterator of (key, value) tuples
+fn parse_headers(val: &str) -> impl Iterator<Item = (String, String)> + '_ {
+    val.split(",").filter_map(|kv| {
+        let s = kv
+            .split_once("=")
+            .map(|(k, v)| (k.to_owned(), v.to_owned()));
+        s
+    })
+}
+fn read_headers_from_env() -> HashMap<String, String> {
+    let mut headers = HashMap::new();
+    headers.extend(parse_headers(
+        &std::env::var("OTEL_EXPORTER_OTLP_HEADERS").unwrap_or_default(),
+    ));
+    headers.extend(parse_headers(
+        &std::env::var("OTEL_EXPORTER_OTLP_TRACES_HEADERS").unwrap_or_default(),
+    ));
+    headers
+}
 fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
     let maybe_endpoint = std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
         .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT"))
@@ -133,9 +155,10 @@ fn infer_protocol_and_endpoint(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use assert2::assert;
     use rstest::rstest;
+
+    use super::*;
 
     #[rstest]
     #[case(None, None, "http/protobuf", "http://localhost:4318")] //Devskim: ignore DS137138
