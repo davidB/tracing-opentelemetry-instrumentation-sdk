@@ -1,13 +1,12 @@
-use crate::Error;
 use opentelemetry::trace::TraceError;
 use opentelemetry_sdk::trace::Tracer;
 use tracing::{info, Subscriber};
 use tracing_opentelemetry::OpenTelemetryLayer;
-use tracing_subscriber::filter::EnvFilter;
-use tracing_subscriber::fmt::format::FmtSpan;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::registry::LookupSpan;
-use tracing_subscriber::Layer;
+use tracing_subscriber::{
+    filter::EnvFilter, fmt::format::FmtSpan, layer::SubscriberExt, registry::LookupSpan, Layer,
+};
+
+use crate::Error;
 
 #[must_use]
 pub fn build_logger_text<S>() -> Box<dyn Layer<S> + Send + Sync + 'static>
@@ -76,7 +75,7 @@ where
     // )?;
     init_propagator()?;
     Ok(tracing_opentelemetry::layer()
-        .with_exception_field_propagation(true)
+        .with_error_records_to_exceptions(true)
         .with_tracer(otel_tracer))
 }
 
