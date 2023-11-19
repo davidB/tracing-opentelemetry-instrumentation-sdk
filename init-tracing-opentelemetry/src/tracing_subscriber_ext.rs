@@ -76,7 +76,7 @@ where
     // )?;
     init_propagator()?;
     Ok(tracing_opentelemetry::layer()
-        .with_exception_field_propagation(true)
+        .with_error_records_to_exceptions(true)
         .with_tracer(otel_tracer))
 }
 

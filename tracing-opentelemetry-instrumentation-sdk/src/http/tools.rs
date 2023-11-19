@@ -111,8 +111,8 @@ pub fn grpc_update_span_from_response<B>(
     let status = response
         .headers()
         .get("grpc-status")
-        .map(|v| v.to_str().unwrap_or("2"))
-        .map(|v| v.parse::<u16>().unwrap_or(2))
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.parse::<u16>().ok())
         .unwrap_or(2);
     span.record("rpc.grpc.status_code", status);
 
@@ -124,6 +124,7 @@ pub fn grpc_update_span_from_response<B>(
 }
 
 #[inline]
+#[must_use]
 /// see [Semantic Conventions for gRPC | OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/rpc/grpc/)
 /// see [GRPC Core: Status codes and their use in gRPC](https://grpc.github.io/grpc/core/md_doc_statuscodes.html)
 pub fn grpc_status_is_error(status: u16, is_spankind_server: bool) -> bool {
