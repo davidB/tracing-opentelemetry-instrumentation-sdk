@@ -31,7 +31,7 @@ tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
   "http",
-], version = "0.14" }
+], version = "^0.14.2" }
 
 [dev-dependencies]
 axum = "0.6"
