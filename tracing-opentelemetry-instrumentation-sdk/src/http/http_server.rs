@@ -36,10 +36,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
 
 pub fn update_span_from_response<B>(span: &tracing::Span, response: &http::Response<B>) {
     let status = response.status();
-    span.record(
-        "http.response.status_code",
-        &tracing::field::display(status.as_u16()),
-    );
+    span.record("http.response.status_code", status.as_u16());
 
     if status.is_server_error() {
         span.record("otel.status_code", "ERROR");
