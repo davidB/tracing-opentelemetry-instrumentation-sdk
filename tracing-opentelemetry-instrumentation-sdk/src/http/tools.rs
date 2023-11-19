@@ -101,6 +101,39 @@ pub fn http_host<B>(req: &http::Request<B>) -> &str {
         .unwrap_or("")
 }
 
+/// If "grpc-status" can not be extracted from http response, the status "2" (UNKNOWN error) is defined
+//TODO create similar but with tonic::Response<B> ?
+pub fn grpc_update_span_from_response<B>(
+    span: &tracing::Span,
+    response: &http::Response<B>,
+    is_spankind_server: bool,
+) {
+    let status = response
+        .headers()
+        .get("grpc-status")
+        .map(|v| v.to_str().unwrap_or("2"))
+        .map(|v| v.parse::<u16>().unwrap_or(2))
+        .unwrap_or(2);
+    span.record("rpc.grpc.status_code", status);
+
+    if grpc_status_is_error(status, is_spankind_server) {
+        span.record("otel.status_code", "ERROR");
+    } else {
+        span.record("otel.status_code", "OK");
+    }
+}
+
+#[inline]
+/// see [Semantic Conventions for gRPC | OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/rpc/grpc/)
+/// see [GRPC Core: Status codes and their use in gRPC](https://grpc.github.io/grpc/core/md_doc_statuscodes.html)
+pub fn grpc_status_is_error(status: u16, is_spankind_server: bool) -> bool {
+    if is_spankind_server {
+        status == 2 || status == 4 || status == 12 || status == 13 || status == 14 || status == 15
+    } else {
+        status != 0
+    }
+}
+
 // if let Some(host_name) = SYSTEM.host_name() {
 //     attributes.push(NET_HOST_NAME.string(host_name));
 // }
