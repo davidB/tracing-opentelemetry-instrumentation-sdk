@@ -21,7 +21,7 @@ license.workspace = true
 futures-core = "0.3"
 futures-util = { version = "0.3", default_features = false, features = [] }
 http = { workspace = true }
-http-body = "0.4"
+http-body = "1.0"
 hyper = "0.14"
 opentelemetry-http = { workspace = true }
 pin-project-lite = "0.2"
