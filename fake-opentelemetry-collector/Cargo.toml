@@ -31,5 +31,5 @@ tracing = { workspace = true }
 
 [dev-dependencies]
 assert2 = "0.3"
-hyper = "0.14"
+hyper = "1.0"
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }

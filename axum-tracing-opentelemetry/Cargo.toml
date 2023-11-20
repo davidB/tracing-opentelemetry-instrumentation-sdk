@@ -36,7 +36,7 @@ tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-i
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
 testing-tracing-opentelemetry = { path = "../testing-tracing-opentelemetry" }
 assert2 = "0.3"
-hyper = "0.14"
+hyper = "1.0"
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }
 opentelemetry-otlp = { workspace = true, features = [
   "http-proto",
