@@ -33,12 +33,13 @@ test:
 
 changelog:
   git-cliff -o "CHANGELOG.md"
+  git add CHANGELOG.md && git commit -m "📝 update CHANGELOG"
 
 release *arguments:
   cargo release --workspace --execute {{arguments}}
   # git-cliff could not be used as `pre-release-hook` of cargo-release because it uses tag
-  git-cliff -o "CHANGELOG.md" --with-commit "📝 update CHANGELOG"
-  git push
+  git-cliff -o "CHANGELOG.md"
+  git add CHANGELOG.md && git commit -m "📝 update CHANGELOG" && git push
 
 _container *arguments:
   if [ -x "$(command -v podman)" ]; then \
