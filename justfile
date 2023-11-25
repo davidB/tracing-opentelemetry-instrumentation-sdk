@@ -4,6 +4,7 @@ requirements:
   cargo binstall cargo-sort
   cargo binstall cargo-insta
   cargo binstall cargo-workspaces
+  cargo binstall git-cliff
 
 # Format the code and sort dependencies
 format:
@@ -29,6 +30,9 @@ megalinter:
 test:
   cargo nextest run
   cargo test --doc
+
+changelog:
+  git-cliff -o CHANGELOG.md
 
 release *arguments:
   cargo ws publish --tag-prefix "" --no-individual-tags --all --message "🔖 %v" {{arguments}}
