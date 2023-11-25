@@ -4,7 +4,6 @@ description = "A set of helpers to initialize (and more) tracing + opentelemetry
 readme = "README.md"
 keywords = ["tracing", "opentelemetry"]
 categories = ["development-tools::debugging", "development-tools::profiling"]
-homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/init-tracing-opentelemetry"
 edition.workspace = true
 version.workspace = true
 authors.workspace = true

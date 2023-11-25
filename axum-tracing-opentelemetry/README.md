@@ -52,84 +52,9 @@ async fn shutdown_signal() {
 
 For more info about how to initialize, you can look at crate [`init-tracing-opentelemetry`] or [`tracing-opentelemetry`].
 
-## Compatibility
-
-| axum | axum-tracing-opentelemetry |
-|------|----------------------------|
-| 0.6  | latest - 0.6               |
-| 0.5  | 0.1 - 0.5                  |
-
 ## Changelog - History
 
-### 0.13
-
-- ⬆️ upgrade to opentelemetry 0.20 (and related dependencies)
-
-### 0.12
-
-- 💥 upgrade opentelemetry attributes to follow semantic 1.22
-- 💥 extract tools, tonic,... into separate crates [`init-tracing-opentelemetry`], [`tonic-tracing-opentelemetry`], [`tracing-opentelemetry-instrumentation-sdk`], without re-export and features
-- 💥 remove `trace_id` from attributes (opnetelemetry) and field in trace (log,...) on creation
-  because the previous workaround created invalid states in some context
-- deprecate factory `opentelemetry_tracing_layer`, `response_with_trace_layer`
-- full rewrite without tower-http/Tracing
-
-### 0.11
-
-- upgrade to opentelemetry 0.19
-
-### 0.10
-
-- 💥 default configuration for otlp Sampler is no longer hardcoded to `always_on`, but read environment variables `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG`
-- ✨ provide opinionated `tracing_subscriber_ext`
-- ✨ log under target `otel::setup` detected configuration by otel setup tools
-- ✨ add a axum layer for gRPC (#36) (wip)
-
-### 0.9
-
-- add `DetectResource` builder to help detection for [Resource Semantic Conventions | OpenTelemetry](https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/#semantic-attributes-with-sdk-provided-default-value)
-
-### 0.8
-
-- add `init_propagator` to configure the global propagator based on content of the env variable [OTEL_PROPAGATORS](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_propagators)
-
-### 0.7
-
-- add a layer`response_with_trace_layer` to have `traceparent` injected into response
-- improve discovery of otlp configuration based on `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL`, `OTEL_EXPORTER_OTLP_PROTOCOL`
-
-### 0.6
-
-- upgrade to axum 0.6
-
-### 0.5
-
-- upgrade to opentelemetry 0.18
-- breaking change: upgrade opentelemetry-jaeger to 0.17 (switch from PipelineBuiler to AgentPipeline)
-
-### 0.4
-
-- allow customization of tracer
-- add tracer to export on stdout or stderr
-- add tracer to export to nowhere (like `/dev/null`) to allow to have trace_id
-  and the opentelemetry span & metadata on log and http response (without collector)
-
-### 0.3
-
-- Allow customization of exporter pipeline
-- Fix name of the root span (#6)
-
-### 0.2
-
-- First public release as a crate
-
-### 0.1
-
-- Code originally created at part of axum-extra [Add OpenTelemetry middleware by davidpdrsn · Pull Request #769 · tokio-rs/axum](https://github.com/tokio-rs/axum/pull/769)
-- Code copied and modified as part of [davidB/sandbox_axum_observability: Sandbox to experiment axum and observability](https://github.com/davidB/sandbox_axum_observability)
-- Published as a standalone crate with OK from original author
+[CHANGELOG.md](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/blob/main/CHANGELOG.md)
 
 [`tracing-opentelemetry`]: https://crates.io/crates/tracing-opentelemetry
 [`init-tracing-opentelemetry`]: https://crates.io/crates/init-tracing-opentelemetry
-[`tonic-tracing-opentelemetry`]: https://crates.io/crates/tonic-tracing-opentelemetry
-[`tracing-opentelemetry-instrumentation-sdk`]: https://crates.io/crates/tracing-opentelemetry-instrumentation-sdk

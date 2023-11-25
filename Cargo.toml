@@ -18,6 +18,7 @@ version = "0.15.0"
 authors = ["David Bernard"]
 license = "CC0-1.0"
 repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
+rust-version = "1.70"
 
 [workspace.dependencies]
 http = "^0.2"

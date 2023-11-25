@@ -8,8 +8,7 @@ categories = [
   "development-tools::profiling",
   "web-programming",
 ]
-homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/axum-tracing-opentelemetry"
-rust-version = "1.70"
+rust-version.workspace = true
 edition.workspace = true
 version.workspace = true
 authors.workspace = true

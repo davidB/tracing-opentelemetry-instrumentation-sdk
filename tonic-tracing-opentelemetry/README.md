@@ -55,11 +55,4 @@ Extract of `server.rs`:
 
 ## Changelog - History
 
-### 0.13
-
-- ⬆️ upgrade to opentelemetry 0.20 (and related dependencies)
-
-### 0.12
-
-- 💥 extracted from axum-tracing-opentelemetry 0.11
-- add filter (eg to not trace on healthcheck)
+[CHANGELOG.md](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/blob/main/CHANGELOG.md)

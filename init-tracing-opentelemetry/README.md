@@ -134,11 +134,4 @@ spec:
 
 ## Changelog - History
 
-### 0.13
-
-- ⬆️ upgrade to opentelemetry 0.20 (and related dependencies)
-- 💥 stdio tracer moved under feature flags "sdout" and change type to reflect change into opentelemetry
-
-### 0.12
-
-- 💥 extracted from axum-tracing-opentelemetry
+[CHANGELOG.md](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/blob/main/CHANGELOG.md)
