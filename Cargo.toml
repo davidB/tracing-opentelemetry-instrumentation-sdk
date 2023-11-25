@@ -39,5 +39,8 @@ opt-level = 3
 [profile.dev.package.similar]
 opt-level = 3
 
-[workspace.metadata.workspaces]
-no_individual_tags = true
+[workspace.metadata.release]
+pre-release-commit-message = "🚀 (cargo-release) version {{version}}"
+tag-prefix = ""
+tag-name = "{{prefix}}{{version}}"
+tag-message = "🔖 {{version}}"

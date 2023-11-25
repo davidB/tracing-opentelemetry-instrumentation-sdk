@@ -3,7 +3,7 @@ requirements:
   cargo binstall cargo-nextest
   cargo binstall cargo-sort
   cargo binstall cargo-insta
-  cargo binstall cargo-workspaces
+  cargo binstall cargo-release
   cargo binstall git-cliff
 
 # Format the code and sort dependencies
@@ -32,10 +32,13 @@ test:
   cargo test --doc
 
 changelog:
-  git-cliff -o CHANGELOG.md
+  git-cliff -o "CHANGELOG.md"
 
 release *arguments:
-  cargo ws publish --tag-prefix "" --no-individual-tags --all --message "🔖 %v" {{arguments}}
+  cargo release --workspace --execute {{arguments}}
+  # git-cliff could not be used as `pre-release-hook` of cargo-release because it uses tag
+  git-cliff -o "CHANGELOG.md" --with-commit "📝 update CHANGELOG"
+  git push
 
 _container *arguments:
   if [ -x "$(command -v podman)" ]; then \
