@@ -21,7 +21,7 @@ repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sd
 rust-version = "1.70"
 
 [workspace.dependencies]
-http = "^0.2"
+http = "^1.0"
 opentelemetry = { version = "0.21", features = [
   "trace",
 ], default-features = false }
