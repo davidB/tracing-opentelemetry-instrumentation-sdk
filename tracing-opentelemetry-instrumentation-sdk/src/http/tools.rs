@@ -3,8 +3,9 @@ use std::borrow::Cow;
 use http::{HeaderMap, Method, Uri, Version};
 use opentelemetry::Context;
 
+use super::opentelemety_http::{HeaderExtractor, HeaderInjector};
+
 pub fn inject_context(context: &Context, headers: &mut http::HeaderMap) {
-    use opentelemetry_http::HeaderInjector;
     let mut injector = HeaderInjector(headers);
     opentelemetry::global::get_text_map_propagator(|propagator| {
         propagator.inject_context(context, &mut injector);
@@ -14,7 +15,6 @@ pub fn inject_context(context: &Context, headers: &mut http::HeaderMap) {
 // If remote request has no span data the propagator defaults to an unsampled context
 #[must_use]
 pub fn extract_context(headers: &http::HeaderMap) -> Context {
-    use opentelemetry_http::HeaderExtractor;
     let extractor = HeaderExtractor(headers);
     opentelemetry::global::get_text_map_propagator(|propagator| propagator.extract(&extractor))
 }
