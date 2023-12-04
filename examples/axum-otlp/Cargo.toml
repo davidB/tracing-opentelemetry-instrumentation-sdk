@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-axum = "0.6"
+axum = "0.7"
 axum-tracing-opentelemetry = { path = "../../axum-tracing-opentelemetry" }
 init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", features = [
   "otlp",

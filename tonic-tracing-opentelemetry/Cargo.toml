@@ -33,7 +33,7 @@ tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-i
 ], version = "0.15" }
 
 [dev-dependencies]
-axum = "0.6"
+axum = "0.7"
 testing-tracing-opentelemetry = { path = "../testing-tracing-opentelemetry" }
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
 assert2 = "0.3"
