@@ -184,12 +184,11 @@ fn http_route<B>(req: &Request<B>) -> &str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::body::HttpBody as _;
     use axum::{body::Body, routing::get, Router};
     use http::{Request, StatusCode};
     use rstest::rstest;
     use testing_tracing_opentelemetry::{assert_trace, FakeEnvironment};
-    use tower::{Service, ServiceExt};
+    use tower::Service;
 
     #[rstest]
     #[case("filled_http_route_for_existing_route", "http://example.com/users/123", &[], false)]
@@ -243,11 +242,11 @@ mod tests {
                 builder = builder.header(*key, *value);
             }
             let req = builder.uri(uri).body(Body::empty()).unwrap();
-            let mut res = svc.ready().await.unwrap().call(req).await.unwrap();
+            let _res = svc.call(req).await.unwrap();
 
-            while res.data().await.is_some() {}
-            res.trailers().await.unwrap();
-            drop(res);
+            // while res.data().await.is_some() {}
+            // res.trailers().await.unwrap();
+            // drop(res);
         }
         let (tracing_events, otel_spans) = fake_env.collect_traces().await;
         assert_trace(name, tracing_events, otel_spans, is_trace_id_constant);
