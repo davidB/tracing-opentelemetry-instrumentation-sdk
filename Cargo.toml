@@ -6,11 +6,11 @@ members = [
   "fake-opentelemetry-collector",
   "init-tracing-opentelemetry",
   "testing-tracing-opentelemetry",
-  "tonic-tracing-opentelemetry",
+  # "tonic-tracing-opentelemetry",
   "tracing-opentelemetry-instrumentation-sdk",
 ]
 
-exclude = ["target"]
+exclude = ["target", "tonic-tracing-opentelemetry", "examples/grpc"]
 
 [workspace.package]
 edition = "2021"
