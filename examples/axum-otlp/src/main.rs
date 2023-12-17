@@ -19,9 +19,9 @@ async fn main() -> Result<(), BoxError> {
     tracing::warn!("listening on {}", addr);
     tracing::info!("try to call `curl -i http://127.0.0.1:3003/` (with trace)"); //Devskim: ignore DS137138
     tracing::info!("try to call `curl -i http://127.0.0.1:3003/health` (with NO trace)"); //Devskim: ignore DS137138
-    axum::Server::bind(addr)
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(shutdown_signal())
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, app.into_make_service())
+        //FIXME .with_graceful_shutdown(shutdown_signal())
         .await?;
     Ok(())
 }
