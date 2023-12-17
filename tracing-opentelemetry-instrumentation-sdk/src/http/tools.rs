@@ -142,7 +142,7 @@ pub fn grpc_status_is_error(status: u16, is_spankind_server: bool) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert2::check;
+    use assert2::assert;
     use rstest::rstest;
 
     #[rstest]
@@ -155,7 +155,7 @@ mod tests {
         #[case] service: &str,
         #[case] method: &str,
     ) {
-        check!(extract_service_method(&path.parse::<Uri>().unwrap()) == (service, method));
+        assert!(extract_service_method(&path.parse::<Uri>().unwrap()) == (service, method));
     }
 
     #[rstest]
@@ -164,6 +164,6 @@ mod tests {
     #[case("foo://example.org/hello/world", "foo")]
     fn test_extract_url_scheme(#[case] input: &str, #[case] expected: &str) {
         let uri: Uri = input.parse().unwrap();
-        check!(url_scheme(&uri) == expected);
+        assert!(url_scheme(&uri) == expected);
     }
 }
