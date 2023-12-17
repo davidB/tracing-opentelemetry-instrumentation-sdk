@@ -27,9 +27,9 @@ async fn main() -> Result<(), axum::BoxError> {
     // run it
     let addr = &"0.0.0.0:3000".parse::<SocketAddr>()?;
     tracing::warn!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(shutdown_signal())
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, app.into_make_service())
+        //FIXME .with_graceful_shutdown(shutdown_signal())
         .await?;
     Ok(())
 }

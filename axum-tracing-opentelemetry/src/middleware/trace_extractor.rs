@@ -23,10 +23,9 @@
 //!     .layer(OtelAxumLayer::default());
 //!
 //! # async {
-//! axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
-//!     // we must use `into_make_service_with_connect_info` for `opentelemetry_tracing_layer` to
-//!     // access the client ip
-//!     .serve(app.into_make_service_with_connect_info::<SocketAddr>())
+//! let addr = &"0.0.0.0:3000".parse::<SocketAddr>().unwrap();
+//! let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+//! axum::serve(listener, app.into_make_service())
 //!     .await
 //!     .expect("server failed");
 //! # };
