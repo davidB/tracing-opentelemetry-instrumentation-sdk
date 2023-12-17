@@ -7,7 +7,7 @@ RUSTC_WRAPPER = "sccache"
 ASDF_RUST_PROFILE = "minimal"
 
 [tools]
-rust = '1.72'
+rust = '1.74'
 just = '1'
 grpcurl = '*'
 grpc-health-probe = "*"

@@ -16,7 +16,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-axum = "0.6"
+axum = "0.7"
 futures-core = "0.3"
 futures-util = { version = "0.3", default_features = false, features = [] }
 http = { workspace = true }
@@ -35,7 +35,7 @@ tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-i
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
 testing-tracing-opentelemetry = { path = "../testing-tracing-opentelemetry" }
 assert2 = "0.3"
-hyper = "0.14"
+hyper = "1"
 insta = { version = "1.29.0", features = ["yaml", "redactions"] }
 opentelemetry-otlp = { workspace = true, features = [
   "http-proto",
