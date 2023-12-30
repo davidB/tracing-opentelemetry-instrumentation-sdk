@@ -58,6 +58,10 @@ insert_final_newline = unset
 indent_style = tab
 indent_size = 4
 
+[justfile]
+indent_style = space
+indent_size = 4
+
 # Batch files use tabs for indentation
 [*.bat]
 indent_style = tab
