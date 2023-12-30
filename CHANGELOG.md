@@ -6,6 +6,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2023-12-30
+
+### Added
+
+- ✨ add support for OTLP headers from environment (#110) ([ccd123b](ccd123b6d7de9c1f10d3d861cb8494db9ed201ee))
+
+### Changed
+
+- 📝 update CHANGELOG ([319b1eb](319b1eb17cc8876d3b7f999a4e1d5b4f534d2816))
+- 📝 Update link to changelog, remove homepage, ... ([7f38094](7f380949f73c76a315779db727b75be32211804d))
+- ➖ remove dependency to opentelemetry-http ([e049fb0](e049fb0e0c67140b3252bf465aa3c74e6838400d))
+- ⬆️ upgrade dependencies for axum-0.7 ([d4ad2d3](d4ad2d31bf8787b8c99332f6b8a7e44e34088886))
+- 📝 update example in doc ([b74c686](b74c68604ab359b19d4e43da1a3b0514e1ec2e68))
+
+### Fixed
+
+- 🐛 fix compilation & linter ([24d1eca](24d1eca18a2f85bd2fda98389583684a89d42e7c))
+
 ## [0.15.0] - 2023-11-25
 
 ### Added
