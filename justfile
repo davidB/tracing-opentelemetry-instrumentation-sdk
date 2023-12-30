@@ -1,10 +1,17 @@
-requirements:
-    cargo install  cargo-binstall
-    cargo binstall cargo-nextest
-    # cargo binstall cargo-sort
-    cargo binstall cargo-insta
-    cargo binstall cargo-release
-    cargo binstall git-cliff
+_install_cargo-binstall:
+    cargo install cargo-binstall
+
+_install_cargo-nextest: _install_cargo-binstall
+    cargo binstall cargo-nextest -y
+
+_install_cargo-insta: _install_cargo-binstall
+    cargo binstall cargo-insta -y
+
+_install_cargo-release: _install_cargo-binstall
+    cargo binstall cargo-release -y
+
+_install_git-cliff: _install_cargo-binstall
+    cargo binstall git-cliff -y
 
 # Format the code and sort dependencies
 format:
@@ -18,22 +25,21 @@ deny:
 # Lint the rust code
 lint:
     cargo fmt --all -- --check
-    # cargo sort --workspace --grouped --check
     cargo clippy --workspace --all-features --all-targets -- --deny warnings
 
 megalinter:
     @just _container run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "megalinter/megalinter:v7"
 
 # Launch tests
-test:
+tinstall_cst: _install_cargo-nextest _install_cargo-insta
     cargo nextest run
     cargo test --doc
 
-changelog:
+changelog: _install_git-cliff
     git-cliff -o "CHANGELOG.md"
     git add CHANGELOG.md && git commit -m "📝 update CHANGELOG"
 
-release *arguments:
+release *arguments: _install_cargo-release _install_git-cliff
     cargo release --workspace --execute {{ arguments }}
     # git-cliff could not be used as `pre-release-hook` of cargo-release because it uses tag
     git-cliff -o "CHANGELOG.md"
