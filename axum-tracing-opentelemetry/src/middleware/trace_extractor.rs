@@ -135,7 +135,7 @@ where
             tracing::Span::none()
         };
         let future = {
-            let _ = span.enter();
+            let _enter = span.enter();
             self.inner.call(req)
         };
         ResponseFuture {
