@@ -64,7 +64,7 @@ where
         let span = otel_http::grpc_client::make_span_from_request(&req);
         otel_http::inject_context(&find_context_from_tracing(&span), req.headers_mut());
         let future = {
-            let _ = span.enter();
+            let _enter = span.enter();
             self.inner.call(req)
         };
         ResponseFuture {
