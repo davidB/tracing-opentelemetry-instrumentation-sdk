@@ -1,9 +1,11 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
 package helloworld;
 
 service Greeter {
   rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc SayStatus (StatusRequest) returns (google.protobuf.Empty) {}
 }
 
 message HelloRequest {
@@ -12,4 +14,10 @@ message HelloRequest {
 
 message HelloReply {
   string message = 1;
+}
+
+message StatusRequest {
+  // https://github.com/grpc/grpc/blob/master/doc/statuscodes.md#status-codes-and-their-use-in-grpc
+  int32 code = 1;
+  string message = 2;
 }

@@ -1,6 +1,7 @@
 use hello_world::greeter_client::GreeterClient;
-use hello_world::HelloRequest;
+use hello_world::{HelloRequest, StatusRequest};
 use tonic::transport::Channel;
+use tonic::Code;
 use tonic_tracing_opentelemetry::middleware::client::OtelGrpcLayer;
 use tower::ServiceBuilder;
 
@@ -21,14 +22,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let channel = ServiceBuilder::new().layer(OtelGrpcLayer).service(channel);
 
     let mut client = GreeterClient::new(channel);
+    {
+        let request = tonic::Request::new(HelloRequest {
+            name: "Tonic".into(),
+        });
 
-    let request = tonic::Request::new(HelloRequest {
-        name: "Tonic".into(),
-    });
+        let response = client.say_hello(request).await?;
 
-    let response = client.say_hello(request).await?;
+        println!("RESPONSE={:?}", response);
+    }
+    {
+        let request = tonic::Request::new(StatusRequest {
+            code: Code::NotFound.into(),
+            message: "not found...".into(),
+        });
 
-    println!("RESPONSE={:?}", response);
+        let response = client.say_status(request).await;
+
+        println!("RESPONSE={:?}", response);
+    }
+    {
+        let request = tonic::Request::new(StatusRequest {
+            code: Code::DeadlineExceeded.into(),
+            message: "deadline...".into(),
+        });
+
+        let response = client.say_status(request).await;
+
+        println!("RESPONSE={:?}", response);
+    }
 
     opentelemetry::global::shutdown_tracer_provider();
     Ok(())

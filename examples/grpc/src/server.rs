@@ -1,5 +1,6 @@
 use hello_world::greeter_server::{Greeter, GreeterServer};
-use hello_world::{HelloReply, HelloRequest};
+use hello_world::{HelloReply, HelloRequest, StatusRequest};
+use tonic::Code;
 use tonic::{transport::Server, Request, Response, Status};
 use tonic_tracing_opentelemetry::middleware::{filters, server};
 
@@ -31,6 +32,12 @@ impl Greeter for MyGreeter {
             message: format!("Hello {}! ({:?})", request.into_inner().name, trace_id),
         };
         Ok(Response::new(reply))
+    }
+
+    #[tracing::instrument(skip(self, request))]
+    async fn say_status(&self, request: Request<StatusRequest>) -> Result<Response<()>, Status> {
+        let request = request.into_inner();
+        Err(Status::new(Code::from(request.code), request.message))
     }
 }
 
