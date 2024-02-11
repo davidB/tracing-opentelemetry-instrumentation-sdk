@@ -112,7 +112,7 @@ fn read_sampler_from_env() -> Sampler {
             Sampler::ParentBased(Box::new(Sampler::AlwaysOn))
         }
     };
-    tracing::debug!(target: "otel::setup", OTEL_TRACES_SAMPLER = ?name);
+    tracing::debug!(target: "otel::setup", OTEL_TRACES_SAMPLER = name);
     v
 }
 
