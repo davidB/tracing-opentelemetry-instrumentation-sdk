@@ -33,7 +33,7 @@ pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
         format!(
             // `otel::tracing` should be a level trace to emit opentelemetry trace & span
             // `otel::setup` set to debug to log detected resources, configuration read and infered
-            "{},otel::tracing=trace,otel=debug",
+            "{},otel::tracing=info,otel=debug",
             std::env::var("RUST_LOG")
                 .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
                 .unwrap_or_else(|_| "info".to_string())

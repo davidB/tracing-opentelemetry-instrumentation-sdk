@@ -35,7 +35,7 @@ The helpers could be used as is or into middleware build on it (eg: [`axum-traci
   - The OpenTelemetry parent Context (and trace_id) is created on `NEW` span or inherited from parent span. The parent context can be overwritten after creation, but until then the `trace_id` is the one from `NEW`, So tracing's log could report none or not-yet set trace_id on event `NEW` and the following until update.
   - To define kind, name,... of OpenTelemetry's span from tracing's span used special record's name: `otel.name`, `otel.kind`, ...
   - Record in a [`tracing`]'s Span should be defined at creation time. So some field are created with value `tracing::field::Empty` to then being updated.
-- Create trace with target `otel::tracing` (and level `trace`), to have a common way to enable / to disable
+- Create trace with target `otel::tracing` (and level `info`), to have a common way to enable / to disable
 
 ## Instrumentations Tips
 
@@ -49,7 +49,7 @@ Use `tracing::instrumented` (no propagation & no update on response)
 fn make_otel_span(db_operation: &str) -> tracing::Span {
     // NO parsing of statement to extract information, not recommended by Specification and time-consuming
     // warning: providing the statement could leek information
-    tracing::trace_span!(
+    tracing::info_span!(
         target: tracing_opentelemetry_instrumentation_sdk::TRACING_TARGET,
         "DB request",
         db.system = "postgresql",

@@ -10,7 +10,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
     // [opentelemetry-specification/.../span-general.md](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md)
     // Can not use const or opentelemetry_semantic_conventions::trace::* for name of records
     let http_method = http_method(req.method());
-    tracing::trace_span!(
+    tracing::info_span!(
         target: TRACING_TARGET,
         "HTTP request",
         http.request.method = %http_method,
