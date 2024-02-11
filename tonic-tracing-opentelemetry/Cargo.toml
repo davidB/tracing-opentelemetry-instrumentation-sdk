@@ -8,6 +8,7 @@ categories = [
   "development-tools::profiling",
   "web-programming",
 ]
+homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/tonic-tracing-opentelemetry"
 rust-version.workspace = true
 edition.workspace = true
 version.workspace = true
