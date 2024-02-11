@@ -30,7 +30,7 @@ tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
   "http",
-], version = "0.16" }
+], version = "0.17" }
 
 [dev-dependencies]
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
