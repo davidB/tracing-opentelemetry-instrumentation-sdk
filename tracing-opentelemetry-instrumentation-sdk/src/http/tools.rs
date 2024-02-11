@@ -101,8 +101,7 @@ pub fn http_host<B>(req: &http::Request<B>) -> &str {
         .unwrap_or("")
 }
 
-/// gRPC status codes
-/// [gRPC status codes]: https://github.com/grpc/grpc/blob/master/doc/statuscodes.md#status-codes-and-their-use-in-grpc
+/// [`gRPC` status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md#status-codes-and-their-use-in-grpc)
 /// copied from tonic
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum GrpcCode {
@@ -259,7 +258,10 @@ mod tests {
         let mut headers = http::HeaderMap::new();
         headers.insert("grpc-status", input.to_string().parse().unwrap());
         if input > -1 {
-            assert_eq!(grpc_status_from_http_header(&headers), Some(input as u16));
+            assert_eq!(
+                grpc_status_from_http_header(&headers),
+                Some(u16::try_from(input).unwrap())
+            );
         } else {
             assert_eq!(grpc_status_from_http_header(&headers), None);
         }
