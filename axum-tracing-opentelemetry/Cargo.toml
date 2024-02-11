@@ -8,7 +8,7 @@ categories = [
   "development-tools::profiling",
   "web-programming",
 ]
-homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/axum-tracing-opentelemetry"
+homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/axum-tracing-opentelemetry"
 rust-version = "1.70"
 edition.workspace = true
 version.workspace = true

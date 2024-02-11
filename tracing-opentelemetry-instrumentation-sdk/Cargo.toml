@@ -8,7 +8,7 @@ categories = [
   "development-tools::profiling",
   "web-programming",
 ]
-homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tracing-opentelemetry-instrumentation-sdk"
+homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/tracing-opentelemetry-instrumentation-sdk"
 edition.workspace = true
 version.workspace = true
 authors.workspace = true
