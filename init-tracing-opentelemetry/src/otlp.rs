@@ -62,9 +62,9 @@ where
 
 /// turn a string of "k1=v1,k2=v2,..." into an iterator of (key, value) tuples
 fn parse_headers(val: &str) -> impl Iterator<Item = (String, String)> + '_ {
-    val.split(",").filter_map(|kv| {
+    val.split(',').filter_map(|kv| {
         let s = kv
-            .split_once("=")
+            .split_once('=')
             .map(|(k, v)| (k.to_owned(), v.to_owned()));
         s
     })
