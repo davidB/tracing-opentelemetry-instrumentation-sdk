@@ -22,7 +22,7 @@ impl Greeter for MyGreeter {
         request: Request<HelloRequest>,
     ) -> Result<Response<HelloReply>, Status> {
         let trace_id = tracing_opentelemetry_instrumentation_sdk::find_current_trace_id();
-        println!(
+        tracing::info!(
             "Got a request from {:?} ({:?})",
             request.remote_addr(),
             trace_id
@@ -36,7 +36,13 @@ impl Greeter for MyGreeter {
 
     #[tracing::instrument(skip(self, request))]
     async fn say_status(&self, request: Request<StatusRequest>) -> Result<Response<()>, Status> {
+        let trace_id = tracing_opentelemetry_instrumentation_sdk::find_current_trace_id();
         let request = request.into_inner();
+        tracing::info!(
+            "ask to return status : {} ({:?})",
+            request.code,
+            trace_id
+        );
         Err(Status::new(Code::from(request.code), request.message))
     }
 }

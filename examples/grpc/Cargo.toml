@@ -8,6 +8,7 @@ publish = false
 init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", features = [
   "otlp",
   "tracing_subscriber_ext",
+  "logfmt",
 ] }
 opentelemetry = "0.21"
 prost = "0.12"
@@ -19,10 +20,10 @@ tonic = { version = "0.10", features = [
 ], default-features = false }
 tonic-health = "0.10"
 tonic-reflection = "0.10"
-tonic-tracing-opentelemetry = { path = "../../tonic-tracing-opentelemetry" }
+tonic-tracing-opentelemetry = "0.15" #{ path = "../../tonic-tracing-opentelemetry" }
 tower = "0.4"
 tracing = "0.1"
-tracing-opentelemetry-instrumentation-sdk = { path = "../../tracing-opentelemetry-instrumentation-sdk" }
+tracing-opentelemetry-instrumentation-sdk = "0.15" # { path = "../../tracing-opentelemetry-instrumentation-sdk" }
 
 [build-dependencies]
 tonic-build = { version = "0.10", default-features = false, features = [

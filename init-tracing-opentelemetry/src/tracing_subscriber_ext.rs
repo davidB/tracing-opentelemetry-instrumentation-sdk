@@ -2,17 +2,17 @@ use opentelemetry::trace::TraceError;
 use opentelemetry_sdk::trace::Tracer;
 use tracing::{info, Subscriber};
 use tracing_opentelemetry::OpenTelemetryLayer;
-use tracing_subscriber::{
-    filter::EnvFilter, fmt::format::FmtSpan, layer::SubscriberExt, registry::LookupSpan, Layer,
-};
+use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, registry::LookupSpan, Layer};
 
 use crate::Error;
 
+#[cfg(not(feature = "logfmt"))]
 #[must_use]
 pub fn build_logger_text<S>() -> Box<dyn Layer<S> + Send + Sync + 'static>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
+    use tracing_subscriber::fmt::format::FmtSpan;
     if cfg!(debug_assertions) {
         Box::new(
             tracing_subscriber::fmt::layer()
@@ -30,6 +30,15 @@ where
                 .with_timer(tracing_subscriber::fmt::time::uptime()),
         )
     }
+}
+
+#[cfg(feature = "logfmt")]
+#[must_use]
+pub fn build_logger_text<S>() -> Box<dyn Layer<S> + Send + Sync + 'static>
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+{
+    Box::new(tracing_logfmt_otel::layer())
 }
 
 #[must_use]
