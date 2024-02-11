@@ -6,6 +6,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2024-02-11
+
+### Added
+
+- ✨ add support for logfmt into `tracing_subscriber_ext::init_subscribers()` ([580d709](580d709161554b5888697604a6ec125a69503b09))
+
+### Changed
+
+- 📝 update CHANGELOG ([d3609ac](d3609ac2cc699d3a24fbf89754053cc8e938e3bf))
+- 📝 update link to homepage ([3e081fb](3e081fbd3a410fb9abfbdc0cc7a5a2953fee823a))
+- 💄 fix display of OTEL_TRACES_SAMPLER ([62d9c2a](62d9c2a7af020015949e1eaf308d365124aad43b))
+
+### Fixed
+
+- 🐛 on grpc when no status code into header, fallback to OK (previously Unkown) ([f1a23c4](f1a23c4cdeba8abcea598a2d4305dbe6e1a10edf))
+
 ## [0.16.0] - 2023-12-30
 
 ### Added
