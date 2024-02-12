@@ -13,7 +13,7 @@ Middlewares and tools to integrate tonic + tracing + opentelemetry for client an
 - Start a new trace if no trace is found in the incoming request
 - Trace is attached into tracing's span
 
-For examples, you can look at the [examples](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/examples/) folder.
+For examples, you can look at the [examples](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/examples/) folder.
 
 Extract of `client.rs`:
 
