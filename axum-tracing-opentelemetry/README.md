@@ -12,7 +12,7 @@ Middlewares to integrate axum + tracing + opentelemetry.
 - Trace is attached into tracing'span
 - OpenTelemetry Span is created on close of the tracing's span (behavior from [tracing-opentelemetry])
 
-For examples, you can look at the [examples](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/examples/) folder.
+For examples, you can look at the [examples](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/examples/) folder.
 
 ```txt
 //...
