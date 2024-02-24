@@ -44,4 +44,4 @@ Then :
 
 ## To release
 
-Use the github workflow `release`.
+Use the github workflow `release-plz`.
