@@ -15,37 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        # rust: [stable]
-        rust: ["1.70"]
     env:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: full
     steps:
       - uses: actions/checkout@v4
-      # - name: Install Protoc
-      #   uses: arduino/setup-protoc@v1
-      #   with:
-      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install Rust ${{ matrix.rust }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          profile: minimal
-          override: true
-          components: clippy
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-hack,protoc
-      - run: cargo hack check --each-feature --no-dev-deps
-      - run: cargo clippy --workspace --all-features --all-targets -- --deny warnings --allow deprecated --allow unknown-lints
-      - run: cargo hack test --each-feature -- --test-threads=1
+      - uses: jdx/mise-action@v2
+      - run: just check
+      - run: just lint
+      - run: just test_each_feature

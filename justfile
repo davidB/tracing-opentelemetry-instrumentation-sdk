@@ -1,17 +1,24 @@
 _install_cargo-binstall:
-    cargo install cargo-binstall
+    # cargo install --locked cargo-binstall
+    cargo-binstall --version || (curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash)
 
-_install_cargo-nextest: _install_cargo-binstall
-    cargo binstall cargo-nextest -y
+_binstall ARG: _install_cargo-binstall
+    cargo binstall -y {{ARG}} || cargo install --locked {{ARG}}
 
-_install_cargo-insta: _install_cargo-binstall
-    cargo binstall cargo-insta -y
+_install_cargo-nextest:
+    @just _binstall cargo-nextest
 
-_install_cargo-release: _install_cargo-binstall
-    cargo binstall cargo-release -y
+_install_cargo-insta:
+    @just _binstall cargo-insta
 
-_install_git-cliff: _install_cargo-binstall
-    cargo binstall git-cliff -y
+_install_cargo-release:
+    @just _binstall cargo-release
+
+_install_git-cliff:
+    @just _binstall git-cliff
+
+_install_cargo-hack:
+    @just _binstall cargo-hack
 
 # Format the code and sort dependencies
 format:
@@ -22,18 +29,24 @@ deny:
     cargo deny check advisories
     cargo deny check bans licenses sources
 
+check: _install_cargo-hack
+    cargo hack check --each-feature --no-dev-deps
+
 # Lint the rust code
 lint:
     cargo fmt --all -- --check
-    cargo clippy --workspace --all-features --all-targets -- --deny warnings
+    cargo clippy --workspace --all-features --all-targets -- --deny warnings --allow deprecated --allow unknown-lints
 
 megalinter:
     @just _container run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "megalinter/megalinter:v7"
 
 # Launch tests
-tinstall_cst: _install_cargo-nextest _install_cargo-insta
+test: _install_cargo-nextest _install_cargo-insta
     cargo nextest run
     cargo test --doc
+
+test_each_feature: _install_cargo-hack
+    cargo hack test --each-feature -- --test-threads=1
 
 # changelog: _install_git-cliff
 #     git-cliff -o "CHANGELOG.md"
