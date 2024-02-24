@@ -35,15 +35,15 @@ tinstall_cst: _install_cargo-nextest _install_cargo-insta
     cargo nextest run
     cargo test --doc
 
-changelog: _install_git-cliff
-    git-cliff -o "CHANGELOG.md"
-    git add CHANGELOG.md && git commit -m "📝 update CHANGELOG"
+# changelog: _install_git-cliff
+#     git-cliff -o "CHANGELOG.md"
+#     git add CHANGELOG.md && git commit -m "📝 update CHANGELOG"
 
-release *arguments: _install_cargo-release _install_git-cliff
-    cargo release --workspace --execute {{ arguments }}
-    # git-cliff could not be used as `pre-release-hook` of cargo-release because it uses tag
-    git-cliff -o "CHANGELOG.md"
-    git add CHANGELOG.md && git commit -m "📝 update CHANGELOG" && git push
+# release *arguments: _install_cargo-release _install_git-cliff
+#     cargo release --workspace --execute {{ arguments }}
+#     # git-cliff could not be used as `pre-release-hook` of cargo-release because it uses tag
+#     git-cliff -o "CHANGELOG.md"
+#     git add CHANGELOG.md && git commit -m "📝 update CHANGELOG" && git push
 
 _container *arguments:
     if [ -x "$(command -v podman)" ]; then \
