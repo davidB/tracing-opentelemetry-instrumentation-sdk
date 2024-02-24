@@ -20,6 +20,10 @@ _install_git-cliff:
 _install_cargo-hack:
     @just _binstall cargo-hack
 
+_install_rustfmt_clippy:
+    rustup component add rustfmt
+    rustup component add clippy
+
 # Format the code and sort dependencies
 format:
     cargo fmt
@@ -33,7 +37,7 @@ check: _install_cargo-hack
     cargo hack check --each-feature --no-dev-deps
 
 # Lint the rust code
-lint:
+lint: _install_rustfmt_clippy
     cargo fmt --all -- --check
     cargo clippy --workspace --all-features --all-targets -- --deny warnings --allow deprecated --allow unknown-lints
 
