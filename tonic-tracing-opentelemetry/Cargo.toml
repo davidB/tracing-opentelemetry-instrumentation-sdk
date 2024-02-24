@@ -2,33 +2,31 @@
 name = "tonic-tracing-opentelemetry"
 description = "Middlewares and tools to integrate tonic + tracing + opentelemetry."
 readme = "README.md"
-keywords = ["axum", "tracing", "opentelemetry"]
+keywords = ["tonic", "tracing", "opentelemetry"]
 categories = [
   "development-tools::debugging",
   "development-tools::profiling",
   "web-programming",
 ]
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/tonic-tracing-opentelemetry"
-rust-version.workspace = true
 edition.workspace = true
-version.workspace = true
+version = "0.15.4"
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
 
-
 [dependencies]
 futures-core = "0.3"
 futures-util = { version = "0.3", default_features = false, features = [] }
-http = { workspace = true }
+http = "0.2"
 http-body = "0.4"
 hyper = "0.14"
 pin-project-lite = "0.2"
-tonic = { version = "0.10", default-features = false }
+tonic = { version = "0.11", default-features = false }
 tower = { version = "0.4", default-features = false }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
-tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
+tracing-opentelemetry-instrumentation-sdk = { features = [
   "http",
 ], version = "0.15" }
 

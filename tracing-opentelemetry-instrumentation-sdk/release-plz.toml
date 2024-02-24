@@ -1,0 +1,30 @@
+# [Configuration | Release-plz](https://release-plz.ieni.dev/docs/config)
+[changelog]
+sort_commits = "newest"
+commit_preprocessors = [
+    # { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "" }, # remove issue numbers from commits
+    # { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"}, # replace issue numbers
+]
+# regex for parsing and grouping commits
+# try to follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+commit_parsers = [
+    { message = "^(🔒️|🔐)", group = "<!-- 0 -->Security" },
+    { body = ".*security", group = "<!-- 0 -->Security" },
+    { message = "^(fix|🐛|🚑️|👽️)", group = "<!-- 1 -->Fixed" },
+    { message = "^(test|✅)", group = "<!-- 1 -->Fixed", skip = true },
+    { message = "^.*: add", group = "<!-- 2 -->Added" },
+    { message = "^.*: support", group = "<!-- 2 -->Added" },
+    { message = "^(feat|✨|💥)", group = "<!-- 2 -->Added" },
+    { message = "^.*: remove", group = "<!-- 3 -->Removed" },
+    { message = "^.*: delete", group = "<!-- 3 -->Removed" },
+    { message = "^(style|💄)", group = "<!-- 4 -->Changed" },
+    { message = "^(doc|✏️|📝)", group = "<!-- 4 -->Changed" },
+    { message = "^(perf|⚡️)", group = "<!-- 4 -->Changed" },
+    { message = "^(chore|ci|💚|👷|🚧)", group = "<!-- 4 -->Changed", skip = true },
+    { message = "^revert", group = "<!-- 4 -->Changed" },
+    { message = "^(chore\\(deps\\)|⬇️|⬆️|➕|➖)", group = "<!-- 4 -->Changed" },
+    { message = "^(refactor|🎨|🔥|♻️)", group = "<!-- 5 -->Refactor", skip = true },
+    { message = "^(chore\\(release\\): prepare for|🔖|🚀)", skip = true },
+    { message = "^chore\\(pr\\)", skip = true },
+    { message = "^chore\\(pull\\)", skip = true },
+]

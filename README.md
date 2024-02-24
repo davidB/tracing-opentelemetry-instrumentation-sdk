@@ -45,10 +45,3 @@ Then :
 ## To release
 
 Use the github workflow `release`.
-
-<!--
-```sh
-#cargo ws publish --tag-prefix "" "prepatch" --all --no-individual-tags
-just release "minor"
-```
--->
