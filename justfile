@@ -1,9 +1,9 @@
 _install_cargo-binstall:
-    # cargo install --locked cargo-binstall
-    cargo-binstall -V || (curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash)
+    @# cargo install --locked cargo-binstall
+    @(cargo-binstall -V > /dev/null) || (curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash)
 
 _binstall ARG: _install_cargo-binstall
-    cargo binstall -y {{ARG}} || cargo install --locked {{ARG}}
+    @(cargo binstall -y {{ARG}} || cargo install --locked {{ARG}})
 
 _install_cargo-nextest:
     @just _binstall cargo-nextest
