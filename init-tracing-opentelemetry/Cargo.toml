@@ -14,9 +14,6 @@ license.workspace = true
 [dependencies]
 opentelemetry = { workspace = true }
 opentelemetry-aws = { workspace = true, optional = true, features = ["trace"] }
-opentelemetry-jaeger = { workspace = true, features = [
-  "rt-tokio",
-], optional = true }
 opentelemetry-jaeger-propagator = { workspace = true, optional = true }
 opentelemetry-otlp = { workspace = true, optional = true, features = [
   "grpc-tonic",
@@ -60,11 +57,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ] }
 
 [features]
-jaeger = [
-  "dep:opentelemetry-jaeger",
-  "dep:opentelemetry-jaeger-propagator",
-  "tracer",
-]
+jaeger = ["dep:opentelemetry-jaeger-propagator"]
 otlp = ["opentelemetry-otlp/http-proto", "tracer"]
 stdout = ["dep:opentelemetry-stdout", "tracer"]
 tracer = ["dep:opentelemetry-semantic-conventions"]

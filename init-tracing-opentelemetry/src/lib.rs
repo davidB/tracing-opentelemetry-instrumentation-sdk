@@ -13,8 +13,6 @@ use opentelemetry::propagation::{TextMapCompositePropagator, TextMapPropagator};
 use opentelemetry::trace::TraceError;
 use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
 
-#[cfg(feature = "jaeger")]
-pub mod jaeger;
 #[cfg(feature = "otlp")]
 pub mod otlp;
 #[cfg(feature = "tracer")]
