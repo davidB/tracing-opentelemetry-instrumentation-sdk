@@ -13,19 +13,20 @@ license.workspace = true
 
 [dependencies]
 opentelemetry = { workspace = true }
-opentelemetry-aws = { version = "0.9", optional = true }
-opentelemetry-jaeger = { version = "0.20", features = [
+opentelemetry-aws = { workspace = true, optional = true }
+opentelemetry-jaeger = { workspace = true, features = [
   "rt-tokio",
 ], optional = true }
-opentelemetry-otlp = { version = "0.14", optional = true }
-opentelemetry-stdout = { version = "0.2", features = [
+opentelemetry-jaeger-propagator = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true, optional = true }
+opentelemetry-stdout = { workspace = true, features = [
   "trace",
 ], optional = true }
-opentelemetry-semantic-conventions = { version = "0.13", optional = true }
-opentelemetry-zipkin = { version = "0.19", features = [], optional = true }
+opentelemetry-semantic-conventions = { workspace = true, optional = true }
+opentelemetry-zipkin = { workspace = true, features = [], optional = true }
 opentelemetry_sdk = { workspace = true }
 thiserror = "1.0"
-tonic = { version = "0.9", optional = true, features = ["tls"] }
+tonic = { workspace = true, optional = true, features = ["tls"] }
 tracing = { workspace = true }
 tracing-logfmt-otel = { version = "0.2", optional = true }
 tracing-opentelemetry = { workspace = true }
@@ -56,7 +57,11 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ] }
 
 [features]
-jaeger = ["dep:opentelemetry-jaeger", "tracer"]
+jaeger = [
+  "dep:opentelemetry-jaeger",
+  "dep:opentelemetry-jaeger-propagator",
+  "tracer",
+]
 otlp = ["opentelemetry-otlp/http-proto", "tracer"]
 stdout = ["dep:opentelemetry-stdout", "tracer"]
 tracer = ["dep:opentelemetry-semantic-conventions"]

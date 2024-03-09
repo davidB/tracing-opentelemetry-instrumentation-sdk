@@ -17,7 +17,6 @@ license.workspace = true
 
 [dependencies]
 http = { workspace = true, optional = true }
-# opentelemetry-semantic-conventions = { version = "0.11" }
 opentelemetry = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }

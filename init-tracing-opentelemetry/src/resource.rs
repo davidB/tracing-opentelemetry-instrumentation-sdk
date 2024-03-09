@@ -1,8 +1,9 @@
+use opentelemetry::KeyValue;
 use opentelemetry_sdk::{
     resource::{OsResourceDetector, ResourceDetector},
     Resource,
 };
-use opentelemetry_semantic_conventions as semcov;
+use opentelemetry_semantic_conventions::resource;
 use std::time::Duration;
 
 /// To log detected value set environement variable `RUST_LOG="...,otel::setup::resource=debug"`
@@ -83,7 +84,7 @@ impl ResourceDetector for ServiceInfoDetector {
                 self.fallback_service_name
                     .map(std::string::ToString::to_string)
             })
-            .map(|v| semcov::resource::SERVICE_NAME.string(v));
+            .map(|v| KeyValue::new(resource::SERVICE_NAME, v));
         let service_version = std::env::var("SERVICE_VERSION")
             .or_else(|_| std::env::var("APP_VERSION"))
             .ok()
@@ -91,7 +92,7 @@ impl ResourceDetector for ServiceInfoDetector {
                 self.fallback_service_version
                     .map(std::string::ToString::to_string)
             })
-            .map(|v| semcov::resource::SERVICE_VERSION.string(v));
+            .map(|v| KeyValue::new(resource::SERVICE_VERSION, v));
         Resource::new(vec![service_name, service_version].into_iter().flatten())
     }
 }

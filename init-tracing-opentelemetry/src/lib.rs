@@ -9,11 +9,9 @@
 mod error;
 pub use error::Error;
 
-use opentelemetry::propagation::TextMapPropagator;
+use opentelemetry::propagation::{TextMapCompositePropagator, TextMapPropagator};
 use opentelemetry::trace::TraceError;
-use opentelemetry_sdk::propagation::{
-    BaggagePropagator, TextMapCompositePropagator, TraceContextPropagator,
-};
+use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
 
 #[cfg(feature = "jaeger")]
 pub mod jaeger;
@@ -96,7 +94,7 @@ fn propagator_from_string(
         )),
         #[cfg(feature = "jaeger")]
         "jaeger" => Ok(Some(Box::new(
-            opentelemetry_jaeger::Propagator::default()
+            opentelemetry_jaeger_propagator::Propagator::default()
         ))),
         #[cfg(not(feature = "jaeger"))]
         "jaeger" => Err(TraceError::from(

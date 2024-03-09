@@ -20,7 +20,7 @@ where
     F: FnOnce(AgentPipeline) -> AgentPipeline,
 {
     let mut pipeline = opentelemetry_jaeger::new_agent_pipeline();
-    if let Some(name) = resource.get(semcov::resource::SERVICE_NAME) {
+    if let Some(name) = resource.get(semcov::resource::SERVICE_NAME.into()) {
         pipeline = pipeline.with_service_name(name.to_string());
     }
     pipeline = pipeline.with_trace_config(
