@@ -1,4 +1,5 @@
 //! code based on [tonic/examples/src/tower/client.rs at master · hyperium/tonic · GitHub](https://github.com/hyperium/tonic/blob/master/examples/src/tower/client.rs)
+use crate::tracing_opentelemetry_instrumentation_sdk::http as otel_http;
 use http::{Request, Response};
 use pin_project_lite::pin_project;
 use std::{
@@ -8,7 +9,6 @@ use std::{
 };
 use tower::{BoxError, Layer, Service};
 use tracing::Span;
-use tracing_opentelemetry_instrumentation_sdk::http as otel_http;
 
 pub type Filter = fn(&str) -> bool;
 

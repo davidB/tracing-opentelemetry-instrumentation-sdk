@@ -6,3 +6,7 @@
 #![doc = include_str!("../README.md")]
 
 pub mod middleware;
+
+// HACK vendor of tracing_opentelemetry_instrumentation_sdk until tonic can support hyper 1, http 1, ...
+// TODO reexport tracing_opentelemetry_instrumentation_sdk crate
+pub mod tracing_opentelemetry_instrumentation_sdk;
