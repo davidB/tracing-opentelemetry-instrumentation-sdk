@@ -14,3 +14,6 @@ pub use self::middleware::opentelemetry_tracing_layer;
 /// for basic backward compatibility and transition
 #[allow(deprecated)]
 pub use self::middleware::response_with_trace_layer;
+
+// reexport tracing_opentelemetry_instrumentation_sdk crate
+pub use tracing_opentelemetry_instrumentation_sdk;
