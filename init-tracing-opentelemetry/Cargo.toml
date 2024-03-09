@@ -13,12 +13,15 @@ license.workspace = true
 
 [dependencies]
 opentelemetry = { workspace = true }
-opentelemetry-aws = { workspace = true, optional = true }
+opentelemetry-aws = { workspace = true, optional = true, features = ["trace"] }
 opentelemetry-jaeger = { workspace = true, features = [
   "rt-tokio",
 ], optional = true }
 opentelemetry-jaeger-propagator = { workspace = true, optional = true }
-opentelemetry-otlp = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true, optional = true, features = [
+  "grpc-tonic",
+  "trace",
+] }
 opentelemetry-stdout = { workspace = true, features = [
   "trace",
 ], optional = true }
