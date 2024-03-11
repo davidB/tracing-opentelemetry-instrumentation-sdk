@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
         }
         for _i in 1..10000 {
-            let _span = tracing::trace_span!(
+            let _span = tracing::info_span!(
                 target: TRACING_TARGET,
                 "Load",
                 http.request.method = "GET",

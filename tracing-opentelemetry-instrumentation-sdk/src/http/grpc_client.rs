@@ -10,7 +10,7 @@ use super::grpc_update_span_from_response;
 //TODO create similar but with tonic::Request<B> ?
 pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
     let (service, method) = extract_service_method(req.uri());
-    tracing::trace_span!(
+    tracing::info_span!(
         target: TRACING_TARGET,
         "GRPC request",
         http.user_agent = %user_agent(req),

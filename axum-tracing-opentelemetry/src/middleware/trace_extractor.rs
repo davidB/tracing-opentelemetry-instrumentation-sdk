@@ -134,6 +134,7 @@ where
         } else {
             tracing::Span::none()
         };
+        eprintln!("span: {:?}.is_disabled{}", span, span.is_disabled());
         let future = {
             let _enter = span.enter();
             self.inner.call(req)
