@@ -7,7 +7,7 @@
 //! # Span fields
 //!
 //! Try to provide some of the field define at
-//! [semantic-conventions/.../http.md](https://github.com/open-telemetry/semantic-conventions/blob/v1.25.0/docs/http/http-spans.md)
+//! [semantic-conventions/.../http-spans.md](https://github.com/open-telemetry/semantic-conventions/blob/v1.25.0/docs/http/http-spans.md)
 //! (Please report or provide fix for missing one)
 //!
 //! # Example
