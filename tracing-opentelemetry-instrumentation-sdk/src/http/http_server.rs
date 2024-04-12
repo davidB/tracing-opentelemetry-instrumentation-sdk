@@ -6,8 +6,8 @@ use crate::TRACING_TARGET;
 use tracing::field::Empty;
 
 pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
-    // [opentelemetry-specification/.../http.md](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md)
-    // [opentelemetry-specification/.../span-general.md](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md)
+    // [semantic-conventions/.../http-spans.md](https://github.com/open-telemetry/semantic-conventions/blob/v1.25.0/docs/http/http-spans.md)
+    // [semantic-conventions/.../general/attributes.md](https://github.com/open-telemetry/semantic-conventions/blob/v1.25.0/docs/general/attributes.md)
     // Can not use const or opentelemetry_semantic_conventions::trace::* for name of records
     let http_method = http_method(req.method());
     tracing::trace_span!(
@@ -40,7 +40,7 @@ pub fn update_span_from_response<B>(span: &tracing::Span, response: &http::Respo
 
     if status.is_server_error() {
         span.record("otel.status_code", "ERROR");
-        // see[](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.22.0/specification/trace/semantic_conventions/http.md#status)
+        // see [http-spans.md#status](https://github.com/open-telemetry/semantic-conventions/blob/v1.25.0/docs/http/http-spans.md#status)
         // Span Status MUST be left unset if HTTP status code was in the 1xx, 2xx or 3xx ranges,
         // unless there was another error (e.g., network error receiving the response body;
         // or 3xx codes with max redirects exceeded), in which case status MUST be set to Error.
