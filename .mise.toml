@@ -10,7 +10,7 @@ ASDF_RUST_PROFILE = "minimal"
 rust = '1.73.0'
 just = '1'
 grpcurl = '*'
-grpc-health-probe = "*"
+# grpc-health-probe = "*"
 sccache = "0.5"
 cargo-binstall = "latest"
 

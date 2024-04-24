@@ -97,7 +97,7 @@ run_example_grpc_server:
 
 run_example_grpc_client:
     # grpcurl -plaintext  -d '{"service": "healthcheck"}' 127.0.0.1:50051 grpc.health.v1.Health/Check
-    grpc-health-probe -addr 127.0.0.1:50051
+    # grpc-health-probe -addr 127.0.0.1:50051
     grpcurl -plaintext 127.0.0.1:50051 list
     cd examples/grpc; OTEL_SERVICE_NAME=grpc-client cargo run --bin client
 
