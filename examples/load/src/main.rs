@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use memory_stats::memory_stats;
 use tracing::field::Empty;
-use tracing_opentelemetry_instrumentation_sdk::TRACING_TARGET;
+use tracing_opentelemetry_instrumentation_sdk::otel_trace_span;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,8 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
         }
         for _i in 1..10000 {
-            let _span = tracing::trace_span!(
-                target: TRACING_TARGET,
+            let _span = otel_trace_span!(
                 "Load",
                 http.request.method = "GET",
                 http.route = Empty,

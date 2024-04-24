@@ -1,5 +1,5 @@
 use crate::http::{extract_service_method, http_host, user_agent};
-use crate::{BoxError, TRACING_TARGET};
+use crate::{otel_trace_span, BoxError};
 use tracing::field::Empty;
 
 use super::grpc_update_span_from_response;
@@ -8,8 +8,7 @@ use super::grpc_update_span_from_response;
 /// see [Semantic Conventions for gRPC | OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/rpc/grpc/#grpc-status)
 pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
     let (service, method) = extract_service_method(req.uri());
-    tracing::trace_span!(
-        target: TRACING_TARGET,
+    otel_trace_span!(
         "GRPC request",
         http.user_agent = %user_agent(req),
         otel.name = format!("{service}/{method}"),

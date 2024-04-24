@@ -1,7 +1,7 @@
 use std::error::Error;
 
+use super::super::otel_trace_span;
 use super::super::span_type::SpanType;
-use super::super::TRACING_TARGET;
 use super::{http_flavor, http_host, http_method, url_scheme, user_agent};
 use tracing::field::Empty;
 
@@ -10,8 +10,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
     // [opentelemetry-specification/.../span-general.md](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md)
     // Can not use const or opentelemetry_semantic_conventions::trace::* for name of records
     let http_method = http_method(req.method());
-    tracing::trace_span!(
-        target: TRACING_TARGET,
+    otel_trace_span!(
         "HTTP request",
         http.request.method = %http_method,
         http.route = Empty, // to set by router of "webframework" after

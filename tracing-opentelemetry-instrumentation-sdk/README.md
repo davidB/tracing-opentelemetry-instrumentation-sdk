@@ -49,8 +49,7 @@ Use `tracing::instrumented` (no propagation & no update on response)
 fn make_otel_span(db_operation: &str) -> tracing::Span {
     // NO parsing of statement to extract information, not recommended by Specification and time-consuming
     // warning: providing the statement could leek information
-    tracing::trace_span!(
-        target: tracing_opentelemetry_instrumentation_sdk::TRACING_TARGET,
+    tracing_opentelemetry_instrumentation_sdk::otel_trace_span!(
         "DB request",
         db.system = "postgresql",
         // db.statement = stmt,

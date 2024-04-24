@@ -14,6 +14,12 @@ use opentelemetry::Context;
 /// tracing's target used by instrumentation library to create span
 pub const TRACING_TARGET: &str = "otel::tracing";
 
+#[cfg(not(feature = "tracing_level_info"))]
+pub const TRACING_LEVEL: tracing::Level = tracing::Level::TRACE;
+
+#[cfg(feature = "tracing_level_info")]
+pub const TRACING_LEVEL: tracing::Level = tracing::Level::INFO;
+
 // const SPAN_NAME_FIELD: &str = "otel.name";
 // const SPAN_KIND_FIELD: &str = "otel.kind";
 // const SPAN_STATUS_CODE_FIELD: &str = "otel.status_code";
@@ -22,6 +28,37 @@ pub const TRACING_TARGET: &str = "otel::tracing";
 // const FIELD_EXCEPTION_MESSAGE: &str = "exception.message";
 // const FIELD_EXCEPTION_STACKTRACE: &str = "exception.stacktrace";
 // const HTTP_TARGET: &str = opentelemetry_semantic_conventions::trace::HTTP_TARGET.as_str();
+
+/// Constructs a span for the target `TRACING_TARGET` with the level `TRACING_LEVEL`.
+///
+/// [Fields] and [attributes] are set using the same syntax as the [`tracing::span!`]
+/// macro.
+#[macro_export]
+macro_rules! otel_trace_span {
+    (parent: $parent:expr, $name:expr, $($field:tt)*) => {
+        tracing::span!(
+            target: $crate::TRACING_TARGET,
+            parent: $parent,
+            $crate::TRACING_LEVEL,
+            $name,
+            $($field)*
+        )
+    };
+    (parent: $parent:expr, $name:expr) => {
+        $crate::otel_trace_span!(parent: $parent, $name,)
+    };
+    ($name:expr, $($field:tt)*) => {
+        tracing::span!(
+            target: $crate::TRACING_TARGET,
+            $crate::TRACING_LEVEL,
+            $name,
+            $($field)*
+        )
+    };
+    ($name:expr) => {
+        $crate::otel_trace_span!($name,)
+    };
+}
 
 #[inline]
 #[must_use]
