@@ -1,4 +1,4 @@
-# axum-tracing-opentelemetry
+# tonic-tracing-opentelemetry
 
 [![crates license](https://img.shields.io/crates/l/tonic-tracing-opentelemetry.svg)](http://creativecommons.org/publicdomain/zero/1.0/)
 [![crate version](https://img.shields.io/crates/v/tonic-tracing-opentelemetry.svg)](https://crates.io/crates/tonic-tracing-opentelemetry)
