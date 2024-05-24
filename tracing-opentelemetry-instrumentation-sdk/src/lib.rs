@@ -130,6 +130,18 @@ pub fn find_trace_id(context: &Context) -> Option<String> {
     // };
 }
 
+#[inline]
+#[must_use]
+pub fn find_span_id(context: &Context) -> Option<String> {
+    use opentelemetry::trace::TraceContextExt;
+
+    let span = context.span();
+    let span_context = span.span_context();
+    span_context
+        .is_valid()
+        .then(|| span_context.span_id().to_string())
+}
+
 // pub(crate) fn set_otel_parent(parent_context: Context, span: &tracing::Span) {
 //     use opentelemetry::trace::TraceContextExt as _;
 //     use tracing_opentelemetry::OpenTelemetrySpanExt as _;
