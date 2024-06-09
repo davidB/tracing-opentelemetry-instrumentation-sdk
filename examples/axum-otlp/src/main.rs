@@ -21,9 +21,7 @@ async fn main() -> Result<(), BoxError> {
     tracing::info!("try to call `curl -i http://127.0.0.1:3003/health` (with NO trace)"); //Devskim: ignore DS137138
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app.into_make_service())
-        //FIXME garcefull shutdown is in wip for axum 0.7
-        // see [axum/examples/graceful-shutdown/src/main.rs at main · tokio-rs/axum](https://github.com/tokio-rs/axum/blob/main/examples/graceful-shutdown/src/main.rs)
-        // .with_graceful_shutdown(shutdown_signal())
+        .with_graceful_shutdown(shutdown_signal())
         .await?;
     Ok(())
 }
@@ -64,29 +62,29 @@ async fn proxy_handler(Path((service, path)): Path<(String, String)>) -> impl In
     )
 }
 
-// async fn shutdown_signal() {
-//     let ctrl_c = async {
-//         tokio::signal::ctrl_c()
-//             .await
-//             .expect("failed to install Ctrl+C handler");
-//     };
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
 
-//     #[cfg(unix)]
-//     let terminate = async {
-//         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-//             .expect("failed to install signal handler")
-//             .recv()
-//             .await;
-//     };
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
 
-//     #[cfg(not(unix))]
-//     let terminate = std::future::pending::<()>();
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
 
-//     tokio::select! {
-//         _ = ctrl_c => {},
-//         _ = terminate => {},
-//     }
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
 
-//     tracing::warn!("signal received, starting graceful shutdown");
-//     opentelemetry::global::shutdown_tracer_provider();
-// }
+    tracing::warn!("signal received, starting graceful shutdown");
+    opentelemetry::global::shutdown_tracer_provider();
+}
