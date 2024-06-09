@@ -63,6 +63,9 @@ async fn proxy_handler(Path((service, path)): Path<(String, String)>) -> impl In
 }
 
 async fn shutdown_signal() {
+    use std::sync::mpsc;
+    use std::{thread, time::Duration};
+
     let ctrl_c = async {
         tokio::signal::ctrl_c()
             .await
@@ -86,5 +89,13 @@ async fn shutdown_signal() {
     }
 
     tracing::warn!("signal received, starting graceful shutdown");
-    opentelemetry::global::shutdown_tracer_provider();
+    let (sender, receiver) = mpsc::channel();
+    let _ = thread::spawn(move || {
+        opentelemetry::global::shutdown_tracer_provider();
+        sender.send(()).ok()
+    });
+    let shutdown_res = receiver.recv_timeout(Duration::from_millis(2_000));
+    if shutdown_res.is_err() {
+        tracing::error!("failed to shutdown OpenTelemetry");
+    }
 }
