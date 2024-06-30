@@ -69,6 +69,5 @@ opentelemetry_sdk = { workspace = true, features = [
 ] }
 
 [features]
-default = ["dep:instrumentation-sdk-trace"]
 # to use level `info` instead of `trace` to create otel span
-tracing_level_info = ["dep:instrumentation-sdk-info"]
+tracing_level_info = ["tracing-opentelemetry-instrumentation-sdk/tracing_level_info"]
