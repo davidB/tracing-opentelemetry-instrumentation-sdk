@@ -1,8 +1,6 @@
 use opentelemetry::KeyValue;
-use opentelemetry_sdk::{
-    resource::{OsResourceDetector, ResourceDetector},
-    Resource,
-};
+use opentelemetry_resource_detectors::OsResourceDetector;
+use opentelemetry_sdk::{resource::ResourceDetector, Resource};
 use opentelemetry_semantic_conventions::resource;
 use std::time::Duration;
 

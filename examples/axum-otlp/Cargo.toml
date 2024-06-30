@@ -11,8 +11,8 @@ init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", featur
   "otlp",
   "tracing_subscriber_ext",
 ] }
-opentelemetry = "0.22"
-opentelemetry-otlp = { version = "0.14", optional = true }
+opentelemetry = "0.23"
+opentelemetry-otlp = { version = "0.16", optional = true }
 serde_json = "1.0.79"
 tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1"

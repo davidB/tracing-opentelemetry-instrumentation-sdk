@@ -19,6 +19,7 @@ opentelemetry-otlp = { workspace = true, optional = true, features = [
   "grpc-tonic",
   "trace",
 ] }
+opentelemetry-resource-detectors = { workspace = true }
 opentelemetry-stdout = { workspace = true, features = [
   "trace",
 ], optional = true }
@@ -58,7 +59,11 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 
 [features]
 jaeger = ["dep:opentelemetry-jaeger-propagator"]
-otlp = ["opentelemetry-otlp/http-proto", "opentelemetry-otlp/reqwest-client", "tracer"]
+otlp = [
+  "opentelemetry-otlp/http-proto",
+  "opentelemetry-otlp/reqwest-client",
+  "tracer",
+]
 stdout = ["dep:opentelemetry-stdout", "tracer"]
 tracer = ["dep:opentelemetry-semantic-conventions"]
 xray = ["dep:opentelemetry-aws"]
