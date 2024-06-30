@@ -64,3 +64,8 @@ opentelemetry_sdk = { workspace = true, features = [
   "rt-tokio",
   "testing",
 ] }
+
+[features]
+default = []
+# to use level `info` instead of `trace` to create otel span
+tracing_level_info = []
