@@ -10,7 +10,7 @@ categories = [
 ]
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/tracing-opentelemetry-instrumentation-sdk"
 edition.workspace = true
-version = "0.18.1"
+version = "0.18.2"
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
