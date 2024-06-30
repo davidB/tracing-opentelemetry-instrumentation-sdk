@@ -232,6 +232,8 @@ tags
 
 # End of https://www.toptal.com/developers/gitignore/api/git,bazel,vim,emacs,visualstudiocode,jetbrains+all,helm,rust
 
+.envrc
+
 # ignore downloaded charts
 *.tgz
 *.off
