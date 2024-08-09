@@ -1,6 +1,6 @@
 use std::{collections::HashMap, str::FromStr};
 
-use opentelemetry::trace::TraceError;
+use opentelemetry::trace::{TraceError, TracerProvider};
 use opentelemetry_otlp::SpanExporterBuilder;
 use opentelemetry_sdk::{
     trace::{Sampler, Tracer},
@@ -52,12 +52,14 @@ where
         .tracing()
         .with_exporter(exporter)
         .with_trace_config(
-            opentelemetry_sdk::trace::config()
+            opentelemetry_sdk::trace::Config::default()
                 .with_resource(resource)
                 .with_sampler(read_sampler_from_env()),
         );
     pipeline = transform(pipeline);
-    pipeline.install_batch(opentelemetry_sdk::runtime::Tokio)
+    let provider = pipeline.install_batch(opentelemetry_sdk::runtime::Tokio);
+    opentelemetry::global::set_tracer_provider(provider.clone());
+    provider.tracer()
 }
 
 /// turn a string of "k1=v1,k2=v2,..." into an iterator of (key, value) tuples
