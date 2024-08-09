@@ -14,7 +14,7 @@ To collect and visualize trace on local, one of the simplest solution:
 # launch Jaeger with OpenTelemetry, Jaeger, Zipking,... mode.
 # see https://www.jaegertracing.io/docs/1.49/getting-started/#all-in-one
 
-# nerctl or docker or any container runner
+# nerdctl or docker or any container runner
 nerdctl run --rm --name jaeger \
   -e COLLECTOR_ZIPKIN_HOST_PORT:9411 \
   -e COLLECTOR_OTLP_ENABLED:true \
