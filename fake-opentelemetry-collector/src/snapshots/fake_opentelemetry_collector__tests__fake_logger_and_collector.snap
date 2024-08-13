@@ -1,0 +1,13 @@
+---
+source: fake-opentelemetry-collector/src/lib.rs
+expression: otel_logs
+---
+- trace_id: "[trace_id:lg0]"
+  span_id: "[span_id:lg0]"
+  observed_time_unix_nano: "[timestamp]"
+  severity_number: 9
+  severity_text: info
+  body: "AnyValue { value: Some(StringValue(\"This is information\")) }"
+  attributes: {}
+  dropped_attributes_count: 0
+  flags: 0
