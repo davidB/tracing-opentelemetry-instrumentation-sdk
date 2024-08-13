@@ -53,7 +53,6 @@ impl LogsService for FakeLogsService {
         &self,
         request: tonic::Request<ExportLogsServiceRequest>,
     ) -> Result<tonic::Response<ExportLogsServiceResponse>, tonic::Status> {
-        println!("log request");
         request
             .into_inner()
             .resource_logs
