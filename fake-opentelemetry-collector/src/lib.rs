@@ -171,8 +171,6 @@ mod tests {
         logger.emit(record);
 
         let otel_logs = fake_collector.exported_logs();
-        println!("otel_logs {:?}", otel_logs);
-
         insta::assert_yaml_snapshot!(otel_logs, {
             "[].trace_id" => insta::dynamic_redaction(|value, _path| {
                 assert2::let_assert!(Some(trace_id) = value.as_str());
