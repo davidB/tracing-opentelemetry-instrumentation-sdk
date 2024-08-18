@@ -23,10 +23,10 @@ rust-version = "1.73.0"
 
 [workspace.dependencies]
 http = "^1"
-opentelemetry = { version = "0.23", features = [
+opentelemetry = { version = "0.24", features = [
   "trace",
 ], default-features = false }
-opentelemetry_sdk = { version = "0.23", default-features = false, features = [
+opentelemetry_sdk = { version = "0.24.1", default-features = false, features = [
   "rt-tokio",
 ] }
 opentelemetry-aws = { version = "0.11", default-features = false }
@@ -35,12 +35,12 @@ opentelemetry-jaeger-propagator = { version = "0.2", default-features = false }
 opentelemetry-resource-detectors = { version = "0.2.0", default-features = false }
 opentelemetry-semantic-conventions = { version = "0.15", default-features = false }
 opentelemetry-zipkin = { version = "0.21", default-features = false }
-opentelemetry-otlp = { version = "0.16", default-features = false }
+opentelemetry-otlp = { version = "0.17", default-features = false }
 opentelemetry-proto = { version = "0.6", default-features = false }
 opentelemetry-stdout = { version = "0.4" }
 tonic = { version = "0.11", default-features = false } #should be sync with opentelemetry-proto
 tracing = "0.1"
-tracing-opentelemetry = "0.24"
+tracing-opentelemetry = "0.25"
 
 [profile.dev.package.insta]
 opt-level = 3
