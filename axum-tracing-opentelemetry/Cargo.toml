@@ -11,7 +11,7 @@ categories = [
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/axum-tracing-opentelemetry"
 rust-version.workspace = true
 edition.workspace = true
-version = "0.18.1"
+version = "0.19.0"
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
@@ -36,8 +36,7 @@ instrumentation-sdk-trace = { package = "tracing-opentelemetry-instrumentation-s
 instrumentation-sdk-info = { package = "tracing-opentelemetry-instrumentation-sdk", path = "../tracing-opentelemetry-instrumentation-sdk", features = [
   "http",
   "tracing_level_info",
-], version = "0.18", optional = true }
-
+], version = "0.19", optional = true }
 
 [dev-dependencies]
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
@@ -51,7 +50,7 @@ opentelemetry-otlp = { workspace = true, features = [
   "reqwest-rustls",
 ] }
 opentelemetry-proto = { workspace = true, features = ["gen-tonic"] }
-rstest = "0.18"
+rstest = "0.21"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 tokio = { version = "1.27", features = ["full"] }

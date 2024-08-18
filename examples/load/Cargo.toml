@@ -1,6 +1,6 @@
 [package]
 name = "examples-load"
-version = "0.18.0"
+version = "0.19.0"
 edition = "2021"
 publish = false
 
@@ -10,7 +10,7 @@ init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", featur
   "tracing_subscriber_ext",
 ] }
 memory-stats = "1.1"
-opentelemetry = "0.22"
+opentelemetry = "0.23"
 serde_json = "1.0.79"
 tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1"

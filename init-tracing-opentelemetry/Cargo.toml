@@ -6,7 +6,7 @@ keywords = ["tracing", "opentelemetry"]
 categories = ["development-tools::debugging", "development-tools::profiling"]
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/init-tracing-opentelemetry"
 edition.workspace = true
-version = "0.18.1"
+version = "0.19.0"
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
@@ -19,6 +19,7 @@ opentelemetry-otlp = { workspace = true, optional = true, features = [
   "grpc-tonic",
   "trace",
 ] }
+opentelemetry-resource-detectors = { workspace = true }
 opentelemetry-stdout = { workspace = true, features = [
   "trace",
 ], optional = true }
@@ -39,7 +40,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 
 [dev-dependencies]
 assert2 = "0.3"
-rstest = "0.18"
+rstest = "0.21"
 # need tokio runtime to run smoke tests.
 opentelemetry_sdk = { workspace = true, features = [
   "trace",
@@ -58,7 +59,11 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 
 [features]
 jaeger = ["dep:opentelemetry-jaeger-propagator"]
-otlp = ["opentelemetry-otlp/http-proto", "opentelemetry-otlp/reqwest-client", "tracer"]
+otlp = [
+  "opentelemetry-otlp/http-proto",
+  "opentelemetry-otlp/reqwest-client",
+  "tracer",
+]
 stdout = ["dep:opentelemetry-stdout", "tracer"]
 tracer = ["dep:opentelemetry-semantic-conventions"]
 xray = ["dep:opentelemetry-aws"]

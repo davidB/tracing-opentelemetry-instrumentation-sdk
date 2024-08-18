@@ -12,7 +12,7 @@ just = '1'
 grpcurl = '*'
 # grpc-health-probe = "*"
 sccache = "0.5"
-cargo-binstall = "latest"
+binstall = "latest"
 
 [plugins]
-cargo-binstall = "https://github.com/davidB/asdf-cargo-binstall"
+binstall = "https://github.com/davidB/asdf-cargo-binstall"
