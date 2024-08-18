@@ -28,9 +28,15 @@ pin-project-lite = "0.2"
 tower = "0.4"
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
-tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
+
+instrumentation-sdk-trace = { package = "tracing-opentelemetry-instrumentation-sdk", path = "../tracing-opentelemetry-instrumentation-sdk", features = [
   "http",
-], version = "0.19" }
+], version = "0.18", optional = true }
+
+instrumentation-sdk-info = { package = "tracing-opentelemetry-instrumentation-sdk", path = "../tracing-opentelemetry-instrumentation-sdk", features = [
+  "http",
+  "tracing_level_info",
+], version = "0.19", optional = true }
 
 [dev-dependencies]
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
@@ -60,3 +66,7 @@ opentelemetry_sdk = { workspace = true, features = [
   "rt-tokio",
   "testing",
 ] }
+
+[features]
+# to use level `info` instead of `trace` to create otel span
+tracing_level_info = ["tracing-opentelemetry-instrumentation-sdk/tracing_level_info"]
