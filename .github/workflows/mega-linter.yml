@@ -9,11 +9,11 @@ on:
   # Comment this line to trigger action only on pull-requests
   # (not recommended if you don't pay for GH Actions)
   push:
+    branches:
+      - main
+      - master
+  pull_request:
 
-  # pull_request:
-  #   branches:
-  #     - main
-  #     - master
 
 # Comment env block if you do not want to apply fixes
 env:
