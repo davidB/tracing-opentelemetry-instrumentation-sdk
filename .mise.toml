@@ -7,12 +7,12 @@ RUSTC_WRAPPER = "sccache"
 ASDF_RUST_PROFILE = "minimal"
 
 [tools]
-rust = '1.73.0'
+rust = '1.75.0'
 just = '1'
 grpcurl = '*'
 # grpc-health-probe = "*"
 sccache = "0.5"
-binstall = "latest"
+binstall = "1.10"
 
 [plugins]
 binstall = "https://github.com/davidB/asdf-cargo-binstall"
