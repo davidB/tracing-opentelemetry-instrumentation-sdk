@@ -23,7 +23,7 @@ tracing-opentelemetry = { workspace = true }
 
 [dev-dependencies]
 assert2 = "0.3"
-rstest = "0.21"
+rstest = "0.22"
 
 [features]
 default = []

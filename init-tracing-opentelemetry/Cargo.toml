@@ -40,7 +40,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 
 [dev-dependencies]
 assert2 = "0.3"
-rstest = "0.21"
+rstest = "0.22"
 # need tokio runtime to run smoke tests.
 opentelemetry_sdk = { workspace = true, features = [
   "trace",
