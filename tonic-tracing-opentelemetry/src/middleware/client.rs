@@ -1,7 +1,4 @@
 //! code based on [tonic/examples/src/tower/client.rs at master · hyperium/tonic · GitHub](https://github.com/hyperium/tonic/blob/master/examples/src/tower/client.rs)
-use crate::tracing_opentelemetry_instrumentation_sdk::{
-    find_context_from_tracing, http as otel_http,
-};
 use http::{Request, Response};
 use pin_project_lite::pin_project;
 use std::{
@@ -13,6 +10,7 @@ use std::{
 use tonic::client::GrpcService;
 use tower::Layer;
 use tracing::Span;
+use tracing_opentelemetry_instrumentation_sdk::{find_context_from_tracing, http as otel_http};
 
 /// layer for grpc (tonic client):
 ///

@@ -242,7 +242,7 @@ mod tests {
     }
 
     #[rstest]
-    #[case("http://example.org/hello/world", "http")]
+    #[case("http://example.org/hello/world", "http")] // Devskim: ignore DS137138
     #[case("https://example.org/hello/world", "https")]
     #[case("foo://example.org/hello/world", "foo")]
     fn test_extract_url_scheme(#[case] input: &str, #[case] expected: &str) {
