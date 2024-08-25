@@ -29,16 +29,16 @@ opentelemetry = { version = "0.24", features = [
 opentelemetry_sdk = { version = "0.24.1", default-features = false, features = [
   "rt-tokio",
 ] }
-opentelemetry-aws = { version = "0.11", default-features = false }
+opentelemetry-aws = { version = "0.12", default-features = false }
 opentelemetry-jaeger = { version = "0.22", default-features = false }
-opentelemetry-jaeger-propagator = { version = "0.2", default-features = false }
-opentelemetry-resource-detectors = { version = "0.2.0", default-features = false }
-opentelemetry-semantic-conventions = { version = "0.15", default-features = false }
-opentelemetry-zipkin = { version = "0.21", default-features = false }
+opentelemetry-jaeger-propagator = { version = "0.3", default-features = false }
+opentelemetry-resource-detectors = { version = "0.3", default-features = false }
+opentelemetry-semantic-conventions = { version = "0.16", default-features = false }
+opentelemetry-zipkin = { version = "0.22", default-features = false }
 opentelemetry-otlp = { version = "0.17", default-features = false }
-opentelemetry-proto = { version = "0.6", default-features = false }
-opentelemetry-stdout = { version = "0.4" }
-tonic = { version = "0.11", default-features = false } #should be sync with opentelemetry-proto
+opentelemetry-proto = { version = "0.7", default-features = false }
+opentelemetry-stdout = { version = "0.5" }
+tonic = { version = "0.12", default-features = false } #should be sync with opentelemetry-proto
 tracing = "0.1"
 tracing-opentelemetry = "0.25"
 

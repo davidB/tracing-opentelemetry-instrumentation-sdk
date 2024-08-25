@@ -25,18 +25,12 @@ opentelemetry = { workspace = true, features = [
   "trace",
 ], default-features = false }
 pin-project-lite = "0.2"
-tower = "0.4"
+tower = "0.5"
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
-
-instrumentation-sdk-trace = { package = "tracing-opentelemetry-instrumentation-sdk", path = "../tracing-opentelemetry-instrumentation-sdk", features = [
+tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
   "http",
-], version = "0.18", optional = true }
-
-instrumentation-sdk-info = { package = "tracing-opentelemetry-instrumentation-sdk", path = "../tracing-opentelemetry-instrumentation-sdk", features = [
-  "http",
-  "tracing_level_info",
-], version = "0.19", optional = true }
+], version = "0.19" }
 
 [dev-dependencies]
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
@@ -69,4 +63,6 @@ opentelemetry_sdk = { workspace = true, features = [
 
 [features]
 # to use level `info` instead of `trace` to create otel span
-tracing_level_info = ["tracing-opentelemetry-instrumentation-sdk/tracing_level_info"]
+tracing_level_info = [
+  "tracing-opentelemetry-instrumentation-sdk/tracing_level_info",
+]

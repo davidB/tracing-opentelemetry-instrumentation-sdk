@@ -1,11 +1,8 @@
 use std::{collections::HashMap, str::FromStr};
 
-use opentelemetry::trace::{TraceError, TracerProvider};
+use opentelemetry::trace::TraceError;
 use opentelemetry_otlp::SpanExporterBuilder;
-use opentelemetry_sdk::{
-    trace::{Sampler, Tracer},
-    Resource,
-};
+use opentelemetry_sdk::{trace::Sampler, trace::TracerProvider, Resource};
 #[cfg(feature = "tls")]
 use tonic::transport::ClientTlsConfig;
 
@@ -17,7 +14,10 @@ pub fn identity(
 }
 
 // see https://opentelemetry.io/docs/reference/specification/protocol/exporter/
-pub fn init_tracer<F>(resource: Resource, transform: F) -> Result<Tracer, TraceError>
+pub fn init_tracerprovider<F>(
+    resource: Resource,
+    transform: F,
+) -> Result<TracerProvider, TraceError>
 where
     F: FnOnce(
         opentelemetry_otlp::OtlpTracePipeline<SpanExporterBuilder>,
@@ -57,9 +57,8 @@ where
                 .with_sampler(read_sampler_from_env()),
         );
     pipeline = transform(pipeline);
-    let provider = pipeline.install_batch(opentelemetry_sdk::runtime::Tokio);
-    opentelemetry::global::set_tracer_provider(provider.clone());
-    provider.tracer()
+    let provider = pipeline.install_batch(opentelemetry_sdk::runtime::Tokio)?;
+    Ok(provider)
 }
 
 /// turn a string of "k1=v1,k2=v2,..." into an iterator of (key, value) tuples

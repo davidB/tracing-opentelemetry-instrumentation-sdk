@@ -10,6 +10,7 @@ use trace::*;
 use std::net::SocketAddr;
 
 use futures::StreamExt;
+use opentelemetry::trace::TracerProvider;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_proto::tonic::collector::logs::v1::logs_service_server::LogsServiceServer;
 use opentelemetry_proto::tonic::collector::trace::v1::trace_service_server::TraceServiceServer;
@@ -91,6 +92,7 @@ pub async fn setup_tracer(fake_server: &FakeCollectorServer) -> opentelemetry_sd
         )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
         .expect("failed to install tracer")
+        .tracer("")
 }
 
 pub async fn setup_logger(

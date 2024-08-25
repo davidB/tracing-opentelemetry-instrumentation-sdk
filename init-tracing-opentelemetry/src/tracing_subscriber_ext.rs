@@ -1,4 +1,4 @@
-use opentelemetry::trace::TraceError;
+use opentelemetry::trace::{TraceError, TracerProvider};
 use opentelemetry_sdk::trace::Tracer;
 use tracing::{info, Subscriber};
 use tracing_opentelemetry::OpenTelemetryLayer;
@@ -68,11 +68,12 @@ where
         otlp,
         resource::DetectResource,
     };
+    use opentelemetry::global;
     let otel_rsrc = DetectResource::default()
         //.with_fallback_service_name(env!("CARGO_PKG_NAME"))
         //.with_fallback_service_version(env!("CARGO_PKG_VERSION"))
         .build();
-    let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
+    let tracerprovider = otlp::init_tracerprovider(otel_rsrc, otlp::identity)?;
     // to not send trace somewhere, but continue to create and propagate,...
     // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
     // or to `std::io::stdout()` to print
@@ -83,9 +84,11 @@ where
     //     stdio::WriteNoWhere::default(),
     // )?;
     init_propagator()?;
-    Ok(tracing_opentelemetry::layer()
+    let layer = tracing_opentelemetry::layer()
         .with_error_records_to_exceptions(true)
-        .with_tracer(otel_tracer))
+        .with_tracer(tracerprovider.tracer(""));
+    global::set_tracer_provider(tracerprovider);
+    Ok(layer)
 }
 
 pub fn init_subscribers() -> Result<(), Error> {
