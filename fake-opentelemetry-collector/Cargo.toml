@@ -14,7 +14,7 @@ license.workspace = true
 futures = "0.3"
 hex = "0.4"
 opentelemetry = { workspace = true }
-opentelemetry-otlp = { workspace = true, features = ["grpc-tonic", "trace"] }
+opentelemetry-otlp = { workspace = true, features = ["grpc-tonic", "trace", "logs"] }
 opentelemetry-proto = { workspace = true, features = ["gen-tonic"] }
 # need tokio runtime to run smoke tests.
 opentelemetry_sdk = { workspace = true, features = [
