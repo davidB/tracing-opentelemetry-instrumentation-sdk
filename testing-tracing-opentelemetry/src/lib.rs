@@ -123,16 +123,22 @@ impl FakeEnvironment {
     }
 
     pub async fn collect_traces(
-        self,
+        &mut self,
     ) -> (Vec<Value>, Vec<fake_opentelemetry_collector::ExportedSpan>) {
         opentelemetry::global::shutdown_tracer_provider();
-
-        let otel_span = self.fake_collector.exported_spans();
+        let otel_spans = self
+            .fake_collector
+            .exported_spans(1, std::time::Duration::from_millis(5000))
+            .await;
         // insta::assert_debug_snapshot!(first_span);
-        let tracing_events = std::iter::from_fn(|| self.rx.try_recv().ok())
-            .map(|bytes| serde_json::from_slice::<Value>(&bytes).unwrap())
-            .collect::<Vec<_>>();
-        (tracing_events, otel_span)
+        let tracing_events = std::iter::from_fn(|| {
+            self.rx
+                .recv_timeout(std::time::Duration::from_millis(500))
+                .ok()
+        })
+        .map(|bytes| serde_json::from_slice::<Value>(&bytes).unwrap())
+        .collect::<Vec<_>>();
+        (tracing_events, otel_spans)
     }
 }
 

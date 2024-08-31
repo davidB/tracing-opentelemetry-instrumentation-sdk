@@ -4,7 +4,7 @@ use opentelemetry_proto::tonic::collector::logs::v1::{
 };
 use serde::Serialize;
 use std::collections::BTreeMap;
-use std::sync::{mpsc, Mutex};
+use tokio::sync::mpsc;
 
 /// This is created to flatten the log record to make it more compatible with insta for testing
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -37,12 +37,12 @@ impl From<opentelemetry_proto::tonic::logs::v1::LogRecord> for ExportedLog {
 }
 
 pub(crate) struct FakeLogsService {
-    tx: Mutex<mpsc::SyncSender<ExportedLog>>,
+    tx: mpsc::Sender<ExportedLog>,
 }
 
 impl FakeLogsService {
-    pub fn new(tx: mpsc::SyncSender<ExportedLog>) -> Self {
-        Self { tx: Mutex::new(tx) }
+    pub fn new(tx: mpsc::Sender<ExportedLog>) -> Self {
+        Self { tx }
     }
 }
 
@@ -52,14 +52,22 @@ impl LogsService for FakeLogsService {
         &self,
         request: tonic::Request<ExportLogsServiceRequest>,
     ) -> Result<tonic::Response<ExportLogsServiceResponse>, tonic::Status> {
-        request
+        let sender = self.tx.clone();
+        for el in request
             .into_inner()
             .resource_logs
             .into_iter()
             .flat_map(|rl| rl.scope_logs)
             .flat_map(|sl| sl.log_records)
             .map(ExportedLog::from)
-            .for_each(|el| self.tx.lock().unwrap().send(el).unwrap());
+        {
+            sender
+                .send(el)
+                .await
+                .inspect_err(|e| eprintln!("failed to send to channel: {e}"))
+                .map_err(|err| tonic::Status::from_error(Box::new(err)))?;
+        }
+
         Ok(tonic::Response::new(ExportLogsServiceResponse {
             partial_success: None,
         }))

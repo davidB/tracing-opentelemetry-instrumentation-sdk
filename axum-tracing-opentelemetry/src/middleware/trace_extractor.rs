@@ -209,7 +209,7 @@ mod tests {
         #[case] headers: &[(&str, &str)],
         #[case] is_trace_id_constant: bool,
     ) {
-        let fake_env = FakeEnvironment::setup().await;
+        let mut fake_env = FakeEnvironment::setup().await;
         {
             let mut svc = Router::new()
                 .route("/users/:id", get(|| async { StatusCode::OK }))

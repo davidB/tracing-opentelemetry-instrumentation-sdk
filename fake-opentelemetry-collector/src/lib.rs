@@ -8,13 +8,15 @@ use logs::*;
 use trace::*;
 
 use std::net::SocketAddr;
+use std::time::{Duration, Instant};
 
 use futures::StreamExt;
 use opentelemetry::trace::TracerProvider;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_proto::tonic::collector::logs::v1::logs_service_server::LogsServiceServer;
 use opentelemetry_proto::tonic::collector::trace::v1::trace_service_server::TraceServiceServer;
-use std::sync::mpsc;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::Receiver;
 use tokio_stream::wrappers::TcpListenerStream;
 use tracing::debug;
 
@@ -37,8 +39,8 @@ impl FakeCollectorServer {
             s
         });
 
-        let (req_tx, req_rx) = mpsc::sync_channel::<ExportedSpan>(1024);
-        let (log_tx, log_rx) = mpsc::sync_channel::<ExportedLog>(1024);
+        let (req_tx, req_rx) = mpsc::channel::<ExportedSpan>(64);
+        let (log_tx, log_rx) = mpsc::channel::<ExportedLog>(64);
         let trace_service = TraceServiceServer::new(FakeTraceService::new(req_tx));
         let logs_service = LogsServiceServer::new(FakeLogsService::new(log_tx));
         let handle = tokio::task::spawn(async move {
@@ -67,17 +69,29 @@ impl FakeCollectorServer {
         format!("http://{}", self.address()) //Devskim: ignore DS137138)
     }
 
-    pub fn exported_spans(&self) -> Vec<ExportedSpan> {
-        std::iter::from_fn(|| self.req_rx.try_recv().ok()).collect::<Vec<_>>()
+    pub async fn exported_spans(
+        &mut self,
+        at_least: usize,
+        timeout: Duration,
+    ) -> Vec<ExportedSpan> {
+        recv_many(&mut self.req_rx, at_least, timeout).await
     }
 
-    pub fn exported_logs(&self) -> Vec<ExportedLog> {
-        std::iter::from_fn(|| self.log_rx.try_recv().ok()).collect::<Vec<_>>()
+    pub async fn exported_logs(&mut self, at_least: usize, timeout: Duration) -> Vec<ExportedLog> {
+        recv_many(&mut self.log_rx, at_least, timeout).await
     }
 
     pub fn abort(self) {
         self.handle.abort()
     }
+}
+
+async fn recv_many<T>(rx: &mut Receiver<T>, at_least: usize, timeout: Duration) -> Vec<T> {
+    let deadline = Instant::now();
+    while rx.len() < at_least && deadline.elapsed() < timeout {
+        tokio::time::sleep(timeout / 5).await;
+    }
+    std::iter::from_fn(|| rx.try_recv().ok()).collect::<Vec<_>>()
 }
 
 pub async fn setup_tracer(fake_server: &FakeCollectorServer) -> opentelemetry_sdk::trace::Tracer {
@@ -119,7 +133,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_fake_tracer_and_collector() {
-        let fake_collector = FakeCollectorServer::start()
+        let mut fake_collector = FakeCollectorServer::start()
             .await
             .expect("fake collector setup and started");
         let tracer = setup_tracer(&fake_collector).await;
@@ -133,7 +147,9 @@ mod tests {
         span.end();
         shutdown_tracer_provider();
 
-        let otel_spans = fake_collector.exported_spans();
+        let otel_spans = fake_collector
+            .exported_spans(1, Duration::from_millis(2000))
+            .await;
         //insta::assert_debug_snapshot!(otel_spans);
         insta::assert_yaml_snapshot!(otel_spans, {
             "[].start_time_unix_nano" => "[timestamp]",
@@ -160,7 +176,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_fake_logger_and_collector() {
-        let fake_collector = FakeCollectorServer::start()
+        let mut fake_collector = FakeCollectorServer::start()
             .await
             .expect("fake collector setup and started");
 
@@ -172,7 +188,10 @@ mod tests {
         record.set_severity_text("info".into());
         logger.emit(record);
 
-        let otel_logs = fake_collector.exported_logs();
+        let otel_logs = fake_collector
+            .exported_logs(1, Duration::from_millis(500))
+            .await;
+
         insta::assert_yaml_snapshot!(otel_logs, {
             "[].trace_id" => insta::dynamic_redaction(|value, _path| {
                 assert2::let_assert!(Some(trace_id) = value.as_str());

@@ -5,8 +5,7 @@ use opentelemetry_proto::tonic::collector::trace::v1::{
 };
 use serde::Serialize;
 use std::collections::BTreeMap;
-use std::sync::mpsc;
-use std::sync::Mutex;
+use tokio::sync::mpsc;
 
 use tracing::debug;
 
@@ -109,12 +108,12 @@ impl From<&opentelemetry_proto::tonic::trace::v1::span::Event> for Event {
 }
 
 pub(crate) struct FakeTraceService {
-    tx: Mutex<mpsc::SyncSender<ExportedSpan>>,
+    tx: mpsc::Sender<ExportedSpan>,
 }
 
 impl FakeTraceService {
-    pub fn new(tx: mpsc::SyncSender<ExportedSpan>) -> Self {
-        Self { tx: Mutex::new(tx) }
+    pub fn new(tx: mpsc::Sender<ExportedSpan>) -> Self {
+        Self { tx }
     }
 }
 
@@ -125,16 +124,21 @@ impl TraceService for FakeTraceService {
         request: tonic::Request<ExportTraceServiceRequest>,
     ) -> Result<tonic::Response<ExportTraceServiceResponse>, tonic::Status> {
         debug!("Sending request into channel...");
-        request
+        let sender = self.tx.clone();
+        for es in request
             .into_inner()
             .resource_spans
             .into_iter()
             .flat_map(|rs| rs.scope_spans)
             .flat_map(|ss| ss.spans)
             .map(ExportedSpan::from)
-            .for_each(|es| {
-                self.tx.lock().unwrap().send(es).expect("Channel full");
-            });
+        {
+            sender
+                .send(es)
+                .await
+                .inspect_err(|e| eprintln!("failed to send to channel: {e}"))
+                .map_err(|err| tonic::Status::from_error(Box::new(err)))?;
+        }
         Ok(tonic::Response::new(ExportTraceServiceResponse {
             partial_success: None,
         }))
