@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 // SpanType is a non official open-telemetry key, only supported by Datadog, to help categorize traces.
 // Documentation: https://github.com/open-telemetry/opentelemetry-rust/blob/ccb510fbd6fdef9694e3b751fd01dbe33c7345c0/opentelemetry-datadog/src/lib.rs#L29-L30
 // Usage: It should be informed as span.type span key
@@ -19,9 +21,9 @@ pub enum SpanType {
     Graphql,
 }
 
-impl ToString for SpanType {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for SpanType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
             SpanType::Web => "web",
             SpanType::Http => "http",
             SpanType::Sql => "sql",
@@ -35,7 +37,7 @@ impl ToString for SpanType {
             SpanType::Queue => "queue",
             SpanType::Consul => "consul",
             SpanType::Graphql => "graphql",
-        }
-        .to_owned()
+        };
+        f.write_str(s)
     }
 }

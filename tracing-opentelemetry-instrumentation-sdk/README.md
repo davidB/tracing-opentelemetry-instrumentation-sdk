@@ -19,7 +19,7 @@ Instrumentation on the callee side of a call is  composed of steps:
 - do the processing
 - update attributes of the span with response (status,...)
 
-The crates provide helper (or inspiration) to extract/inject context info, start & update span and retrieve context or trace_id during processing (eg to inject trace_id into log, error message,...).
+The crates provide helper (or inspiration) to extract/inject context info, start & update span and retrieve context or `trace_id` during processing (eg to inject `trace_id` into log, error message,...).
 
 ```rust
   let trace_id = tracing_opentelemetry_instrumentation_sdk::find_current_trace_id();
@@ -31,8 +31,8 @@ The helpers could be used as is or into middleware build on it (eg: [`axum-traci
 ## Notes
 
 - [`tracing-opentelemetry`] extends [`tracing`] to interoperate with [OpenTelemetry]. But with some constraints:
-  - Creation of the OpenTelemetry's span is done when the tracing span is closed. So do not try to interact with OpenTelemetry Span (or SpanBuilder) from inside the tracing span.
-  - The OpenTelemetry parent Context (and trace_id) is created on `NEW` span or inherited from parent span. The parent context can be overwritten after creation, but until then the `trace_id` is the one from `NEW`, So tracing's log could report none or not-yet set trace_id on event `NEW` and the following until update.
+  - Creation of the OpenTelemetry's span is done when the tracing span is closed. So do not try to interact with OpenTelemetry Span (or `SpanBuilder`) from inside the tracing span.
+  - The OpenTelemetry parent `Context` (and `trace_id`) is created on `NEW` span or inherited from parent span. The parent context can be overwritten after creation, but until then the `trace_id` is the one from `NEW`, So tracing's log could report none or not-yet set `trace_id` on event `NEW` and the following until update.
   - To define kind, name,... of OpenTelemetry's span from tracing's span used special record's name: `otel.name`, `otel.kind`, ...
   - Record in a [`tracing`]'s Span should be defined at creation time. So some field are created with value `tracing::field::Empty` to then being updated.
 - Create trace with target `otel::tracing` (and level `trace`), to have a common way to enable / to disable

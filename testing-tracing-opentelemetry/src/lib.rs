@@ -16,7 +16,7 @@ pub fn assert_trace(
     is_trace_id_constant: bool,
 ) {
     let trace_id_0 = tracing_events
-        .get(0)
+        .first()
         .and_then(|v| v.as_object())
         .and_then(|v| v.get("span"))
         .and_then(|v| v.as_object())
