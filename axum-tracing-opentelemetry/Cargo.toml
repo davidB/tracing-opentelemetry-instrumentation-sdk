@@ -19,7 +19,7 @@ license.workspace = true
 [dependencies]
 axum = "0.7"
 futures-core = "0.3"
-futures-util = { version = "0.3", default_features = false, features = [] }
+futures-util = { version = "0.3", default-features = false, features = [] }
 http = { workspace = true }
 opentelemetry = { workspace = true, features = [
   "trace",
