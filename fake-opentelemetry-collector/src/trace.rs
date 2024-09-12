@@ -54,8 +54,8 @@ impl From<opentelemetry_proto::tonic::trace::v1::Span> for ExportedSpan {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Serialize)]
 pub struct Status {
-    message: String,
-    code: String,
+    pub message: String,
+    pub code: String,
 }
 
 impl From<opentelemetry_proto::tonic::trace::v1::Status> for Status {
@@ -90,10 +90,10 @@ impl From<&opentelemetry_proto::tonic::trace::v1::span::Link> for Link {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Event {
-    time_unix_nano: u64,
-    name: String,
-    attributes: BTreeMap<String, String>,
-    dropped_attributes_count: u32,
+    pub time_unix_nano: u64,
+    pub name: String,
+    pub attributes: BTreeMap<String, String>,
+    pub dropped_attributes_count: u32,
 }
 
 impl From<&opentelemetry_proto::tonic::trace::v1::span::Event> for Event {
