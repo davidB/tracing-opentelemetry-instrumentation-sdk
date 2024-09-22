@@ -41,7 +41,6 @@ Then :
 - copy trace_id from log (or response header)
 - paste into Jaeger web UI
 
-
 ## To release
 
 Use the github workflow `release-plz`.

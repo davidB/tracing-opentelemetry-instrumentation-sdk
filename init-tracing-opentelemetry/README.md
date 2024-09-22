@@ -132,6 +132,21 @@ spec:
             #       fieldPath: status.hostIP
 ```
 
+## Troubleshot why no trace?
+
+- check you only have a single version of opentelemtry (could be part of your CI/build), use `cargo-deny` or `cargo tree`
+
+    ```sh
+    # Check only one version of opentelemetry_api should be used
+    # else issue with setup of global (static variable)
+    # check_single_version_opentelemtry:
+    cargo tree -i opentelemetry_api
+    ```
+
+- check the code of your exporter and the integration with `tracing` (as subscriber's layer)
+- check the environment variables of opentelemetry `OTEL_EXPORTER...` and `OTEL_TRACES_SAMPLER` (values are logged on target `otel::setup` )
+- check that log target `otel::tracing` enable log level `trace` (or `info` if you use `tracing_level_info` feature) to generate span to send to opentelemetry collector.
+
 ## Changelog - History
 
 [CHANGELOG.md](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/blob/main/CHANGELOG.md)
