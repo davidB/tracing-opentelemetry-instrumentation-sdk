@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.20.0...init-tracing-opentelemetry-v0.21.0) - 2024-09-22
+
+### <!-- 2 -->Added
+
+- *(deps)* upgrade to opentelemetry 0.25
+- add a troubleshot section
+- [**breaking**] disable resourcedetector (os,...) until update for new version of opentelemetry
+- [**breaking**] disable support of xray (until update for new version of opentelemetry)
+
 ## [0.20.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.19.0...init-tracing-opentelemetry-v0.20.0) - 2024-08-31
 
 ### <!-- 1 -->Fixed
