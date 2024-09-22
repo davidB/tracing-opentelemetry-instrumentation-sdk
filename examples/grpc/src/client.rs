@@ -1,12 +1,13 @@
-use hello_world::greeter_client::GreeterClient;
-use hello_world::{HelloRequest, StatusRequest};
+use generated::greeter_client::GreeterClient;
+use generated::{HelloRequest, StatusRequest};
 use tonic::transport::Channel;
 use tonic::Code;
 use tonic_tracing_opentelemetry::middleware::client::OtelGrpcLayer;
 use tower::ServiceBuilder;
 
-pub mod hello_world {
-    tonic::include_proto!("helloworld");
+pub mod generated {
+    //tonic::include_proto!("helloworld");
+    include!("generated/helloworld.rs");
 }
 
 #[tokio::main]

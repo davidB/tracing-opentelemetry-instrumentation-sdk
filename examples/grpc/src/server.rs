@@ -1,14 +1,16 @@
-use hello_world::greeter_server::{Greeter, GreeterServer};
-use hello_world::{HelloReply, HelloRequest, StatusRequest};
+use generated::greeter_server::{Greeter, GreeterServer};
+use generated::{HelloReply, HelloRequest, StatusRequest};
 use tonic::Code;
 use tonic::{transport::Server, Request, Response, Status};
 use tonic_tracing_opentelemetry::middleware::{filters, server};
 
-pub mod hello_world {
-    tonic::include_proto!("helloworld");
+pub mod generated {
+    //tonic::include_proto!("helloworld");
+    include!("generated/helloworld.rs");
 
     pub(crate) const FILE_DESCRIPTOR_SET: &[u8] =
-        tonic::include_file_descriptor_set!("helloworld_descriptor");
+        //tonic::include_file_descriptor_set!("helloworld_descriptor");
+        include_bytes!("generated/helloworld_descriptor.bin");
 }
 
 #[derive(Default)]
@@ -28,7 +30,7 @@ impl Greeter for MyGreeter {
             trace_id
         );
 
-        let reply = hello_world::HelloReply {
+        let reply = generated::HelloReply {
             message: format!("Hello {}! ({:?})", request.into_inner().name, trace_id),
         };
         Ok(Response::new(reply))
@@ -54,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (_, health_service) = tonic_health::server::health_reporter();
     let reflection_service = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(hello_world::FILE_DESCRIPTOR_SET)
+        .register_encoded_file_descriptor_set(generated::FILE_DESCRIPTOR_SET)
         .build_v1()?;
 
     println!("GreeterServer listening on {}", addr);
