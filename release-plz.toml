@@ -1,6 +1,6 @@
 # [Configuration | Release-plz](https://release-plz.ieni.dev/docs/config)
-[workspace]
-features_always_increment_minor = true
+# [workspace]
+# features_always_increment_minor = true
 
 [changelog]
 sort_commits = "newest"
