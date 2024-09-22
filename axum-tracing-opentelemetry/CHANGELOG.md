@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.19.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/axum-tracing-opentelemetry-v0.19.0...axum-tracing-opentelemetry-v0.19.1) - 2024-08-31
+## [0.21.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/axum-tracing-opentelemetry-v0.19.0...axum-tracing-opentelemetry-v0.21.0) - 2024-08-31
 
 ### <!-- 1 -->Fixed
 - 🐛 workaround for a delay, batch,... behavior in otlp exporter and test with fake-opentelemetry-collector (closed too early)

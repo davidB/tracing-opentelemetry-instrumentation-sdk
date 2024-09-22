@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.20.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tonic-tracing-opentelemetry-v0.19.0...tonic-tracing-opentelemetry-v0.20.0) - 2024-08-31
+## [0.21.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tonic-tracing-opentelemetry-v0.19.0...tonic-tracing-opentelemetry-v0.21.0) - 2024-08-31
 
 ### <!-- 4 -->Changed
 - 💄 update deprecated syntax "default_features" in Cargo.toml
