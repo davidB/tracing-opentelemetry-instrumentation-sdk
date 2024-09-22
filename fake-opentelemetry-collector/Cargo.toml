@@ -31,11 +31,11 @@ opentelemetry_sdk = { workspace = true, features = [
   "testing",
 ] }
 serde = { version = "1.0", features = ["derive"] }
-tokio = { version = "1.40", features = ["full"] }
-tokio-stream = { version = "0.1", features = ["net"] }
+tokio = { workspace = true, features = ["full"] }
+tokio-stream = { workspace = true, features = ["net"] }
 tonic = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
-assert2 = "0.3"
-insta = { version = "1.39", features = ["yaml", "redactions"] }
+assert2 = { workspace = true }
+insta = { workspace = true }

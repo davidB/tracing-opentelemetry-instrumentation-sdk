@@ -22,8 +22,10 @@ repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sd
 rust-version = "1.80.0"
 
 [workspace.dependencies]
+axum = { version = "0.7", default-features = false }
 http = "^1"
-opentelemetry = { version = "0.24", features = [
+hyper = "1"
+insta = { version = "1.40", features = ["yaml", "redactions"] }
   "trace",
 ], default-features = false }
 opentelemetry_sdk = { version = "0.24.1", default-features = false, features = [
@@ -33,12 +35,11 @@ opentelemetry-aws = { version = "0.12", default-features = false }
 opentelemetry-jaeger = { version = "0.22", default-features = false }
 opentelemetry-jaeger-propagator = { version = "0.3", default-features = false }
 opentelemetry-resource-detectors = { version = "0.3", default-features = false }
-opentelemetry-semantic-conventions = { version = "0.16", default-features = false }
-opentelemetry-zipkin = { version = "0.22", default-features = false }
-opentelemetry-otlp = { version = "0.17", default-features = false }
-opentelemetry-proto = { version = "0.7", default-features = false }
-opentelemetry-stdout = { version = "0.5" }
+rstest = "0.22"
+tokio = { version = "1.38", default-features = false }
+tokio-stream = { version = "0.1", default-features = false }
 tonic = { version = "0.12", default-features = false } #should be sync with opentelemetry-proto
+tower = { version = "0.5", default-features = false }
 tracing = "0.1"
 tracing-opentelemetry = "0.25"
 

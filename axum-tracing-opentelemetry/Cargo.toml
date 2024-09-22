@@ -17,7 +17,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-axum = "0.7"
+axum = { workspace = true, features = ["matched-path"] }
 futures-core = "0.3"
 futures-util = { version = "0.3", default-features = false, features = [] }
 http = { workspace = true }
@@ -25,7 +25,7 @@ opentelemetry = { workspace = true, features = [
   "trace",
 ], default-features = false }
 pin-project-lite = "0.2"
-tower = "0.5"
+tower = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
@@ -35,25 +35,25 @@ tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-i
 [dev-dependencies]
 fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector" }
 testing-tracing-opentelemetry = { path = "../testing-tracing-opentelemetry" }
-assert2 = "0.3"
-hyper = "1"
-insta = { version = "1.29.0", features = ["yaml", "redactions"] }
+assert2 = { workspace = true }
+hyper = { workspace = true }
+insta = { workspace = true }
 opentelemetry-otlp = { workspace = true, features = [
   "http-proto",
   "reqwest-client",
   "reqwest-rustls",
 ] }
 opentelemetry-proto = { workspace = true, features = ["gen-tonic"] }
-rstest = "0.22"
+rstest = { workspace = true }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
-tokio = { version = "1.27", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }
+tokio-stream = { workspace = true, features = ["net"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "env-filter",
   "fmt",
   "json",
 ] }
-tokio-stream = { version = "0.1", features = ["net"] }
 # need tokio runtime to run smoke tests.
 opentelemetry_sdk = { workspace = true, features = [
   "trace",
