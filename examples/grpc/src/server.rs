@@ -38,11 +38,7 @@ impl Greeter for MyGreeter {
     async fn say_status(&self, request: Request<StatusRequest>) -> Result<Response<()>, Status> {
         let trace_id = tracing_opentelemetry_instrumentation_sdk::find_current_trace_id();
         let request = request.into_inner();
-        tracing::info!(
-            "ask to return status : {} ({:?})",
-            request.code,
-            trace_id
-        );
+        tracing::info!("ask to return status : {} ({:?})", request.code, trace_id);
         Err(Status::new(Code::from(request.code), request.message))
     }
 }
@@ -59,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (_, health_service) = tonic_health::server::health_reporter();
     let reflection_service = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(hello_world::FILE_DESCRIPTOR_SET)
-        .build()?;
+        .build_v1()?;
 
     println!("GreeterServer listening on {}", addr);
 

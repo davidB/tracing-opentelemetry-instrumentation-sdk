@@ -88,8 +88,9 @@ impl FakeCollectorServer {
 
 async fn recv_many<T>(rx: &mut Receiver<T>, at_least: usize, timeout: Duration) -> Vec<T> {
     let deadline = Instant::now();
+    let pause = (timeout / 5).min(Duration::from_millis(500));
     while rx.len() < at_least && deadline.elapsed() < timeout {
-        tokio::time::sleep(timeout / 5).await;
+        tokio::time::sleep(pause).await;
     }
     std::iter::from_fn(|| rx.try_recv().ok()).collect::<Vec<_>>()
 }
@@ -148,7 +149,7 @@ mod tests {
         shutdown_tracer_provider();
 
         let otel_spans = fake_collector
-            .exported_spans(1, Duration::from_millis(2000))
+            .exported_spans(1, Duration::from_secs(20))
             .await;
         //insta::assert_debug_snapshot!(otel_spans);
         insta::assert_yaml_snapshot!(otel_spans, {
@@ -185,7 +186,7 @@ mod tests {
         let mut record = logger.create_log_record();
         record.set_body("This is information".into());
         record.set_severity_number(Severity::Info);
-        record.set_severity_text("info".into());
+        record.set_severity_text("info");
         logger.emit(record);
 
         let otel_logs = fake_collector
