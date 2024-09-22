@@ -19,7 +19,7 @@ opentelemetry-otlp = { workspace = true, optional = true, features = [
   "grpc-tonic",
   "trace",
 ] }
-opentelemetry-resource-detectors = { workspace = true }
+# opentelemetry-resource-detectors = { workspace = true } //FIXME enable when available for opentelemetry >= 0.25
 opentelemetry-stdout = { workspace = true, features = [
   "trace",
 ], optional = true }

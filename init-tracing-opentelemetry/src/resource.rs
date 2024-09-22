@@ -1,5 +1,5 @@
 use opentelemetry::KeyValue;
-use opentelemetry_resource_detectors::OsResourceDetector;
+// use opentelemetry_resource_detectors::OsResourceDetector;
 use opentelemetry_sdk::{resource::ResourceDetector, Resource};
 use opentelemetry_semantic_conventions::resource;
 use std::time::Duration;
@@ -50,7 +50,7 @@ impl DetectResource {
                     fallback_service_name: self.fallback_service_name.take(),
                     fallback_service_version: self.fallback_service_version.take(),
                 }),
-                Box::new(OsResourceDetector),
+                //Box::new(OsResourceDetector), //FIXME enable when available for opentelemetry >= 0.25
                 //Box::new(ProcessResourceDetector),
             ],
         );
