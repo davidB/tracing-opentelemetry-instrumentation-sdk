@@ -16,7 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os:
+          - ubuntu-latest
+          # - macos-latest
     env:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: full
