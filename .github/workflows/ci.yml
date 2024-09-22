@@ -22,10 +22,15 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: full
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: "sccache"
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
+      - uses: mozilla-actions/sccache-action@v0.0.5
       - run: just check
       - run: just lint
       - run: just test
       #- run: just test_each_feature
+      - run: ${SCCACHE_PATH} --show-stats
+        shell: bash
