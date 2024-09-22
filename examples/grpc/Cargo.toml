@@ -13,11 +13,7 @@ init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", featur
 opentelemetry = { workspace = true }
 prost = "0.13"
 tokio = { workspace = true, features = ["full"] }
-tonic = { version = "0.12", features = [
-  "transport",
-  "channel",
-  "codegen",
-], default-features = false }
+tonic = "0.12"
 tonic-health = "0.12"
 tonic-reflection = "0.12"
 tonic-tracing-opentelemetry = { path = "../../tonic-tracing-opentelemetry" }
@@ -26,11 +22,7 @@ tracing = { workspace = true }
 tracing-opentelemetry-instrumentation-sdk = "0.15" # { path = "../../tracing-opentelemetry-instrumentation-sdk" }
 
 [build-dependencies]
-tonic-build = { version = "0.12", default-features = false, features = [
-  "transport",
-  "prost",
-] }
-
+tonic-build = "0.12"
 
 [[bin]]
 name = "server"
