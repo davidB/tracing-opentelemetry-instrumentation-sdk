@@ -9,7 +9,7 @@ ASDF_RUST_PROFILE = "minimal"
 [tools]
 rust = '1.80.0'
 just = '1'
-grpcurl = '*'
+grpcurl = '1.9'
 # grpc-health-probe = "*"
 # sccache = "0.5"
 binstall = "1.10"
