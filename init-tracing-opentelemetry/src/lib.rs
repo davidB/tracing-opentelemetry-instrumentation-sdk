@@ -98,14 +98,15 @@ fn propagator_from_string(
         "jaeger" => Err(TraceError::from(
             "unsupported propagators form env OTEL_PROPAGATORS: 'jaeger', try to enable compile feature 'jaeger'"
         )),
-        #[cfg(feature = "xray")]
-        "xray" => Ok(Some(Box::new(
-            opentelemetry_aws::trace::XrayPropagator::default(),
-        ))),
-        #[cfg(not(feature = "xray"))]
-        "xray" => Err(TraceError::from(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'xray', try to enable compile feature 'xray'"
-        )),
+        //FIXME re-enable when opentelementry_aws available for the current version of opentelemetry
+        // #[cfg(feature = "xray")]
+        // "xray" => Ok(Some(Box::new(
+        //     opentelemetry_aws::trace::XrayPropagator::default(),
+        // ))),
+        // #[cfg(not(feature = "xray"))]
+        // "xray" => Err(TraceError::from(
+        //     "unsupported propagators form env OTEL_PROPAGATORS: 'xray', try to enable compile feature 'xray'"
+        // )),
         "none" => Ok(None),
         unknown => Err(TraceError::from(format!(
             "unsupported propagators form env OTEL_PROPAGATORS: '{unknown}'"
