@@ -10,9 +10,9 @@ init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", featur
   "tracing_subscriber_ext",
   "logfmt",
 ] }
-opentelemetry = "0.24"
+opentelemetry = { workspace = true }
 prost = "0.13"
-tokio = { version = "1.0", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }
 tonic = { version = "0.12", features = [
   "transport",
   "channel",

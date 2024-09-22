@@ -10,7 +10,7 @@ members = [
   "tracing-opentelemetry-instrumentation-sdk",
 ]
 
-exclude = ["examples/grpc", "target", "tonic-tracing-opentelemetry"]
+exclude = ["target"]
 
 [workspace.package]
 edition = "2021"

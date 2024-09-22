@@ -5,13 +5,13 @@ edition = "2021"
 publish = false
 
 [dependencies]
-axum = "0.7"
+axum = { workspace = true }
 axum-tracing-opentelemetry = { path = "../../axum-tracing-opentelemetry" }
 init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", features = [
   "otlp",
   "tracing_subscriber_ext",
 ] }
-opentelemetry = "0.24"
+opentelemetry = { workspace = true }
 opentelemetry-otlp = { version = "*", default-features = false, features = [
   "reqwest-client",
   "reqwest-rustls",
@@ -19,6 +19,6 @@ opentelemetry-otlp = { version = "*", default-features = false, features = [
   "tls",
 ] }
 serde_json = "1.0.79"
-tokio = { version = "1.0", features = ["full"] }
-tracing = "0.1"
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
 tracing-opentelemetry-instrumentation-sdk = { path = "../../tracing-opentelemetry-instrumentation-sdk" }
