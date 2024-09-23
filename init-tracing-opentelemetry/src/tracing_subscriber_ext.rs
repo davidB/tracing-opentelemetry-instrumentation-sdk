@@ -38,7 +38,8 @@ pub fn build_logger_text<S>() -> Box<dyn Layer<S> + Send + Sync + 'static>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
-    Box::new(tracing_logfmt_otel::layer())
+    //FIXME tracing_logfmt use an old version of crates, how to inject trace_id and span_id into log?
+    Box::new(tracing_logfmt::layer())
 }
 
 #[must_use]

@@ -29,7 +29,7 @@ opentelemetry_sdk = { workspace = true }
 thiserror = "1.0"
 tonic = { workspace = true, optional = true, features = ["tls"] }
 tracing = { workspace = true }
-tracing-logfmt-otel = { version = "0.2", optional = true }
+tracing-logfmt = { version = "0.3", optional = true }
 tracing-opentelemetry = { workspace = true }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "ansi",
@@ -70,4 +70,4 @@ xray = ["dep:opentelemetry-aws"]
 zipkin = ["dep:opentelemetry-zipkin"]
 tracing_subscriber_ext = ["dep:tracing-subscriber", "otlp"]
 tls = ["tonic/tls", "opentelemetry-otlp/tls", "opentelemetry-otlp/tls-roots"]
-logfmt = ["dep:tracing-logfmt-otel"]
+logfmt = ["dep:tracing-logfmt"]
