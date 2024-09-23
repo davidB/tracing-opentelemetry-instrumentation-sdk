@@ -5,6 +5,9 @@ _install_cargo-binstall:
 _binstall ARG: _install_cargo-binstall
     @(cargo binstall -y {{ARG}} || cargo install --locked {{ARG}})
 
+_install_cargo-deny:
+    @just _binstall cargo-deny
+
 _install_cargo-nextest:
     @just _binstall cargo-nextest
 
@@ -29,9 +32,8 @@ format:
     cargo fmt
     # cargo sort --workspace --grouped
 
-deny:
-    cargo deny check advisories
-    cargo deny check bans licenses sources
+deny: _install_cargo-deny
+    cargo deny check
 
 check: _install_cargo-hack
     cargo hack check --each-feature --no-dev-deps

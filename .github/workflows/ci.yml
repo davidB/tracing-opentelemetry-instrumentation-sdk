@@ -31,6 +31,7 @@ jobs:
       - run: just check
       - run: just lint
       - run: just test
+      - run: just deny
       #- run: just test_each_feature
       - run: ${SCCACHE_PATH} --show-stats
         shell: bash

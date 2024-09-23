@@ -1,8 +1,11 @@
 [package]
 name = "examples-grpc"
-version = "0.15.0"
-edition = "2021"
 publish = false
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", features = [
@@ -19,7 +22,7 @@ tonic-reflection = "0.12"
 tonic-tracing-opentelemetry = { path = "../../tonic-tracing-opentelemetry" }
 tower = { workspace = true }
 tracing = { workspace = true }
-tracing-opentelemetry-instrumentation-sdk = "0.15" # { path = "../../tracing-opentelemetry-instrumentation-sdk" }
+tracing-opentelemetry-instrumentation-sdk = { path = "../../tracing-opentelemetry-instrumentation-sdk" }
 
 [build-dependencies]
 tonic-build = "0.12"

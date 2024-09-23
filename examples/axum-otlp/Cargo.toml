@@ -1,8 +1,11 @@
 [package]
 name = "examples-axum-otlp"
-version = "0.19.0"
-edition = "2021"
 publish = false
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 axum = { workspace = true, default-features = true }
