@@ -39,7 +39,7 @@ where
         #[cfg(feature = "tls")]
         "grpc/tls" => opentelemetry_otlp::new_exporter()
             .tonic()
-            .with_tls_config(ClientTlsConfig::new())
+            .with_tls_config(ClientTlsConfig::new().with_native_roots())
             .with_endpoint(endpoint)
             .into(),
         _ => opentelemetry_otlp::new_exporter()
