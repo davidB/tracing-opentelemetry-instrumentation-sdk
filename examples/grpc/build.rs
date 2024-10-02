@@ -15,6 +15,6 @@ fn main() {
         .build_server(true)
         .file_descriptor_set_path(out_dir.join("helloworld_descriptor.bin"))
         .out_dir(out_dir)
-        .compile(&["helloworld.proto"], &["proto"])
+        .compile_protos(&["helloworld.proto"], &["proto"])
         .unwrap();
 }
