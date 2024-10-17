@@ -27,7 +27,10 @@ opentelemetry-semantic-conventions = { workspace = true, optional = true }
 opentelemetry-zipkin = { workspace = true, features = [], optional = true }
 opentelemetry_sdk = { workspace = true }
 thiserror = "1.0"
-tonic = { workspace = true, optional = true, features = ["tls"] }
+tonic = { workspace = true, optional = true, features = [
+  "tls",
+  "tls-native-roots",
+] }
 tracing = { workspace = true }
 tracing-logfmt = { version = "0.3", optional = true }
 tracing-opentelemetry = { workspace = true }
