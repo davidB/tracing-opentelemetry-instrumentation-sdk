@@ -62,6 +62,7 @@ jaeger = ["dep:opentelemetry-jaeger-propagator"]
 otlp = [
   "opentelemetry-otlp/http-proto",
   "opentelemetry-otlp/reqwest-client",
+  "opentelemetry-otlp/reqwest-rustls",
   "tracer",
 ]
 stdout = ["dep:opentelemetry-stdout", "tracer"]
