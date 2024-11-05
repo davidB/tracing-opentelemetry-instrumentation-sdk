@@ -1,0 +1,27 @@
+// https://docs.renovatebot.com/configuration-options/
+// https://www.augmentedmind.de/2023/07/30/renovate-bot-cheat-sheet/
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended"],
+  additionalReviewers: ["davidB"],
+  packageRules: [
+    {
+      matchUpdateTypes: ["patch", "pin", "digest"],
+      enabled: false,
+    },
+    {
+      matchPackageNames: ["helm"],
+      automerge: true,
+      // Force Renovate to not create a PR (but merge its branches directly), to avoid PR-related email spam
+      automergeType: "branch",
+    },
+    {
+      matchPackageNames: ["/opentelemetry/"],
+      groupName: "opentelemetry",
+    },
+    {
+      matchPackageNames: ["kube", "k8s-openapi"],
+      groupName: "kubers",
+    },
+  ],
+}
