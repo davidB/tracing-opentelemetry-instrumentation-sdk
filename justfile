@@ -63,6 +63,14 @@ test_each_feature: _install_cargo-hack
 #     # git-cliff could not be used as `pre-release-hook` of cargo-release because it uses tag
 #     git-cliff -o "CHANGELOG.md"
 #     git add CHANGELOG.md && git commit -m "📝 update CHANGELOG" && git push
+set_version *version:
+    sed -i 's/^version = .*/version = "{{version}}"/' Cargo.toml
+    release-plz set-version axum-tracing-opentelemetry@{{version}}
+    release-plz set-version fake-opentelemetry-collector@{{version}}
+    release-plz set-version init-tracing-opentelemetry@{{version}}
+    # release-plz set-version testing-tracing-opentelemetry@{{version}}
+    release-plz set-version tonic-tracing-opentelemetry@{{version}}
+    release-plz set-version tracing-opentelemetry-instrumentation-sdk@{{version}}
 
 _container *arguments:
     if [ -x "$(command -v podman)" ]; then \
