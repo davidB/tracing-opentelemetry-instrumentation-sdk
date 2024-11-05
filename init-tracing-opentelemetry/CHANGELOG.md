@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.22.0...init-tracing-opentelemetry-v0.22.1) - 2024-11-05
+
+### <!-- 1 -->Fixed
+
+- enable reqwest-rustls feature to otlp ([#171](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/171))
+
 ## [0.22.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.21.0...init-tracing-opentelemetry-v0.22.0) - 2024-09-23
 
 ### <!-- 2 -->Added
