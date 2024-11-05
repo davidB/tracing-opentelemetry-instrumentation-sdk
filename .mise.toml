@@ -7,7 +7,7 @@ OTEL_TRACES_SAMPLER = "always_on"
 ASDF_RUST_PROFILE = "minimal"
 
 [tools]
-rust = '1.80.0'
+rust = '1.82.0'
 just = '1'
 grpcurl = '1.9'
 protoc = '28'
