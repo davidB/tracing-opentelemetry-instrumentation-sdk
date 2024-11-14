@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 
 use futures::StreamExt;
 use opentelemetry::trace::TracerProvider;
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{LogExporter, SpanExporter, WithExportConfig};
 use opentelemetry_proto::tonic::collector::logs::v1::logs_service_server::LogsServiceServer;
 use opentelemetry_proto::tonic::collector::trace::v1::trace_service_server::TraceServiceServer;
 use tokio::sync::mpsc;
@@ -98,30 +98,33 @@ async fn recv_many<T>(rx: &mut Receiver<T>, at_least: usize, timeout: Duration) 
 pub async fn setup_tracer(fake_server: &FakeCollectorServer) -> opentelemetry_sdk::trace::Tracer {
     // if the environment variable is set (in test or in caller), `with_endpoint` value is ignored
     std::env::remove_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
-    opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_endpoint(fake_server.endpoint()),
+
+    opentelemetry_sdk::trace::TracerProvider::builder()
+        .with_batch_exporter(
+            SpanExporter::builder()
+                .with_tonic()
+                .with_endpoint(fake_server.endpoint())
+                .build()
+                .expect("failed to install tracer"),
+            opentelemetry_sdk::runtime::Tokio,
         )
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
-        .expect("failed to install tracer")
+        .build()
         .tracer("")
 }
 
 pub async fn setup_logger(
     fake_server: &FakeCollectorServer,
 ) -> opentelemetry_sdk::logs::LoggerProvider {
-    opentelemetry_otlp::new_pipeline()
-        .logging()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_endpoint(fake_server.endpoint()),
+    opentelemetry_sdk::logs::LoggerProvider::builder()
+        //Install simple so we don't have to wait for batching in tests
+        .with_simple_exporter(
+            LogExporter::builder()
+                .with_tonic()
+                .with_endpoint(fake_server.endpoint())
+                .build()
+                .expect("failed to install logging"),
         )
-        .install_simple() //Install simple so we don't have to wait for batching in tests
-        .expect("failed to install logging")
+        .build()
 }
 
 #[cfg(test)]
