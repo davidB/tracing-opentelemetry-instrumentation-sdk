@@ -1,5 +1,5 @@
 use opentelemetry::trace::{TraceError, TracerProvider as _};
-use opentelemetry::InstrumentationLibrary;
+use opentelemetry::InstrumentationScope;
 use opentelemetry_sdk::trace as sdktrace;
 use opentelemetry_sdk::trace::BatchSpanProcessor;
 use opentelemetry_sdk::trace::TracerProvider;
@@ -31,13 +31,11 @@ where
         );
     provider_builder = transform(provider_builder);
     // tracer used in libraries/crates that optionally includes version and schema url
-    let library = std::sync::Arc::new(
-        InstrumentationLibrary::builder(env!("CARGO_PKG_NAME"))
-            .with_version(env!("CARGO_PKG_VERSION"))
-            .with_schema_url("https://opentelemetry.io/schema/1.0.0")
-            .build(),
-    );
-    Ok(provider_builder.build().library_tracer(library))
+    let scope = InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
+        .with_version(env!("CARGO_PKG_VERSION"))
+        .with_schema_url("https://opentelemetry.io/schema/1.0.0")
+        .build();
+    Ok(provider_builder.build().tracer_with_scope(scope))
 }
 
 #[derive(Debug, Default)]

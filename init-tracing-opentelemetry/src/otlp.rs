@@ -1,15 +1,13 @@
 use std::{collections::HashMap, str::FromStr};
 
 use opentelemetry::trace::TraceError;
-use opentelemetry_otlp::SpanExporterBuilder;
+use opentelemetry_otlp::{SpanExporter, WithHttpConfig};
 use opentelemetry_sdk::{trace::Sampler, trace::TracerProvider, Resource};
 #[cfg(feature = "tls")]
-use tonic::transport::ClientTlsConfig;
+use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
 
 #[must_use]
-pub fn identity(
-    v: opentelemetry_otlp::OtlpTracePipeline<SpanExporterBuilder>,
-) -> opentelemetry_otlp::OtlpTracePipeline<SpanExporterBuilder> {
+pub fn identity(v: opentelemetry_sdk::trace::Builder) -> opentelemetry_sdk::trace::Builder {
     v
 }
 
@@ -19,9 +17,7 @@ pub fn init_tracerprovider<F>(
     transform: F,
 ) -> Result<TracerProvider, TraceError>
 where
-    F: FnOnce(
-        opentelemetry_otlp::OtlpTracePipeline<SpanExporterBuilder>,
-    ) -> opentelemetry_otlp::OtlpTracePipeline<SpanExporterBuilder>,
+    F: FnOnce(opentelemetry_sdk::trace::Builder) -> opentelemetry_sdk::trace::Builder,
 {
     use opentelemetry_otlp::WithExportConfig;
 
@@ -30,35 +26,34 @@ where
         infer_protocol_and_endpoint(maybe_protocol.as_deref(), maybe_endpoint.as_deref());
     tracing::debug!(target: "otel::setup", OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = endpoint);
     tracing::debug!(target: "otel::setup", OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = protocol);
-    let exporter: SpanExporterBuilder = match protocol.as_str() {
-        "http/protobuf" => opentelemetry_otlp::new_exporter()
-            .http()
+    let exporter: SpanExporter = match protocol.as_str() {
+        "http/protobuf" => SpanExporter::builder()
+            .with_http()
             .with_endpoint(endpoint)
             .with_headers(read_headers_from_env())
-            .into(),
+            .build()?,
         #[cfg(feature = "tls")]
-        "grpc/tls" => opentelemetry_otlp::new_exporter()
-            .tonic()
+        "grpc/tls" => SpanExporter::builder()
+            .with_tonic()
             .with_tls_config(ClientTlsConfig::new().with_native_roots())
             .with_endpoint(endpoint)
-            .into(),
-        _ => opentelemetry_otlp::new_exporter()
-            .tonic()
+            .build()?,
+        _ => SpanExporter::builder()
+            .with_tonic()
             .with_endpoint(endpoint)
-            .into(),
+            .build()?,
     };
 
-    let mut pipeline = opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(exporter)
-        .with_trace_config(
+    let mut trace_provider: opentelemetry_sdk::trace::Builder = TracerProvider::builder()
+        .with_config(
             opentelemetry_sdk::trace::Config::default()
                 .with_resource(resource)
                 .with_sampler(read_sampler_from_env()),
-        );
-    pipeline = transform(pipeline);
-    let provider = pipeline.install_batch(opentelemetry_sdk::runtime::Tokio)?;
-    Ok(provider)
+        )
+        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio);
+
+    trace_provider = transform(trace_provider);
+    Ok(trace_provider.build())
 }
 
 /// turn a string of "k1=v1,k2=v2,..." into an iterator of (key, value) tuples
