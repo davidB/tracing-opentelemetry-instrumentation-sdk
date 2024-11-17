@@ -86,7 +86,12 @@ To ease setup and compliance with [OpenTelemetry SDK configuration](https://open
 - `OTEL_PROPAGATORS` for the configuration of the propagators
 - `OTEL_TRACES_SAMPLER` & `OTEL_TRACES_SAMPLER_ARG` for configuration of the sampler
 
-In the context of kubernetes, the above environment variable can be injected by the Opentelemetry operator (via `inject-sdk`):
+Few other environment variables can also be used to configure OTLP exporter (eg to configure headers, authentication,, etc...):
+
+- [`OTEL_EXPORTER_OTLP_HEADERS`](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/#otel_exporter_otlp_headers)
+- [`OTEL_EXPORTER_OTLP_TRACES_HEADERS`](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/#otel_exporter_otlp_traces_headers)
+
+In the context of **kubernetes**, some of the above environment variables can be injected by the Opentelemetry operator (via `inject-sdk`):
 
 ```yaml
 apiVersion: apps/v1
@@ -137,10 +142,10 @@ spec:
 - check you only have a single version of opentelemtry (could be part of your CI/build), use `cargo-deny` or `cargo tree`
 
     ```sh
-    # Check only one version of opentelemetry_api should be used
+    # Check only one version of opentelemetry should be used
     # else issue with setup of global (static variable)
     # check_single_version_opentelemtry:
-    cargo tree -i opentelemetry_api
+    cargo tree -i opentelemetry
     ```
 
 - check the code of your exporter and the integration with `tracing` (as subscriber's layer)
