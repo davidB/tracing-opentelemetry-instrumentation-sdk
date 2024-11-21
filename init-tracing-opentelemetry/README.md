@@ -12,7 +12,7 @@ use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
 #[tokio::main]
 async fn main() -> Result<(), axum::BoxError> {
     // very opinionated init of tracing, look as is source to compose your own
-    init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+    let _guard = init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
 
     ...;
 
@@ -20,7 +20,7 @@ async fn main() -> Result<(), axum::BoxError> {
 }
 ```
 
-AND Call `opentelemetry::global::shutdown_tracer_provider();` on shutdown of the app to be sure to send the pending trace,...
+The `init_subscribers` function returns a `TracingGuard` instance. Following the guard pattern, this struct provides no functions but, when dropped, ensures that any pending traces are sent before it exits. The syntax `let _guard` is suggested to ensure that Rust does not drop the struct until the application exits.
 
 To configure opentelemetry tracer & tracing, you can use the functions from `init_tracing_opentelemetry::tracing_subscriber_ext`, but they are very opinionated (and WIP to make them more customizable and friendly), so we recommend making your composition, but look at the code (to avoid some issue) and share your feedback.
 

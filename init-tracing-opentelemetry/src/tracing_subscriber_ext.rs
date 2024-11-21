@@ -1,5 +1,5 @@
 use opentelemetry::trace::{TraceError, TracerProvider};
-use opentelemetry_sdk::trace::Tracer;
+use opentelemetry_sdk::trace::{self, Tracer};
 use tracing::{info, Subscriber};
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, registry::LookupSpan, Layer};
@@ -60,7 +60,7 @@ pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
     EnvFilter::from_default_env()
 }
 
-pub fn build_otel_layer<S>() -> Result<OpenTelemetryLayer<S, Tracer>, TraceError>
+pub fn build_otel_layer<S>() -> Result<(OpenTelemetryLayer<S, Tracer>, TracingGuard), TraceError>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
@@ -88,11 +88,21 @@ where
     let layer = tracing_opentelemetry::layer()
         .with_error_records_to_exceptions(true)
         .with_tracer(tracerprovider.tracer(""));
-    global::set_tracer_provider(tracerprovider);
-    Ok(layer)
+    global::set_tracer_provider(tracerprovider.clone());
+    Ok((layer, TracingGuard { tracerprovider }))
 }
 
-pub fn init_subscribers() -> Result<(), Error> {
+pub struct TracingGuard {
+    tracerprovider: trace::TracerProvider,
+}
+
+impl Drop for TracingGuard {
+    fn drop(&mut self) {
+        self.tracerprovider.force_flush();
+    }
+}
+
+pub fn init_subscribers() -> Result<TracingGuard, Error> {
     //setup a temporary subscriber to log output during setup
     let subscriber = tracing_subscriber::registry()
         .with(build_loglevel_filter_layer())
@@ -100,10 +110,12 @@ pub fn init_subscribers() -> Result<(), Error> {
     let _guard = tracing::subscriber::set_default(subscriber);
     info!("init logging & tracing");
 
+    let (layer, guard) = build_otel_layer()?;
+
     let subscriber = tracing_subscriber::registry()
-        .with(build_otel_layer()?)
+        .with(layer)
         .with(build_loglevel_filter_layer())
         .with(build_logger_text());
     tracing::subscriber::set_global_default(subscriber)?;
-    Ok(())
+    Ok(guard)
 }
