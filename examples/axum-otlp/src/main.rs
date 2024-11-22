@@ -11,7 +11,7 @@ use tracing_opentelemetry_instrumentation_sdk::find_current_trace_id;
 #[tokio::main]
 async fn main() -> Result<(), BoxError> {
     // very opinionated init of tracing, look as is source to make your own
-    init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+    let _guard = init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
 
     let app = app();
     // run it
@@ -20,9 +20,7 @@ async fn main() -> Result<(), BoxError> {
     tracing::info!("try to call `curl -i http://127.0.0.1:3003/` (with trace)"); //Devskim: ignore DS137138
     tracing::info!("try to call `curl -i http://127.0.0.1:3003/health` (with NO trace)"); //Devskim: ignore DS137138
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app.into_make_service())
-        .with_graceful_shutdown(shutdown_signal())
-        .await?;
+    axum::serve(listener, app.into_make_service()).await?;
     Ok(())
 }
 
@@ -60,42 +58,4 @@ async fn proxy_handler(Path((service, path)): Path<(String, String)>) -> impl In
     axum::Json(
         json!({ "my_trace_id": trace_id, "fake_proxy": { "service": service, "path": path } }),
     )
-}
-
-async fn shutdown_signal() {
-    use std::sync::mpsc;
-    use std::{thread, time::Duration};
-
-    let ctrl_c = async {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
-
-    #[cfg(unix)]
-    let terminate = async {
-        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
-
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
-    }
-
-    tracing::warn!("signal received, starting graceful shutdown");
-    let (sender, receiver) = mpsc::channel();
-    let _ = thread::spawn(move || {
-        opentelemetry::global::shutdown_tracer_provider();
-        sender.send(()).ok()
-    });
-    let shutdown_res = receiver.recv_timeout(Duration::from_millis(2_000));
-    if shutdown_res.is_err() {
-        tracing::error!("failed to shutdown OpenTelemetry");
-    }
 }
