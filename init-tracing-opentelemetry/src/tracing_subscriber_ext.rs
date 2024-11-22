@@ -92,6 +92,7 @@ where
     Ok((layer, TracingGuard { tracerprovider }))
 }
 
+#[must_use = "Recommend holding with 'let _guard = ' pattern to ensure final traces are sent to the server"]
 pub struct TracingGuard {
     tracerprovider: trace::TracerProvider,
 }
