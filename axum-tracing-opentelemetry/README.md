@@ -20,17 +20,15 @@ use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
 
 #[tokio::main]
 async fn main() -> Result<(), axum::BoxError> {
-    // very opinionated init of tracing, look as is source to make your own
-    init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+    // very opinionated init of tracing, look at the source to make your own
+    let _guard = init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
 
     let app = app();
     // run it
     let addr = &"0.0.0.0:3000".parse::<SocketAddr>()?;
     tracing::warn!("listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app.into_make_service())
-        //FIXME .with_graceful_shutdown(shutdown_signal())
-        .await?;
+    axum::serve(listener, app.into_make_service()).await?;
     Ok(())
 }
 
@@ -42,11 +40,6 @@ fn app() -> Router {
         //start OpenTelemetry trace on incoming request
         .layer(OtelAxumLayer::default())
         .route("/health", get(health)) // request processed without span / trace
-}
-
-async fn shutdown_signal() {
-    //...
-    opentelemetry::global::shutdown_tracer_provider();
 }
 ```
 

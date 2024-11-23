@@ -48,7 +48,7 @@ impl Greeter for MyGreeter {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // very opinionated init of tracing, look as is source to make your own
-    init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()
+    let _guard = init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()
         .expect("init subscribers");
 
     let addr = "0.0.0.0:50051".parse().unwrap();
@@ -68,35 +68,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(reflection_service)
         //.add_service(GreeterServer::new(greeter))
         .add_service(GreeterServer::new(greeter))
-        .serve_with_shutdown(addr, shutdown_signal())
+        .serve(addr)
         .await?;
 
     Ok(())
-}
-
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
-
-    #[cfg(unix)]
-    let terminate = async {
-        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
-
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
-    }
-
-    //tracing::warn!("signal received, starting graceful shutdown");
-    opentelemetry::global::shutdown_tracer_provider();
 }
