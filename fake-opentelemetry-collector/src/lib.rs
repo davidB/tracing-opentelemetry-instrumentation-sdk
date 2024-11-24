@@ -11,7 +11,6 @@ use std::net::SocketAddr;
 use std::time::{Duration, Instant};
 
 use futures::StreamExt;
-use opentelemetry::trace::TracerProvider;
 use opentelemetry_otlp::{LogExporter, SpanExporter, WithExportConfig};
 use opentelemetry_proto::tonic::collector::logs::v1::logs_service_server::LogsServiceServer;
 use opentelemetry_proto::tonic::collector::trace::v1::trace_service_server::TraceServiceServer;
@@ -88,14 +87,16 @@ impl FakeCollectorServer {
 
 async fn recv_many<T>(rx: &mut Receiver<T>, at_least: usize, timeout: Duration) -> Vec<T> {
     let deadline = Instant::now();
-    let pause = (timeout / 5).min(Duration::from_millis(500));
+    let pause = (timeout / 10).min(Duration::from_millis(10));
     while rx.len() < at_least && deadline.elapsed() < timeout {
         tokio::time::sleep(pause).await;
     }
     std::iter::from_fn(|| rx.try_recv().ok()).collect::<Vec<_>>()
 }
 
-pub async fn setup_tracer(fake_server: &FakeCollectorServer) -> opentelemetry_sdk::trace::Tracer {
+pub async fn setup_tracer_provider(
+    fake_server: &FakeCollectorServer,
+) -> opentelemetry_sdk::trace::TracerProvider {
     // if the environment variable is set (in test or in caller), `with_endpoint` value is ignored
     std::env::remove_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
 
@@ -109,10 +110,9 @@ pub async fn setup_tracer(fake_server: &FakeCollectorServer) -> opentelemetry_sd
             opentelemetry_sdk::runtime::Tokio,
         )
         .build()
-        .tracer("")
 }
 
-pub async fn setup_logger(
+pub async fn setup_logger_provider(
     fake_server: &FakeCollectorServer,
 ) -> opentelemetry_sdk::logs::LoggerProvider {
     opentelemetry_sdk::logs::LoggerProvider::builder()
@@ -131,8 +131,8 @@ pub async fn setup_logger(
 mod tests {
     use super::*;
 
-    use opentelemetry::global::shutdown_tracer_provider;
     use opentelemetry::logs::{LogRecord, Logger, LoggerProvider, Severity};
+    use opentelemetry::trace::TracerProvider;
     use opentelemetry::trace::{Span, SpanKind, Tracer};
 
     #[tokio::test(flavor = "multi_thread")]
@@ -140,7 +140,8 @@ mod tests {
         let mut fake_collector = FakeCollectorServer::start()
             .await
             .expect("fake collector setup and started");
-        let tracer = setup_tracer(&fake_collector).await;
+        let tracer_provider = setup_tracer_provider(&fake_collector).await;
+        let tracer = tracer_provider.tracer("test");
 
         debug!("Sending span...");
         let mut span = tracer
@@ -149,7 +150,12 @@ mod tests {
             .start(&tracer);
         span.add_event("my-test-event", vec![]);
         span.end();
-        shutdown_tracer_provider();
+
+        let _ = tracer_provider.force_flush();
+        tracer_provider
+            .shutdown()
+            .expect("no error during shutdown");
+        drop(tracer_provider);
 
         let otel_spans = fake_collector
             .exported_spans(1, Duration::from_secs(20))
@@ -184,7 +190,7 @@ mod tests {
             .await
             .expect("fake collector setup and started");
 
-        let logger_provider = setup_logger(&fake_collector).await;
+        let logger_provider = setup_logger_provider(&fake_collector).await;
         let logger = logger_provider.logger("test");
         let mut record = logger.create_log_record();
         record.set_body("This is information".into());

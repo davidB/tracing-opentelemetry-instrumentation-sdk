@@ -1,8 +1,8 @@
 use assert2::{check, let_assert};
+use opentelemetry::trace::TracerProvider;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use serde_json::Value;
 use std::sync::mpsc::{self, Receiver, SyncSender};
-
 use tracing_subscriber::{
     fmt::{format::FmtSpan, MakeWriter},
     util::SubscriberInitExt,
@@ -88,6 +88,7 @@ pub struct FakeEnvironment {
     fake_collector: fake_opentelemetry_collector::FakeCollectorServer,
     rx: Receiver<Vec<u8>>,
     _subsciber_guard: tracing::subscriber::DefaultGuard,
+    tracer_provider: opentelemetry_sdk::trace::TracerProvider,
 }
 
 impl FakeEnvironment {
@@ -100,10 +101,11 @@ impl FakeEnvironment {
         let fake_collector = fake_opentelemetry_collector::FakeCollectorServer::start()
             .await
             .unwrap();
-        let tracer = fake_opentelemetry_collector::setup_tracer(&fake_collector).await;
+        let tracer_provider =
+            fake_opentelemetry_collector::setup_tracer_provider(&fake_collector).await;
         //let (tracer, mut req_rx) = fake_opentelemetry_collector::setup_tracer().await;
         opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
-        let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+        let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer_provider.tracer("fake"));
 
         let (make_writer, rx) = duplex_writer();
         let fmt_layer = tracing_subscriber::fmt::layer()
@@ -119,21 +121,24 @@ impl FakeEnvironment {
             fake_collector,
             rx,
             _subsciber_guard,
+            tracer_provider,
         }
     }
 
     pub async fn collect_traces(
         &mut self,
     ) -> (Vec<Value>, Vec<fake_opentelemetry_collector::ExportedSpan>) {
-        opentelemetry::global::shutdown_tracer_provider();
+        let _ = self.tracer_provider.force_flush();
+
         let otel_spans = self
             .fake_collector
-            .exported_spans(1, std::time::Duration::from_millis(5000))
+            .exported_spans(1, std::time::Duration::from_millis(100))
             .await;
         // insta::assert_debug_snapshot!(first_span);
         let tracing_events = std::iter::from_fn(|| {
             self.rx
-                .recv_timeout(std::time::Duration::from_millis(500))
+                .recv_timeout(std::time::Duration::from_millis(3))
+                //.recv()
                 .ok()
         })
         .map(|bytes| serde_json::from_slice::<Value>(&bytes).unwrap())
