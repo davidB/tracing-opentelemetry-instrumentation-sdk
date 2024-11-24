@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.24.0...init-tracing-opentelemetry-v0.24.1) - 2024-11-24
+
+### <!-- 1 -->Fixed
+
+- Use guard pattern to allow consumers to ensure final trace is sent ([#185](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/185))
+
 ## [0.24.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.21.0...init-tracing-opentelemetry-v0.24.0) - 2024-09-23
 
 ### <!-- 2 -->Added
