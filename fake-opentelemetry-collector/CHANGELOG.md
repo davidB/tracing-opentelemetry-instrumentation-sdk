@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/fake-opentelemetry-collector-v0.24.0...fake-opentelemetry-collector-v0.25.0) - 2024-11-24
+
+### <!-- 1 -->Fixed
+
+- [**breaking**] use `TraceProvider::flush_force()` during test
+
 ## [0.21.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/fake-opentelemetry-collector-v0.20.0...fake-opentelemetry-collector-v0.21.0) - 2024-09-22
 
 ### <!-- 2 -->Added
