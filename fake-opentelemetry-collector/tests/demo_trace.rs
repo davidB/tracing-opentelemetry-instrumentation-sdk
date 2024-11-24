@@ -1,10 +1,3 @@
-# fake-opentelemetry-collector
-
-A Fake (basic) opentelemetry collector, useful to test what is collected by opentelemetry
-
-Usage example with [insta](https://crates.io/crates/insta) (snapshot testing)
-
-```rust
 use std::time::Duration;
 
 use fake_opentelemetry_collector::{setup_tracer_provider, FakeCollectorServer};
@@ -65,6 +58,3 @@ async fn demo_fake_tracer_and_collector() {
         }),
     });
 }
-```
-
-test example at <https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/fake-opentelemetry-collector/tests>

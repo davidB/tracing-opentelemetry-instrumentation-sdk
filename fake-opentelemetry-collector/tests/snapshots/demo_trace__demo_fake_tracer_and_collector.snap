@@ -1,6 +1,7 @@
 ---
-source: fake-opentelemetry-collector/src/lib.rs
+source: fake-opentelemetry-collector/tests/demo_trace.rs
 expression: otel_spans
+snapshot_kind: text
 ---
 - trace_id: "[trace_id:lg32]"
   span_id: "[span_id:lg16]"
@@ -23,4 +24,3 @@ expression: otel_spans
   status:
     message: ""
     code: STATUS_CODE_UNSET
-

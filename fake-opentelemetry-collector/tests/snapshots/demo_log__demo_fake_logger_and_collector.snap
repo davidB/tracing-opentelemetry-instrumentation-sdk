@@ -1,6 +1,7 @@
 ---
-source: fake-opentelemetry-collector/src/lib.rs
+source: fake-opentelemetry-collector/tests/demo_log.rs
 expression: otel_logs
+snapshot_kind: text
 ---
 - trace_id: "[trace_id:lg0]"
   span_id: "[span_id:lg0]"
