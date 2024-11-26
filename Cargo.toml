@@ -33,9 +33,9 @@ opentelemetry = { version = "0.27", features = [
 opentelemetry_sdk = { version = "0.27", default-features = false, features = [
   "rt-tokio",
 ] }
-opentelemetry-aws = { version = "0.14", default-features = false }
+opentelemetry-aws = { version = "0.15", default-features = false }
 opentelemetry-jaeger-propagator = { version = "0.27", default-features = false }
-opentelemetry-resource-detectors = { version = "0.5", default-features = false }
+opentelemetry-resource-detectors = { version = "0.6", default-features = false }
 opentelemetry-semantic-conventions = { version = "0.27", default-features = false }
 opentelemetry-zipkin = { version = "0.27", default-features = false }
 opentelemetry-otlp = { version = "0.27", default-features = false }
