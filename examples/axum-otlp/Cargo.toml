@@ -16,7 +16,6 @@ init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", featur
 ] }
 opentelemetry = { workspace = true }
 opentelemetry-otlp = { workspace = true, default-features = false, features = [
-  "reqwest-client",
   "reqwest-rustls",
   "http-proto",
   "tls",

@@ -65,6 +65,7 @@ fn parse_headers(val: &str) -> impl Iterator<Item = (String, String)> + '_ {
         s
     })
 }
+
 fn read_headers_from_env() -> HashMap<String, String> {
     let mut headers = HashMap::new();
     headers.extend(parse_headers(
@@ -75,12 +76,20 @@ fn read_headers_from_env() -> HashMap<String, String> {
     ));
     headers
 }
+
 fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
-    let maybe_endpoint = std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
-        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT"))
-        .ok();
     let maybe_protocol = std::env::var("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL")
         .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL"))
+        .ok();
+    let maybe_endpoint = std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
+        .or_else(|_| {
+            std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT").map(|endpoint| match &maybe_protocol {
+                Some(protocol) if protocol.contains("http") => {
+                    format!("{endpoint}/v1/traces")
+                }
+                _ => endpoint,
+            })
+        })
         .ok();
     (maybe_protocol, maybe_endpoint)
 }
@@ -142,7 +151,7 @@ fn infer_protocol_and_endpoint(
     }
 
     let endpoint = match protocol {
-        "http/protobuf" => maybe_endpoint.unwrap_or("http://localhost:4318"), //Devskim: ignore DS137138
+        "http/protobuf" => maybe_endpoint.unwrap_or("http://localhost:4318/v1/traces"), //Devskim: ignore DS137138
         _ => maybe_endpoint.unwrap_or("http://localhost:4317"), //Devskim: ignore DS137138
     };
 
@@ -157,8 +166,13 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case(None, None, "http/protobuf", "http://localhost:4318")] //Devskim: ignore DS137138
-    #[case(Some("http/protobuf"), None, "http/protobuf", "http://localhost:4318")] //Devskim: ignore DS137138
+    #[case(None, None, "http/protobuf", "http://localhost:4318/v1/traces")] //Devskim: ignore DS137138
+    #[case(
+        Some("http/protobuf"),
+        None,
+        "http/protobuf",
+        "http://localhost:4318/v1/traces"
+    )] //Devskim: ignore DS137138
     #[case(Some("grpc"), None, "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
     #[case(None, Some("http://localhost:4317"), "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
     #[cfg_attr(
@@ -181,15 +195,15 @@ mod tests {
     )]
     #[case(
         Some("http/protobuf"),
-        Some("http://localhost:4318"), //Devskim: ignore DS137138
+        Some("http://localhost:4318/v1/traces"), //Devskim: ignore DS137138
         "http/protobuf",
-        "http://localhost:4318" //Devskim: ignore DS137138
+        "http://localhost:4318/v1/traces" //Devskim: ignore DS137138
     )]
     #[case(
         Some("http/protobuf"),
-        Some("https://examples.com:4318"),
+        Some("https://examples.com:4318/v1/traces"),
         "http/protobuf",
-        "https://examples.com:4318"
+        "https://examples.com:4318/v1/traces"
     )]
     #[case(
         Some("http/protobuf"),

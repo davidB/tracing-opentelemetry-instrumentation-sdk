@@ -2,11 +2,22 @@
 
 In a terminal, run
 
+Configure the [environment variables](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/) for the OTLP exporter:
+
+```sh
+# For GRPC:
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://localhost:4317"
+export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="grpc"
+export OTEL_TRACES_SAMPLER="always_on"
+
+# For HTTP:
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://127.0.0.1:4318/v1/traces"
+export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="http/protobuf"
+export OTEL_TRACES_SAMPLER="always_on"
+```
+
 ```sh
 ❯ cd examples/axum-otlp
-> # or direnv allow
-❯ export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4317
-❯ export OTEL_TRACES_SAMPLER=always_on
 ❯ cargo run
    Compiling examples-axum-otlp v0.1.0 (/home/david/src/github.com/davidB/axum-tracing-opentelemetry/examples/axum-otlp)
     Finished dev [unoptimized + debuginfo] target(s) in 3.60s

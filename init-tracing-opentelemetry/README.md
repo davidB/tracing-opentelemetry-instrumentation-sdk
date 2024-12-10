@@ -91,6 +91,18 @@ Few other environment variables can also be used to configure OTLP exporter (eg 
 - [`OTEL_EXPORTER_OTLP_HEADERS`](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/#otel_exporter_otlp_headers)
 - [`OTEL_EXPORTER_OTLP_TRACES_HEADERS`](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/#otel_exporter_otlp_traces_headers)
 
+```sh
+# For GRPC:
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://localhost:4317"
+export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="grpc"
+export OTEL_TRACES_SAMPLER="always_on"
+
+# For HTTP:
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://127.0.0.1:4318/v1/traces"
+export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="http/protobuf"
+export OTEL_TRACES_SAMPLER="always_on"
+```
+
 In the context of **kubernetes**, some of the above environment variables can be injected by the Opentelemetry operator (via `inject-sdk`):
 
 ```yaml
