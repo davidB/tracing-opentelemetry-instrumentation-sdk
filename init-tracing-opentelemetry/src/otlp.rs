@@ -1,8 +1,6 @@
-use std::{collections::HashMap, str::FromStr};
-
 use opentelemetry::trace::TraceError;
-use opentelemetry_otlp::{SpanExporter, WithHttpConfig};
-use opentelemetry_sdk::{trace::Sampler, trace::TracerProvider, Resource};
+use opentelemetry_otlp::SpanExporter;
+use opentelemetry_sdk::{trace::TracerProvider, Resource};
 #[cfg(feature = "tls")]
 use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
 
@@ -19,62 +17,44 @@ pub fn init_tracerprovider<F>(
 where
     F: FnOnce(opentelemetry_sdk::trace::Builder) -> opentelemetry_sdk::trace::Builder,
 {
-    use opentelemetry_otlp::WithExportConfig;
-
+    debug_env();
     let (maybe_protocol, maybe_endpoint) = read_protocol_and_endpoint_from_env();
-    let (protocol, endpoint) =
-        infer_protocol_and_endpoint(maybe_protocol.as_deref(), maybe_endpoint.as_deref());
-    tracing::debug!(target: "otel::setup", OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = endpoint);
-    tracing::debug!(target: "otel::setup", OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = protocol);
-    let exporter: SpanExporter = match protocol.as_str() {
-        "http/protobuf" => SpanExporter::builder()
-            .with_http()
-            .with_endpoint(endpoint)
-            .with_headers(read_headers_from_env())
-            .build()?,
-        #[cfg(feature = "tls")]
-        "grpc/tls" => SpanExporter::builder()
-            .with_tonic()
-            .with_tls_config(ClientTlsConfig::new().with_native_roots())
-            .with_endpoint(endpoint)
-            .build()?,
-        _ => SpanExporter::builder()
-            .with_tonic()
-            .with_endpoint(endpoint)
-            .build()?,
-    };
+    let protocol = infer_protocol(maybe_protocol.as_deref(), maybe_endpoint.as_deref());
 
-    let mut trace_provider: opentelemetry_sdk::trace::Builder = TracerProvider::builder()
-        .with_config(
-            opentelemetry_sdk::trace::Config::default()
-                .with_resource(resource)
-                .with_sampler(read_sampler_from_env()),
-        )
-        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio);
+    let exporter: Option<SpanExporter> = match protocol.as_deref() {
+        Some("http/protobuf") => Some(SpanExporter::builder().with_http().build()?),
+        #[cfg(feature = "tls")]
+        Some("grpc/tls") => Some(
+            SpanExporter::builder()
+                .with_tonic()
+                .with_tls_config(ClientTlsConfig::new().with_native_roots())
+                .build()?,
+        ),
+        Some("grpc") => Some(SpanExporter::builder().with_tonic().build()?),
+        Some(x) => {
+            tracing::warn!("unknown '{x}' env var set or infered for OTEL_EXPORTER_OTLP_TRACES_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no span exporter will be created");
+            None
+        }
+        None => {
+            tracing::warn!("no env var set or infered for OTEL_EXPORTER_OTLP_TRACES_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no span exporter will be created");
+            None
+        }
+    };
+    let mut trace_provider: opentelemetry_sdk::trace::Builder =
+        TracerProvider::builder().with_resource(resource);
+    if let Some(exporter) = exporter {
+        trace_provider =
+            trace_provider.with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio);
+    }
 
     trace_provider = transform(trace_provider);
     Ok(trace_provider.build())
 }
 
-/// turn a string of "k1=v1,k2=v2,..." into an iterator of (key, value) tuples
-fn parse_headers(val: &str) -> impl Iterator<Item = (String, String)> + '_ {
-    val.split(',').filter_map(|kv| {
-        let s = kv
-            .split_once('=')
-            .map(|(k, v)| (k.to_owned(), v.to_owned()));
-        s
-    })
-}
-
-fn read_headers_from_env() -> HashMap<String, String> {
-    let mut headers = HashMap::new();
-    headers.extend(parse_headers(
-        &std::env::var("OTEL_EXPORTER_OTLP_HEADERS").unwrap_or_default(),
-    ));
-    headers.extend(parse_headers(
-        &std::env::var("OTEL_EXPORTER_OTLP_TRACES_HEADERS").unwrap_or_default(),
-    ));
-    headers
+pub fn debug_env() {
+    std::env::vars()
+        .filter(|(k, _)| k.starts_with("OTEL_"))
+        .for_each(|(k, v)| tracing::debug!(target: "otel::setup::env", key = %k, value = %v));
 }
 
 fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
@@ -94,68 +74,27 @@ fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
     (maybe_protocol, maybe_endpoint)
 }
 
-/// see <https://opentelemetry.io/docs/reference/specification/sdk-environment-variables/#general-sdk-configuration>
-/// TODO log error and infered sampler
-fn read_sampler_from_env() -> Sampler {
-    let mut name = std::env::var("OTEL_TRACES_SAMPLER")
-        .ok()
-        .unwrap_or_default()
-        .to_lowercase();
-    let v = match name.as_str() {
-        "always_on" => Sampler::AlwaysOn,
-        "always_off" => Sampler::AlwaysOff,
-        "traceidratio" => Sampler::TraceIdRatioBased(read_sampler_arg_from_env(1f64)),
-        "parentbased_always_on" => Sampler::ParentBased(Box::new(Sampler::AlwaysOn)),
-        "parentbased_always_off" => Sampler::ParentBased(Box::new(Sampler::AlwaysOff)),
-        "parentbased_traceidratio" => Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
-            read_sampler_arg_from_env(1f64),
-        ))),
-        "jaeger_remote" => todo!("unsupported: OTEL_TRACES_SAMPLER='jaeger_remote'"),
-        "xray" => todo!("unsupported: OTEL_TRACES_SAMPLER='xray'"),
-        _ => {
-            name = "parentbased_always_on".to_string();
-            Sampler::ParentBased(Box::new(Sampler::AlwaysOn))
+#[allow(unused_mut)]
+fn infer_protocol(maybe_protocol: Option<&str>, maybe_endpoint: Option<&str>) -> Option<String> {
+    let mut maybe_protocol = match (maybe_protocol, maybe_endpoint) {
+        (Some(protocol), _) => Some(protocol.to_string()),
+        (None, Some(endpoint)) => {
+            if endpoint.contains(":4317") {
+                Some("grpc".to_string())
+            } else {
+                Some("http/protobuf".to_string())
+            }
         }
+        _ => None,
     };
-    tracing::debug!(target: "otel::setup", OTEL_TRACES_SAMPLER = name);
-    v
-}
-
-fn read_sampler_arg_from_env<T>(default: T) -> T
-where
-    T: FromStr + Copy + std::fmt::Debug,
-{
-    //TODO Log for invalid value (how to log)
-    let v = std::env::var("OTEL_TRACES_SAMPLER_ARG")
-        .map_or(default, |s| T::from_str(&s).unwrap_or(default));
-    tracing::debug!(target: "otel::setup", OTEL_TRACES_SAMPLER_ARG = ?v);
-    v
-}
-
-fn infer_protocol_and_endpoint(
-    maybe_protocol: Option<&str>,
-    maybe_endpoint: Option<&str>,
-) -> (String, String) {
-    #[cfg_attr(not(feature = "tls"), allow(unused_mut))]
-    let mut protocol = maybe_protocol.unwrap_or_else(|| {
-        if maybe_endpoint.map_or(false, |e| e.contains(":4317")) {
-            "grpc"
-        } else {
-            "http/protobuf"
-        }
-    });
-
     #[cfg(feature = "tls")]
-    if protocol == "grpc" && maybe_endpoint.unwrap_or("").starts_with("https") {
-        protocol = "grpc/tls";
+    if maybe_protocol.as_deref() == Some("grpc")
+        && maybe_endpoint.is_some_and(|e| e.starts_with("https"))
+    {
+        maybe_protocol = Some("grpc/tls".to_string());
     }
 
-    let endpoint = match protocol {
-        "http/protobuf" => maybe_endpoint.unwrap_or("http://localhost:4318/v1/traces"), //Devskim: ignore DS137138
-        _ => maybe_endpoint.unwrap_or("http://localhost:4317"), //Devskim: ignore DS137138
-    };
-
-    (protocol.to_string(), endpoint.to_string())
+    maybe_protocol
 }
 
 #[cfg(test)]
@@ -166,60 +105,38 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case(None, None, "http/protobuf", "http://localhost:4318/v1/traces")] //Devskim: ignore DS137138
-    #[case(
-        Some("http/protobuf"),
-        None,
-        "http/protobuf",
-        "http://localhost:4318/v1/traces"
-    )] //Devskim: ignore DS137138
-    #[case(Some("grpc"), None, "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
-    #[case(None, Some("http://localhost:4317"), "grpc", "http://localhost:4317")] //Devskim: ignore DS137138
+    #[case(None, None, None)] //Devskim: ignore DS137138
+    #[case(Some("http/protobuf"), None, Some("http/protobuf"))] //Devskim: ignore DS137138
+    #[case(Some("grpc"), None, Some("grpc"))] //Devskim: ignore DS137138
+    #[case(None, Some("http://localhost:4317"), Some("grpc"))] //Devskim: ignore DS137138
     #[cfg_attr(
         feature = "tls",
-        case(
-            None,
-            Some("https://localhost:4317"),
-            "grpc/tls",
-            "https://localhost:4317"
-        )
+        case(None, Some("https://localhost:4317"), Some("grpc/tls"))
     )]
     #[cfg_attr(
         feature = "tls",
-        case(
-            Some("grpc/tls"),
-            Some("https://localhost:4317"),
-            "grpc/tls",
-            "https://localhost:4317"
-        )
+        case(Some("grpc/tls"), Some("https://localhost:4317"), Some("grpc/tls"))
     )]
     #[case(
         Some("http/protobuf"),
         Some("http://localhost:4318/v1/traces"), //Devskim: ignore DS137138
-        "http/protobuf",
-        "http://localhost:4318/v1/traces" //Devskim: ignore DS137138
+        Some("http/protobuf"),
     )]
     #[case(
         Some("http/protobuf"),
         Some("https://examples.com:4318/v1/traces"),
-        "http/protobuf",
-        "https://examples.com:4318/v1/traces"
+        Some("http/protobuf")
     )]
     #[case(
         Some("http/protobuf"),
         Some("https://examples.com:4317"),
-        "http/protobuf",
-        "https://examples.com:4317"
+        Some("http/protobuf")
     )]
-    fn test_infer_protocol_and_endpoint(
+    fn test_infer_protocol(
         #[case] traces_protocol: Option<&str>,
         #[case] traces_endpoint: Option<&str>,
-        #[case] expected_protocol: &str,
-        #[case] expected_endpoint: &str,
+        #[case] expected_protocol: Option<&str>,
     ) {
-        assert!(
-            infer_protocol_and_endpoint(traces_protocol, traces_endpoint)
-                == (expected_protocol.to_string(), expected_endpoint.to_string())
-        );
+        assert!(infer_protocol(traces_protocol, traces_endpoint).as_deref() == expected_protocol);
     }
 }

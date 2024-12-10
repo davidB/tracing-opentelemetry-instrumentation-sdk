@@ -24,11 +24,8 @@ where
         BatchSpanProcessor::builder(exporter, opentelemetry_sdk::runtime::Tokio).build();
     let mut provider_builder: opentelemetry_sdk::trace::Builder = TracerProvider::builder()
         .with_span_processor(processor)
-        .with_config(
-            sdktrace::Config::default()
-                .with_resource(resource)
-                .with_sampler(sdktrace::Sampler::AlwaysOn),
-        );
+        .with_resource(resource)
+        .with_sampler(sdktrace::Sampler::AlwaysOn);
     provider_builder = transform(provider_builder);
     // tracer used in libraries/crates that optionally includes version and schema url
     let scope = InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
