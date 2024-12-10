@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.3](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.24.2...init-tracing-opentelemetry-v0.24.3) - 2024-12-10
+
+### <!-- 2 -->Added
+
+- feat!(init-tracing-opentelemetry): no longer default configuration, delegate interpretation of environment variables to setup endpoint to opentelementry.
+- feat!(init-tracing-opentelemetry): no longer enable `otel=debug` in log
+
 ## [0.24.2](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.24.1...init-tracing-opentelemetry-v0.24.2) - 2024-12-10
 
 ### <!-- 1 -->Fixed
