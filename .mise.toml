@@ -1,10 +1,11 @@
 [env]
 OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "http://127.0.0.1:4317"
-# OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "grpc"
+OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "grpc"
 OTEL_TRACES_SAMPLER = "always_on"
 # RUSTC_WRAPPER = "sccache"
 # RUST_WITHOUT = "rust-docs"
 ASDF_RUST_PROFILE = "minimal"
+# RUST_LOG = "warn,otel::setup=debug"
 
 [tools]
 rust = '1.80.0'
