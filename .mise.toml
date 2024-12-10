@@ -13,7 +13,4 @@ grpcurl = '1.9'
 protoc = '29.1'
 # grpc-health-probe = "*"
 # sccache = "0.5"
-binstall = "1.10"
-
-[plugins]
-binstall = "https://github.com/davidB/asdf-cargo-binstall"
+"aqua:cargo-bins/cargo-binstall" = "1" # do not use cargo-binstall (it's a special name used by mise)
