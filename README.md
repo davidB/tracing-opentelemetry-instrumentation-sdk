@@ -8,7 +8,13 @@ A set of rust crates to help working with tracing + opentelemetry
 
 ## For local dev / demo
 
-To collect and visualize trace on local, one of the simplest solution:
+To collect and visualize trace on local, some ofthe simplest solutions:
+
+### Otel Desktop Viewer
+
+[CtrlSpice/otel-desktop-viewer: desktop-collector](https://github.com/CtrlSpice/otel-desktop-viewer)
+
+### Jaeger all-in-one
 
 ```sh
 # launch Jaeger with OpenTelemetry, Jaeger, Zipking,... mode.
