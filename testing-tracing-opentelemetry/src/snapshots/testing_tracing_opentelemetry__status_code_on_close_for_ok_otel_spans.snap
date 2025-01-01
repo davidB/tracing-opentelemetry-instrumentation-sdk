@@ -1,12 +1,13 @@
 ---
 source: testing-tracing-opentelemetry/src/lib.rs
 expression: otel_spans
+snapshot_kind: text
 ---
 - trace_id: "[trace_id:lg32]"
   span_id: "[span_id:lg16]"
   trace_state: ""
   parent_span_id: "[span_id:lg0]"
-  name: "GET /users/:id"
+  name: "GET /users/{id}"
   kind: SPAN_KIND_SERVER
   start_time_unix_nano: "[timestamp]"
   end_time_unix_nano: "[timestamp]"
@@ -17,7 +18,7 @@ expression: otel_spans
     code.namespace: "Some(AnyValue { value: Some(StringValue(\"tracing_opentelemetry_instrumentation_sdk::http::http_server\")) })"
     http.request.method: "Some(AnyValue { value: Some(StringValue(\"GET\")) })"
     http.response.status_code: "Some(AnyValue { value: Some(StringValue(\"200\")) })"
-    http.route: "Some(AnyValue { value: Some(StringValue(\"/users/:id\")) })"
+    http.route: "Some(AnyValue { value: Some(StringValue(\"/users/{id}\")) })"
     idle_ns: ignore
     network.protocol.version: "Some(AnyValue { value: Some(StringValue(\"1.1\")) })"
     server.address: "Some(AnyValue { value: Some(StringValue(\"\")) })"
@@ -35,4 +36,3 @@ expression: otel_spans
   status:
     message: ""
     code: STATUS_CODE_UNSET
-

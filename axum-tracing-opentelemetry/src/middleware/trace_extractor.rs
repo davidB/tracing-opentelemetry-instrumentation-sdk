@@ -212,7 +212,7 @@ mod tests {
         let mut fake_env = FakeEnvironment::setup().await;
         {
             let mut svc = Router::new()
-                .route("/users/:id", get(|| async { StatusCode::OK }))
+                .route("/users/{id}", get(|| async { StatusCode::OK }))
                 .route(
                     "/status/500",
                     get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
@@ -231,7 +231,7 @@ mod tests {
                 .nest(
                     "/nest",
                     Router::new()
-                        .route("/:nest_id", get(|| async {}))
+                        .route("/{nest_id}", get(|| async {}))
                         .fallback(|| async { (StatusCode::NOT_FOUND, "inner fallback") }),
                 )
                 .fallback(|| async { (StatusCode::NOT_FOUND, "outer fallback") })

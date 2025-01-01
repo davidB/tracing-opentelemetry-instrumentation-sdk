@@ -1,6 +1,7 @@
 ---
 source: testing-tracing-opentelemetry/src/lib.rs
 expression: tracing_events
+snapshot_kind: text
 ---
 - fields:
     message: new
@@ -27,11 +28,11 @@ expression: tracing_events
   span:
     http.request.method: GET
     http.response.status_code: 200
-    http.route: "/users/:id"
+    http.route: "/users/{id}"
     name: HTTP request
     network.protocol.version: "1.1"
     otel.kind: Server
-    otel.name: "GET /users/:id"
+    otel.name: "GET /users/{id}"
     server.address: example.com
     span.type: web
     url.path: /users/123
@@ -40,4 +41,3 @@ expression: tracing_events
   spans: []
   target: "otel::tracing"
   timestamp: "[timestamp]"
-
