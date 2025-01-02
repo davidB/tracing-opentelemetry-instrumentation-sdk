@@ -14,6 +14,7 @@ init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", featur
   "otlp",
   "tracing_subscriber_ext",
 ] }
+memory-stats = "1.1"
 opentelemetry = { workspace = true }
 opentelemetry-otlp = { workspace = true, default-features = false, features = [
   "reqwest-rustls",

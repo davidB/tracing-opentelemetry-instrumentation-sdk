@@ -12,6 +12,7 @@ rust = '1.80.0'
 just = '1'
 grpcurl = '1.9'
 protoc = '29.2'
+k6 = '0.43'
 # grpc-health-probe = "*"
 # sccache = "0.5"
 "aqua:cargo-bins/cargo-binstall" = "1" # do not use cargo-binstall (it's a special name used by mise)

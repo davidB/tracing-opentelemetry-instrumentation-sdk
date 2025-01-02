@@ -28,7 +28,7 @@ fn app() -> Router {
     // build our application with a route
     Router::new()
         .route(
-            "/proxy/:service/*path",
+            "/proxy/{service}/{*path}",
             get(proxy_handler).post(proxy_handler),
         )
         .route("/", get(index)) // request processed inside span
@@ -40,7 +40,10 @@ fn app() -> Router {
 }
 
 async fn health() -> impl IntoResponse {
-    axum::Json(json!({ "status" : "UP" }))
+    let memory_stats = memory_stats::memory_stats();
+    axum::Json(
+        json!({ "status" : "UP", "physical_mem": memory_stats.map(|s| s.physical_mem), "virtual_mem": memory_stats.map(|s| s.virtual_mem) }),
+    )
 }
 
 #[tracing::instrument]
