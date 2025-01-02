@@ -208,8 +208,11 @@ deny = [
 skip = [
     #"ansi_term@0.11.0",
     #{ crate = "ansi_term@0.11.0", reason = "you can specify a reason why it can't be updated/removed" },
-    "tower@0.4",      # axum 0.7 use tower 0.5, but hyper still use 0.4
-    "sync_wrapper",   # axum direct and transive dependency use multiple version
+    "axum@0.7",      # tonic depend on axum 0.7
+    "axum-core@0.4", # tonic depend on axum 0.7
+    "matchit@0.7",   # tonic depend on axum 0.7
+    "tower@0.4",     # axum 0.7 use tower 0.5, but hyper still use 0.4
+    # "sync_wrapper",   # axum direct and transive dependency use multiple version
     "regex-syntax",
     "regex-automata",
     "indexmap",

@@ -23,7 +23,7 @@ rust-version = "1.80.0"
 
 [workspace.dependencies]
 assert2 = "0.3"
-axum = { version = "0.7", default-features = false }
+axum = { version = "0.8", default-features = false }
 http = "^1"
 hyper = "1"
 insta = { version = "1.40", features = ["yaml", "redactions"] }
