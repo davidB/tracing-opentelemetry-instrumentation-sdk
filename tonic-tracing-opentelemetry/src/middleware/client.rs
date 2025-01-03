@@ -8,7 +8,7 @@ use std::{
     task::{Context, Poll},
 };
 use tonic::client::GrpcService;
-use tower::Layer;
+use tower::{Layer, Service};
 use tracing::Span;
 use tracing_opentelemetry_instrumentation_sdk::{find_context_from_tracing, http as otel_http};
 
@@ -34,7 +34,7 @@ pub struct OtelGrpcService<S> {
     inner: S,
 }
 
-impl<S, B, B2> GrpcService<B> for OtelGrpcService<S>
+impl<S, B, B2> Service<Request<B>> for OtelGrpcService<S>
 where
     S: GrpcService<B, ResponseBody = B2> + Clone + Send + 'static,
     S::Future: Send + 'static,
@@ -43,7 +43,7 @@ where
     // B2: tonic::codegen::Body,
     B2: http_body::Body,
 {
-    type ResponseBody = B2;
+    type Response = Response<B2>;
     type Error = S::Error;
     type Future = ResponseFuture<S::Future>;
     // #[allow(clippy::type_complexity)]
