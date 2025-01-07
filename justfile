@@ -126,3 +126,9 @@ run_example_http_client:
 
 run_example_load:
     cd examples/load; cargo run --release 2>/dev/null
+
+run_example_axum-otlp_load:
+    cd examples/axum-otlp; k6 run k6-script.js
+
+run_example_axum-otlp_load_client:
+    while true; do curl -S http://127.0.0.1:3003/health; echo ""; sleep 3; done

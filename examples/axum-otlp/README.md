@@ -77,5 +77,28 @@ content-type: application/json
 content-length: 15
 date: Wed, 28 Dec 2022 17:14:07 GMT
 
-{"status":"UP"}
+{"physical_mem":16056320,"status":"UP","virtual_mem":1130790912}
 ```
+
+## Load test
+
+on terminal 1: launch the server: `just run_example_axum-otlp_server`
+on terminal 2: periodically print the memory usage: `just run_example_axum-otlp_load_client`
+on terminal 3: launch the load test script `just run_example_axum-otlp_load`
+
+```txt
+...
+{"physical_mem":16633856,"status":"UP","virtual_mem":1130790912}
+{"physical_mem":16633856,"status":"UP","virtual_mem":1130790912}
+{"physical_mem":18382848,"status":"UP","virtual_mem":1130790912}
+{"physical_mem":19562496,"status":"UP","virtual_mem":1130790912}
+{"physical_mem":19689472,"status":"UP","virtual_mem":1130790912}
+{"physical_mem":20312064,"status":"UP","virtual_mem":1130790912}
+{"physical_mem":20529152,"status":"UP","virtual_mem":1130790912}
+{"physical_mem":21012480,"status":"UP","virtual_mem":1130790912}
+{"physical_mem":21258240,"status":"UP","virtual_mem":1130790912}
+{"physical_mem":21286912,"status":"UP","virtual_mem":1130790912}
+...
+```
+
+Alternatively, you can use the `examples/load`.
