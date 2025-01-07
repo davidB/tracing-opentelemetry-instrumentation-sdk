@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.3](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tonic-tracing-opentelemetry-v0.24.2...tonic-tracing-opentelemetry-v0.24.3) - 2025-01-07
+
+### <!-- 1 -->Fixed
+
+- Implement tower::Service for OtelGrpcService (#201)
+
 ## [0.21.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tonic-tracing-opentelemetry-v0.19.0...tonic-tracing-opentelemetry-v0.21.0) - 2024-08-31
 
 ### <!-- 4 -->Changed
