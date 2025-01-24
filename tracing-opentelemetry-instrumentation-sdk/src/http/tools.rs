@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use http::{HeaderMap, Method, Uri, Version};
 use opentelemetry::Context;
 
-use super::opentelemety_http::{HeaderExtractor, HeaderInjector};
+use super::opentelemetry_http::{HeaderExtractor, HeaderInjector};
 
 pub fn inject_context(context: &Context, headers: &mut http::HeaderMap) {
     let mut injector = HeaderInjector(headers);
