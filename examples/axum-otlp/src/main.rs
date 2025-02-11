@@ -28,7 +28,7 @@ fn app() -> Router {
     // build our application with a route
     Router::new()
         .route(
-            "/proxy/:service/*path",
+            "/proxy/{service}/{*path}",
             get(proxy_handler).post(proxy_handler),
         )
         .route("/", get(index)) // request processed inside span
