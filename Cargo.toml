@@ -26,7 +26,7 @@ assert2 = "0.3"
 axum = { version = "0.8", default-features = false }
 http = "^1"
 hyper = "1"
-insta = { version = "1.40", features = ["yaml", "redactions"] }
+insta = { version = "1", features = ["yaml", "redactions"] }
 opentelemetry = { version = "0.28", features = [
   "trace",
 ], default-features = false }
