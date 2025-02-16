@@ -1,11 +1,11 @@
 use opentelemetry::trace::TraceError;
 use opentelemetry_otlp::SpanExporter;
-use opentelemetry_sdk::{trace::TracerProvider, Resource};
+use opentelemetry_sdk::{trace::SdkTracerProvider, trace::TracerProviderBuilder, Resource};
 #[cfg(feature = "tls")]
 use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
 
 #[must_use]
-pub fn identity(v: opentelemetry_sdk::trace::Builder) -> opentelemetry_sdk::trace::Builder {
+pub fn identity(v: TracerProviderBuilder) -> TracerProviderBuilder {
     v
 }
 
@@ -13,9 +13,9 @@ pub fn identity(v: opentelemetry_sdk::trace::Builder) -> opentelemetry_sdk::trac
 pub fn init_tracerprovider<F>(
     resource: Resource,
     transform: F,
-) -> Result<TracerProvider, TraceError>
+) -> Result<SdkTracerProvider, TraceError>
 where
-    F: FnOnce(opentelemetry_sdk::trace::Builder) -> opentelemetry_sdk::trace::Builder,
+    F: FnOnce(TracerProviderBuilder) -> TracerProviderBuilder,
 {
     debug_env();
     let (maybe_protocol, maybe_endpoint) = read_protocol_and_endpoint_from_env();
@@ -40,11 +40,9 @@ where
             None
         }
     };
-    let mut trace_provider: opentelemetry_sdk::trace::Builder =
-        TracerProvider::builder().with_resource(resource);
+    let mut trace_provider = SdkTracerProvider::builder().with_resource(resource);
     if let Some(exporter) = exporter {
-        trace_provider =
-            trace_provider.with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio);
+        trace_provider = trace_provider.with_batch_exporter(exporter);
     }
 
     trace_provider = transform(trace_provider);

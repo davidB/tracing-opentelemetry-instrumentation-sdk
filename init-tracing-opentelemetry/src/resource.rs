@@ -2,7 +2,6 @@ use opentelemetry::KeyValue;
 // use opentelemetry_resource_detectors::OsResourceDetector;
 use opentelemetry_sdk::{resource::ResourceDetector, Resource};
 use opentelemetry_semantic_conventions::resource;
-use std::time::Duration;
 
 /// To log detected value set environement variable `RUST_LOG="...,otel::setup::resource=debug"`
 /// ```rust
@@ -42,19 +41,14 @@ impl DetectResource {
 
     #[must_use]
     pub fn build(mut self) -> Resource {
-        let base = Resource::default();
-        let fallback = Resource::from_detectors(
-            Duration::from_secs(0),
-            vec![
-                Box::new(ServiceInfoDetector {
-                    fallback_service_name: self.fallback_service_name.take(),
-                    fallback_service_version: self.fallback_service_version.take(),
-                }),
-                //Box::new(OsResourceDetector), //FIXME enable when available for opentelemetry >= 0.25
-                //Box::new(ProcessResourceDetector),
-            ],
-        );
-        let rsrc = base.merge(&fallback); // base has lower priority
+        //Box::new(OsResourceDetector), //FIXME enable when available for opentelemetry >= 0.25
+        //Box::new(ProcessResourceDetector),
+        let rsrc = Resource::builder()
+            .with_detector(Box::new(ServiceInfoDetector {
+                fallback_service_name: self.fallback_service_name.take(),
+                fallback_service_version: self.fallback_service_version.take(),
+            }))
+            .build();
         debug_resource(&rsrc);
         rsrc
     }
@@ -73,7 +67,7 @@ pub struct ServiceInfoDetector {
 }
 
 impl ResourceDetector for ServiceInfoDetector {
-    fn detect(&self, _timeout: Duration) -> Resource {
+    fn detect(&self) -> Resource {
         let service_name = std::env::var("OTEL_SERVICE_NAME")
             .or_else(|_| std::env::var("SERVICE_NAME"))
             .or_else(|_| std::env::var("APP_NAME"))
@@ -91,6 +85,13 @@ impl ResourceDetector for ServiceInfoDetector {
                     .map(std::string::ToString::to_string)
             })
             .map(|v| KeyValue::new(resource::SERVICE_VERSION, v));
-        Resource::new(vec![service_name, service_version].into_iter().flatten())
+        let mut resource = Resource::builder_empty();
+        if let Some(service_name) = service_name {
+            resource = resource.with_attribute(service_name);
+        }
+        if let Some(service_version) = service_version {
+            resource = resource.with_attribute(service_version);
+        }
+        resource.build()
     }
 }

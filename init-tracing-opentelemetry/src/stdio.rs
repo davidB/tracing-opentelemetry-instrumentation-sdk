@@ -2,27 +2,25 @@ use opentelemetry::trace::{TraceError, TracerProvider as _};
 use opentelemetry::InstrumentationScope;
 use opentelemetry_sdk::trace as sdktrace;
 use opentelemetry_sdk::trace::BatchSpanProcessor;
-use opentelemetry_sdk::trace::TracerProvider;
+use opentelemetry_sdk::trace::SdkTracerProvider;
+use opentelemetry_sdk::trace::TracerProviderBuilder;
 use opentelemetry_sdk::Resource;
 use std::fmt::Debug;
 use std::io::Write;
 
 #[must_use]
-pub fn identity<W: Write>(
-    v: opentelemetry_sdk::trace::Builder,
-) -> opentelemetry_sdk::trace::Builder {
+pub fn identity<W: Write>(v: TracerProviderBuilder) -> TracerProviderBuilder {
     v
 }
 
 pub fn init_tracer<F, W>(resource: Resource, transform: F) -> Result<sdktrace::Tracer, TraceError>
 where
-    F: FnOnce(opentelemetry_sdk::trace::Builder) -> opentelemetry_sdk::trace::Builder,
+    F: FnOnce(TracerProviderBuilder) -> TracerProviderBuilder,
     W: Write + Debug + Send + Sync + 'static,
 {
     let exporter = opentelemetry_stdout::SpanExporter::default();
-    let processor =
-        BatchSpanProcessor::builder(exporter, opentelemetry_sdk::runtime::Tokio).build();
-    let mut provider_builder: opentelemetry_sdk::trace::Builder = TracerProvider::builder()
+    let processor = BatchSpanProcessor::builder(exporter).build();
+    let mut provider_builder = SdkTracerProvider::builder()
         .with_span_processor(processor)
         .with_resource(resource)
         .with_sampler(sdktrace::Sampler::AlwaysOn);

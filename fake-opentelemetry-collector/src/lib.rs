@@ -96,26 +96,25 @@ async fn recv_many<T>(rx: &mut Receiver<T>, at_least: usize, timeout: Duration) 
 
 pub async fn setup_tracer_provider(
     fake_server: &FakeCollectorServer,
-) -> opentelemetry_sdk::trace::TracerProvider {
+) -> opentelemetry_sdk::trace::SdkTracerProvider {
     // if the environment variable is set (in test or in caller), `with_endpoint` value is ignored
     std::env::remove_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
 
-    opentelemetry_sdk::trace::TracerProvider::builder()
+    opentelemetry_sdk::trace::SdkTracerProvider::builder()
         .with_batch_exporter(
             SpanExporter::builder()
                 .with_tonic()
                 .with_endpoint(fake_server.endpoint())
                 .build()
                 .expect("failed to install tracer"),
-            opentelemetry_sdk::runtime::Tokio,
         )
         .build()
 }
 
 pub async fn setup_logger_provider(
     fake_server: &FakeCollectorServer,
-) -> opentelemetry_sdk::logs::LoggerProvider {
-    opentelemetry_sdk::logs::LoggerProvider::builder()
+) -> opentelemetry_sdk::logs::SdkLoggerProvider {
+    opentelemetry_sdk::logs::SdkLoggerProvider::builder()
         //Install simple so we don't have to wait for batching in tests
         .with_simple_exporter(
             LogExporter::builder()
