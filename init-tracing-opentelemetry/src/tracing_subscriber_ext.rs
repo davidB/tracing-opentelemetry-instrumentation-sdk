@@ -1,5 +1,5 @@
 use opentelemetry::trace::{TraceError, TracerProvider};
-use opentelemetry_sdk::trace::{self, Tracer};
+use opentelemetry_sdk::trace::{SdkTracerProvider, Tracer};
 use tracing::{info, Subscriber};
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, registry::LookupSpan, Layer};
@@ -94,12 +94,13 @@ where
 
 #[must_use = "Recommend holding with 'let _guard = ' pattern to ensure final traces are sent to the server"]
 pub struct TracingGuard {
-    tracerprovider: trace::TracerProvider,
+    tracerprovider: SdkTracerProvider,
 }
 
 impl Drop for TracingGuard {
     fn drop(&mut self) {
-        self.tracerprovider.force_flush();
+        #[allow(unused_must_use)]
+        let _ = self.tracerprovider.force_flush();
     }
 }
 

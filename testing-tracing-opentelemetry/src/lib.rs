@@ -88,7 +88,7 @@ pub struct FakeEnvironment {
     fake_collector: fake_opentelemetry_collector::FakeCollectorServer,
     rx: Receiver<Vec<u8>>,
     _subsciber_guard: tracing::subscriber::DefaultGuard,
-    tracer_provider: opentelemetry_sdk::trace::TracerProvider,
+    tracer_provider: opentelemetry_sdk::trace::SdkTracerProvider,
 }
 
 impl FakeEnvironment {
