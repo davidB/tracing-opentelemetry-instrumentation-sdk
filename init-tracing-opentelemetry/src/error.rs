@@ -8,4 +8,8 @@ pub enum Error {
 
     #[error(transparent)]
     TraceError(#[from] opentelemetry::trace::TraceError),
+
+    #[cfg(feature = "tracing_subscriber_ext")]
+    #[error(transparent)]
+    FilterParseError(#[from] tracing_subscriber::filter::ParseError),
 }

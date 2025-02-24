@@ -1,6 +1,6 @@
 use opentelemetry::trace::{TraceError, TracerProvider};
 use opentelemetry_sdk::trace::{SdkTracerProvider, Tracer};
-use tracing::{info, Subscriber};
+use tracing::{info, level_filters::LevelFilter, Subscriber};
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, registry::LookupSpan, Layer};
 
@@ -43,21 +43,41 @@ where
 }
 
 #[must_use]
-pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
-    // filter what is output on log (fmt)
-    // std::env::set_var("RUST_LOG", "warn,otel::tracing=info,otel=debug");
-    std::env::set_var(
-        "RUST_LOG",
-        format!(
-            // `otel::tracing` should be a level info to emit opentelemetry trace & span
-            // `otel::setup` set to debug to log detected resources, configuration read
-            "{},otel::tracing=trace",
-            std::env::var("RUST_LOG")
-                .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
-                .unwrap_or_else(|_| "info".to_string())
-        ),
-    );
-    EnvFilter::from_default_env()
+#[deprecated = "replaced by the configurable build_level_filter_layer(\"\")"]
+pub fn build_loglevel_filter_layer() -> EnvFilter {
+    build_level_filter_layer("").unwrap_or_default()
+}
+
+/// Read the configuration from (first non empty used, priority top to bottom):
+///
+/// - from parameter `directives`
+/// - from environment variable `RUST_LOG`
+/// - from environment variable `OTEL_LOG_LEVEL`
+/// - default to `Level::INFO`
+///
+/// And add directive to:
+///
+/// - `otel::tracing` should be a level info to emit opentelemetry trace & span
+///
+/// You can customize parameter "directives", by adding:
+///
+/// - `otel::setup=debug` set to debug to log detected resources, configuration read (optional)
+///
+/// see [Directives syntax](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives)
+pub fn build_level_filter_layer(log_directives: &str) -> Result<EnvFilter, Error> {
+    let dirs = if log_directives.is_empty() {
+        std::env::var("RUST_LOG")
+            .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
+            .unwrap_or_else(|_| "info".to_string())
+    } else {
+        log_directives.to_string()
+    };
+    let directive_to_allow_otel_trace = "otel::tracing=trace".parse()?;
+
+    Ok(EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .parse_lossy(dirs)
+        .add_directive(directive_to_allow_otel_trace))
 }
 
 pub fn build_otel_layer<S>() -> Result<(OpenTelemetryLayer<S, Tracer>, TracingGuard), TraceError>
@@ -105,9 +125,14 @@ impl Drop for TracingGuard {
 }
 
 pub fn init_subscribers() -> Result<TracingGuard, Error> {
+    init_subscribers_and_loglevel("")
+}
+
+/// see [`build_level_filter_layer`] for the syntax of `log_directives`
+pub fn init_subscribers_and_loglevel(log_directives: &str) -> Result<TracingGuard, Error> {
     //setup a temporary subscriber to log output during setup
     let subscriber = tracing_subscriber::registry()
-        .with(build_loglevel_filter_layer())
+        .with(build_level_filter_layer(log_directives)?)
         .with(build_logger_text());
     let _guard = tracing::subscriber::set_default(subscriber);
     info!("init logging & tracing");
@@ -116,7 +141,7 @@ pub fn init_subscribers() -> Result<TracingGuard, Error> {
 
     let subscriber = tracing_subscriber::registry()
         .with(layer)
-        .with(build_loglevel_filter_layer())
+        .with(build_level_filter_layer(log_directives)?)
         .with(build_logger_text());
     tracing::subscriber::set_global_default(subscriber)?;
     Ok(guard)
