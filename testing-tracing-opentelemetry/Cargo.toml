@@ -18,7 +18,7 @@ fake-opentelemetry-collector = { path = "../fake-opentelemetry-collector", versi
 insta = { workspace = true }
 opentelemetry = { workspace = true }
 opentelemetry_sdk = { workspace = true }
-serde_json = "1.0.79"
+serde_json = "1"
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
