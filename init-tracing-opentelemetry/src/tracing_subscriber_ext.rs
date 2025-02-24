@@ -94,7 +94,7 @@ where
         //.with_fallback_service_name(env!("CARGO_PKG_NAME"))
         //.with_fallback_service_version(env!("CARGO_PKG_VERSION"))
         .build();
-    let tracerprovider = otlp::init_tracerprovider(otel_rsrc, otlp::identity)?;
+    let tracer_provider = otlp::init_tracerprovider(otel_rsrc, otlp::identity)?;
     // to not send trace somewhere, but continue to create and propagate,...
     // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
     // or to `std::io::stdout()` to print
@@ -107,20 +107,31 @@ where
     init_propagator()?;
     let layer = tracing_opentelemetry::layer()
         .with_error_records_to_exceptions(true)
-        .with_tracer(tracerprovider.tracer(""));
-    global::set_tracer_provider(tracerprovider.clone());
-    Ok((layer, TracingGuard { tracerprovider }))
+        .with_tracer(tracer_provider.tracer(""));
+    global::set_tracer_provider(tracer_provider.clone());
+    Ok((layer, TracingGuard { tracer_provider }))
 }
 
+/// On Drop of the `TracingGuard` instance,
+/// the wrapped Tracer Provider is force to flush and to shutdown (ignoring error).
 #[must_use = "Recommend holding with 'let _guard = ' pattern to ensure final traces are sent to the server"]
 pub struct TracingGuard {
-    tracerprovider: SdkTracerProvider,
+    tracer_provider: SdkTracerProvider,
+}
+
+impl TracingGuard {
+    /// the wrapped Tracer Provider
+    #[must_use]
+    pub fn tracer_provider(&self) -> &impl TracerProvider {
+        &self.tracer_provider
+    }
 }
 
 impl Drop for TracingGuard {
     fn drop(&mut self) {
         #[allow(unused_must_use)]
-        let _ = self.tracerprovider.force_flush();
+        let _ = self.tracer_provider.force_flush();
+        let _ = self.tracer_provider.shutdown();
     }
 }
 
