@@ -61,7 +61,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 jaeger = ["dep:opentelemetry-jaeger-propagator"]
 otlp = [
   "opentelemetry-otlp/http-proto",
-  "opentelemetry-otlp/reqwest-client",
+  "opentelemetry-otlp/reqwest-blocking-client",
   "opentelemetry-otlp/reqwest-rustls",
   "tracer",
 ]
