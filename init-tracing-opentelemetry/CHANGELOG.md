@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.27.0...init-tracing-opentelemetry-v0.27.1) - 2025-02-26
+
+### <!-- 1 -->Fixed
+
+- reqwest must use blocking client since opentelemetry 0.28 (#220)
+
+### <!-- 3 -->Removed
+
+- *(deps)* remove minor constraint when major > 1
+
 ## [0.27.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.26.0...init-tracing-opentelemetry-v0.27.0) - 2025-02-24
 
 ### <!-- 1 -->Fixed
