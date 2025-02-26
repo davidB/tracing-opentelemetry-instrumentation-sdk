@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tonic-tracing-opentelemetry-v0.26.0...tonic-tracing-opentelemetry-v0.26.1) - 2025-02-26
+
+### <!-- 3 -->Removed
+
+- *(deps)* remove minor constraint when major > 1
+
 ## [0.24.3](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tonic-tracing-opentelemetry-v0.24.2...tonic-tracing-opentelemetry-v0.24.3) - 2025-01-07
 
 ### <!-- 1 -->Fixed
