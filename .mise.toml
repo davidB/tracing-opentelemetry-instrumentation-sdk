@@ -8,7 +8,7 @@ ASDF_RUST_PROFILE = "minimal"
 # RUST_LOG = "warn,otel::setup=debug"
 
 [tools]
-rust = '1.80.0'
+rust = '1.81.0'
 just = '1'
 grpcurl = '1.9'
 protoc = '29.3'

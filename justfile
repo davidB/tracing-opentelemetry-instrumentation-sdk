@@ -8,9 +8,8 @@ _binstall +ARGS: _install_cargo-binstall
 _install_cargo-deny:
     @just _binstall cargo-deny
 
-# 0.9.85 to be compatible with Rust 1.80 (MSVR)
 _install_cargo-nextest:
-    @just _binstall cargo-nextest --version 0.9.85
+    @just _binstall cargo-nextest # --version 0.9.85 to be compatible with Rust 1.80 (MSRV)
 
 _install_cargo-insta:
     @just _binstall cargo-insta
