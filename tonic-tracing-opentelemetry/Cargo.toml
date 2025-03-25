@@ -23,7 +23,7 @@ http-body = "1"
 hyper = { workspace = true }
 opentelemetry = { workspace = true }
 pin-project-lite = "0.2"
-tonic = { version = "0.12", default-features = false }
+tonic = { version = "0.13", default-features = false }
 tower = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
