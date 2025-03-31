@@ -10,7 +10,7 @@ categories = [
 ]
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/tonic-tracing-opentelemetry"
 edition.workspace = true
-version = "0.26.1"
+version = "0.26.2"
 authors.workspace = true
 repository.workspace = true
 license.workspace = true

@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/fake-opentelemetry-collector-v0.26.1...fake-opentelemetry-collector-v0.27.0) - 2025-03-31
+
+### <!-- 2 -->Added
+
+- *(deps)* update opentelemetry to 0.29 (#227)
+
 ## [0.26.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/fake-opentelemetry-collector-v0.26.0...fake-opentelemetry-collector-v0.26.1) - 2025-02-26
 
 ### <!-- 3 -->Removed
