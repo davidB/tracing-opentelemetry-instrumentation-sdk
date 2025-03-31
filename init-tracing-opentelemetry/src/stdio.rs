@@ -1,4 +1,5 @@
-use opentelemetry::trace::{TraceError, TracerProvider as _};
+use crate::Error;
+use opentelemetry::trace::TracerProvider as _;
 use opentelemetry::InstrumentationScope;
 use opentelemetry_sdk::trace as sdktrace;
 use opentelemetry_sdk::trace::BatchSpanProcessor;
@@ -13,7 +14,7 @@ pub fn identity<W: Write>(v: TracerProviderBuilder) -> TracerProviderBuilder {
     v
 }
 
-pub fn init_tracer<F, W>(resource: Resource, transform: F) -> Result<sdktrace::Tracer, TraceError>
+pub fn init_tracer<F, W>(resource: Resource, transform: F) -> Result<sdktrace::Tracer, Error>
 where
     F: FnOnce(TracerProviderBuilder) -> TracerProviderBuilder,
     W: Write + Debug + Send + Sync + 'static,

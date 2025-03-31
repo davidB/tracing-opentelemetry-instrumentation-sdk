@@ -96,7 +96,7 @@ allow = [
   "CC0-1.0",
   "ISC",
   "MIT",
-  "OpenSSL",
+  # "OpenSSL",
   "Unicode-3.0",
   # "Unicode-DFS-2016",
   "Unlicense",
@@ -219,9 +219,10 @@ skip = [
   # "hermit-abi",
   # "rustls-native-certs",
   "hashbrown",
-  "thiserror",      # until every dependency use thiserror 2
-  "thiserror-impl",
   "getrandom",
+  "rand", # until tonic & tower upgrade
+  "rand_chacha", # until tonic & tower upgrade
+  "rand_core", # until tonic & tower upgrade
   "wasi",
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
@@ -233,7 +234,7 @@ skip-tree = [
   #{ crate = "ansi_term@0.11.0", depth = 20 },
   "windows-targets",
   "windows-sys",
-  "async-std",
+  # "async-std",
 ]
 
 # This section is considered when running `cargo deny check sources`.

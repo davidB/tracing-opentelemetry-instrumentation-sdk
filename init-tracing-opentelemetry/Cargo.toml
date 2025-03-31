@@ -27,7 +27,7 @@ opentelemetry-semantic-conventions = { workspace = true, optional = true }
 opentelemetry-zipkin = { workspace = true, features = [], optional = true }
 opentelemetry_sdk = { workspace = true }
 thiserror = "2"
-tonic = { workspace = true, optional = true, features = ["tls"] }
+tonic = { workspace = true, optional = true }
 tracing = { workspace = true }
 tracing-logfmt = { version = "0.3", optional = true }
 tracing-opentelemetry = { workspace = true }
@@ -70,5 +70,7 @@ tracer = ["dep:opentelemetry-semantic-conventions"]
 xray = ["dep:opentelemetry-aws"]
 zipkin = ["dep:opentelemetry-zipkin"]
 tracing_subscriber_ext = ["dep:tracing-subscriber", "otlp"]
-tls = ["tonic/tls", "opentelemetry-otlp/tls", "opentelemetry-otlp/tls-roots"]
+tls = ["opentelemetry-otlp/tls"]
+tls-roots = ["opentelemetry-otlp/tls-roots"]
+tls-webpki-roots = ["opentelemetry-otlp/tls-webpki-roots"]
 logfmt = ["dep:tracing-logfmt"]

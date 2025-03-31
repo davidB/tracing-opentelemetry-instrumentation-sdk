@@ -1,5 +1,4 @@
-use opentelemetry::trace::TraceError;
-use opentelemetry_otlp::SpanExporter;
+use opentelemetry_otlp::{ExporterBuildError, SpanExporter};
 use opentelemetry_sdk::{trace::SdkTracerProvider, trace::TracerProviderBuilder, Resource};
 #[cfg(feature = "tls")]
 use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
@@ -13,7 +12,7 @@ pub fn identity(v: TracerProviderBuilder) -> TracerProviderBuilder {
 pub fn init_tracerprovider<F>(
     resource: Resource,
     transform: F,
-) -> Result<SdkTracerProvider, TraceError>
+) -> Result<SdkTracerProvider, ExporterBuildError>
 where
     F: FnOnce(TracerProviderBuilder) -> TracerProviderBuilder,
 {

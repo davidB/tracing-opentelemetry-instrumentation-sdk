@@ -7,7 +7,11 @@ pub enum Error {
     SetGlobalDefaultError(#[from] tracing::subscriber::SetGlobalDefaultError),
 
     #[error(transparent)]
-    TraceError(#[from] opentelemetry::trace::TraceError),
+    TraceError(#[from] opentelemetry_sdk::trace::TraceError),
+
+    #[cfg(feature = "otlp")]
+    #[error(transparent)]
+    ExporterBuildError(#[from] opentelemetry_otlp::ExporterBuildError),
 
     #[cfg(feature = "tracing_subscriber_ext")]
     #[error(transparent)]
