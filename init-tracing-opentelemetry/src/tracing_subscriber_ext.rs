@@ -1,4 +1,4 @@
-use opentelemetry::trace::{TraceError, TracerProvider};
+use opentelemetry::trace::TracerProvider;
 use opentelemetry_sdk::trace::{SdkTracerProvider, Tracer};
 use tracing::{info, level_filters::LevelFilter, Subscriber};
 use tracing_opentelemetry::OpenTelemetryLayer;
@@ -80,7 +80,7 @@ pub fn build_level_filter_layer(log_directives: &str) -> Result<EnvFilter, Error
         .add_directive(directive_to_allow_otel_trace))
 }
 
-pub fn build_otel_layer<S>() -> Result<(OpenTelemetryLayer<S, Tracer>, TracingGuard), TraceError>
+pub fn build_otel_layer<S>() -> Result<(OpenTelemetryLayer<S, Tracer>, TracingGuard), Error>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {

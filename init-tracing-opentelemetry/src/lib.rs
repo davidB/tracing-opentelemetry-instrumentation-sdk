@@ -10,8 +10,8 @@ mod error;
 pub use error::Error;
 
 use opentelemetry::propagation::{TextMapCompositePropagator, TextMapPropagator};
-use opentelemetry::trace::TraceError;
 use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
+use opentelemetry_sdk::trace::TraceError;
 
 #[cfg(feature = "otlp")]
 pub mod otlp;
