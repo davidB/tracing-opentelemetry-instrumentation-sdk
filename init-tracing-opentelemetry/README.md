@@ -6,9 +6,6 @@
 A set of helpers to initialize (and more) tracing + opentelemetry (compose your own or use opinionated preset)
 
 ```txt
-//...
-use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
-
 #[tokio::main]
 async fn main() -> Result<(), axum::BoxError> {
     // very opinionated init of tracing, look as is source to compose your own

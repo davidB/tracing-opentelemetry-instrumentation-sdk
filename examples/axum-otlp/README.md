@@ -54,7 +54,7 @@ export OTEL_TRACES_SAMPLER="always_on"
 ...
 ```
 
-Into an other terminal, call the `/` (endpoint with `opentelemetry_tracing_layer` and `response_with_trace_layer`)
+Into an other terminal, call the `/` (endpoint with `OtelAxumLayer` and `OtelInResponseLayer`)
 
 ```sh
 ❯ curl -i http://127.0.0.1:3003/
