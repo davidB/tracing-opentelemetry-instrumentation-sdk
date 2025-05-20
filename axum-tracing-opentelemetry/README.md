@@ -16,7 +16,7 @@ For examples, you can look at the [examples](https://github.com/davidB/tracing-o
 
 ```txt
 //...
-use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 
 #[tokio::main]
 async fn main() -> Result<(), axum::BoxError> {
