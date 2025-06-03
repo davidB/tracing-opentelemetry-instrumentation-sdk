@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _guard = init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()
         .expect("init subscribers");
 
-    let addr = "0.0.0.0:50051".parse().unwrap();
+    let addr = "0.0.0.0:50051".parse()?;
     let greeter = MyGreeter::default();
 
     let (_, health_service) = tonic_health::server::health_reporter();
@@ -62,6 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("GreeterServer listening on {}", addr);
 
     Server::builder()
+        .timeout(std::time::Duration::from_secs(10))
         // create trace for every request including health_service
         .layer(server::OtelGrpcLayer::default().filter(filters::reject_healthcheck))
         .add_service(health_service)

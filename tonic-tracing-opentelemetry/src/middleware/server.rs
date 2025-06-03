@@ -6,7 +6,7 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-use tower::{BoxError, Layer, Service};
+use tower::{Layer, Service};
 use tracing::Span;
 use tracing_opentelemetry_instrumentation_sdk::http as otel_http;
 
@@ -52,8 +52,9 @@ pub struct OtelGrpcService<S> {
 
 impl<S, B, B2> Service<Request<B>> for OtelGrpcService<S>
 where
-    S: Service<Request<B>, Response = Response<B2>, Error = BoxError> + Clone + Send + 'static,
-    S::Future: Send + 'static,
+    S: Service<Request<B>, Response = Response<B2>> + Clone + Send + 'static,
+    //S::Future: Send + 'static,
+    S::Error: std::error::Error,
     B: Send + 'static,
 {
     type Response = S::Response;
@@ -67,7 +68,7 @@ where
     //type Future = Inspect<S::Future, Box<dyn FnOnce(S::Response)>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx).map_err(Into::into)
+        self.inner.poll_ready(cx)
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
@@ -108,11 +109,14 @@ pin_project! {
     }
 }
 
-impl<Fut, ResBody> Future for ResponseFuture<Fut>
+impl<Fut, ResBody, Error> Future for ResponseFuture<Fut>
 where
-    Fut: Future<Output = Result<Response<ResBody>, BoxError>>,
+    Fut: Future<Output = Result<Response<ResBody>, Error>>,
+    // Require that the inner service's error can be converted into a `BoxError`.
+    //Error: Into<BoxError>,
+    Error: std::error::Error,
 {
-    type Output = Result<Response<ResBody>, BoxError>;
+    type Output = Result<Response<ResBody>, Error>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
