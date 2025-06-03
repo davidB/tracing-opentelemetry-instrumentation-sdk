@@ -10,7 +10,7 @@ categories = [
 ]
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/tonic-tracing-opentelemetry"
 edition.workspace = true
-version = "0.28.1"
+version = "0.29.0"
 authors.workspace = true
 repository.workspace = true
 license.workspace = true
@@ -29,7 +29,7 @@ tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", features = [
   "http",
-], version = "0.28" }
+], version = "0.29" }
 
 [dev-dependencies]
 axum = { workspace = true }
