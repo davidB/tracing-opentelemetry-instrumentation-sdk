@@ -1,12 +1,11 @@
 [package]
 name = "bug_234_tls"
-version = "0.1.0"
-edition = "2021"
+publish = false
+edition.workspace = true
+version.workspace = true
 authors.workspace = true
-license.workspace = true
-homepage.workspace = true
 repository.workspace = true
-rust-version.workspace = true
+license.workspace = true
 
 [dependencies]
 axum = { workspace = true, default-features = true }
