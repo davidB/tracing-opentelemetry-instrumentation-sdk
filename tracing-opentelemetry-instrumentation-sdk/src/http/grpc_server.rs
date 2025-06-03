@@ -1,5 +1,5 @@
 use crate::http::{extract_service_method, http_host, user_agent};
-use crate::{otel_trace_span, BoxError};
+use crate::otel_trace_span;
 use tracing::field::Empty;
 
 use super::grpc_update_span_from_response;
@@ -24,7 +24,15 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
     )
 }
 
-fn update_span_from_error(span: &tracing::Span, error: &BoxError) {
+// fn update_span_from_error<E>(span: &tracing::Span, error: &E) {
+//     span.record("otel.status_code", "ERROR");
+//     span.record("rpc.grpc.status_code", 2);
+// }
+
+fn update_span_from_error<E>(span: &tracing::Span, error: &E)
+where
+    E: std::error::Error,
+{
     span.record("otel.status_code", "ERROR");
     span.record("rpc.grpc.status_code", 2);
     span.record("exception.message", error.to_string());
@@ -33,10 +41,12 @@ fn update_span_from_error(span: &tracing::Span, error: &BoxError) {
         .map(|s| span.record("exception.message", s.to_string()));
 }
 
-pub fn update_span_from_response_or_error<B>(
+pub fn update_span_from_response_or_error<B, E>(
     span: &tracing::Span,
-    response: &Result<http::Response<B>, BoxError>,
-) {
+    response: &Result<http::Response<B>, E>,
+) where
+    E: std::error::Error,
+{
     match response {
         Ok(response) => {
             grpc_update_span_from_response(span, response, true);

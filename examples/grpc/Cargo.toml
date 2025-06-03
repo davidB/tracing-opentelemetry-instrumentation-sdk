@@ -16,16 +16,16 @@ init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", featur
 opentelemetry = { workspace = true }
 prost = "0.13"
 tokio = { workspace = true, features = ["full"] }
-tonic = "0.12"
-tonic-health = "0.12"
-tonic-reflection = "0.12"
+tonic = { workspace = true, features = ["transport", "router"] }
+tonic-health = "0.13"
+tonic-reflection = "0.13"
 tonic-tracing-opentelemetry = { path = "../../tonic-tracing-opentelemetry" }
 tower = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry-instrumentation-sdk = { path = "../../tracing-opentelemetry-instrumentation-sdk" }
 
 [build-dependencies]
-tonic-build = "0.12"
+tonic-build = "0.13"
 
 [[bin]]
 name = "server"

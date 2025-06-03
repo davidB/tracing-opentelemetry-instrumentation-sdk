@@ -33,7 +33,7 @@ opentelemetry_sdk = { workspace = true, features = [
 serde = { version = "1", features = ["derive"] }
 tokio = { workspace = true, features = ["full"] }
 tokio-stream = { workspace = true, features = ["net"] }
-tonic = { workspace = true, features = ["codegen", "transport"]}
+tonic = { workspace = true, features = ["codegen", "transport", "router"]}
 tracing = { workspace = true }
 
 [dev-dependencies]
