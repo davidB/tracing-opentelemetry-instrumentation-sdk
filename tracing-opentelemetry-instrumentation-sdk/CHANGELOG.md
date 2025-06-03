@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.28.1...tracing-opentelemetry-instrumentation-sdk-v0.29.0) - 2025-06-03
+
+### <!-- 2 -->Added
+
+- *(deps)* update opentelemetry 0.30 & tonic 0.13 (#240)
+
 ## [0.24.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.19.0...tracing-opentelemetry-instrumentation-sdk-v0.24.0) - 2024-08-31
 
 ### <!-- 4 -->Changed
