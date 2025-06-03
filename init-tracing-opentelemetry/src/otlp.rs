@@ -26,7 +26,7 @@ where
         Some("grpc/tls") => Some(
             SpanExporter::builder()
                 .with_tonic()
-                .with_tls_config(ClientTlsConfig::new().with_native_roots())
+                .with_tls_config(ClientTlsConfig::new().with_enabled_roots())
                 .build()?,
         ),
         Some("grpc") => Some(SpanExporter::builder().with_tonic().build()?),

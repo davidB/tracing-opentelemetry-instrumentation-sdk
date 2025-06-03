@@ -1,0 +1,25 @@
+[package]
+name = "bug_234_tls"
+version = "0.1.0"
+edition = "2021"
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+axum = { workspace = true, default-features = true }
+axum-tracing-opentelemetry = { path = "../../axum-tracing-opentelemetry" }
+tokio = { version = "1", features = ["full"] }
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "std"] }
+init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", features = [
+    "otlp",
+    "tracing_subscriber_ext",
+    "tls",
+] }
+tracing-opentelemetry-instrumentation-sdk = { path = "../../tracing-opentelemetry-instrumentation-sdk", features = [
+    "http",
+] }
+# opentelemetry = { version = "0.29.1", features = ["metrics"] }
