@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.2](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.28.1...init-tracing-opentelemetry-v0.28.2) - 2025-06-03
+
+### <!-- 1 -->Fixed
+
+- *(deps)* missing `tonic` dependency on `tls`
+
+### <!-- 3 -->Removed
+
+- remove deprecated sample from README
+
 ## [0.28.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.27.1...init-tracing-opentelemetry-v0.28.0) - 2025-03-31
 
 ### <!-- 2 -->Added
