@@ -1,7 +1,31 @@
+use opentelemetry::trace::TracerProvider;
 use opentelemetry_otlp::{ExporterBuildError, SpanExporter};
 use opentelemetry_sdk::{trace::SdkTracerProvider, trace::TracerProviderBuilder, Resource};
 #[cfg(feature = "tls")]
 use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
+
+/// On Drop of the `TracingGuard` instance,
+/// the wrapped Tracer Provider is force to flush and to shutdown (ignoring error).
+#[must_use = "Recommend holding with 'let _guard = ' pattern to ensure final traces are sent to the server"]
+pub struct TracingGuard {
+    tracer_provider: SdkTracerProvider,
+}
+
+impl TracingGuard {
+    /// the wrapped Tracer Provider
+    #[must_use]
+    pub fn tracer_provider(&self) -> &impl TracerProvider {
+        &self.tracer_provider
+    }
+}
+
+impl Drop for TracingGuard {
+    fn drop(&mut self) {
+        #[allow(unused_must_use)]
+        let _ = self.tracer_provider.force_flush();
+        let _ = self.tracer_provider.shutdown();
+    }
+}
 
 #[must_use]
 pub fn identity(v: TracerProviderBuilder) -> TracerProviderBuilder {
@@ -72,7 +96,10 @@ fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
 }
 
 #[allow(unused_mut)]
-fn infer_protocol(maybe_protocol: Option<&str>, maybe_endpoint: Option<&str>) -> Option<String> {
+pub(crate) fn infer_protocol(
+    maybe_protocol: Option<&str>,
+    maybe_endpoint: Option<&str>,
+) -> Option<String> {
     let mut maybe_protocol = match (maybe_protocol, maybe_endpoint) {
         (Some(protocol), _) => Some(protocol.to_string()),
         (None, Some(endpoint)) => {
