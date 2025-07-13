@@ -44,7 +44,7 @@ where
         .ok()
         .and_then(|var| var.parse::<u64>().ok())
         .map_or(Duration::from_secs(10), Duration::from_secs);
-    let temporality = env::var("OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY")
+    let temporality = env::var("OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE")
         .ok()
         .and_then(|var| match var.to_lowercase().as_str() {
             "delta" => Some(Temporality::Delta),
@@ -55,7 +55,7 @@ where
             },
         })
         .unwrap_or_default();
-    let export_interval = env::var("OTEL_EXPORTER_OTLP_METRICS_EXPORT_INTERVAL")
+    let export_interval = env::var("OTEL_METRIC_EXPORT_INTERVAL")
         .ok()
         .and_then(|var| var.parse::<u64>().ok())
         .map_or(Duration::from_secs(60), Duration::from_millis);
