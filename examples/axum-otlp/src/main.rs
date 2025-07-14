@@ -45,6 +45,7 @@ async fn health() -> impl IntoResponse {
 
 #[tracing::instrument]
 async fn index() -> impl IntoResponse {
+    tracing::info!(monotonic_counter.index = 1);
     let trace_id = find_current_trace_id();
     dbg!(&trace_id);
     //std::thread::sleep(std::time::Duration::from_secs(1));

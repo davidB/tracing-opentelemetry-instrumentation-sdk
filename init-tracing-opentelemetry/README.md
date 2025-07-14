@@ -17,9 +17,9 @@ async fn main() -> Result<(), axum::BoxError> {
 }
 ```
 
-The `init_subscribers` function returns a `TracingGuard` instance. Following the guard pattern, this struct provides no functions but, when dropped, ensures that any pending traces are sent before it exits. The syntax `let _guard` is suggested to ensure that Rust does not drop the struct until the application exits.
+The `init_subscribers` function returns a `OtelGuard` instance. Following the guard pattern, this struct provides no functions but, when dropped, ensures that any pending traces/metrics are sent before it exits. The syntax `let _guard` is suggested to ensure that Rust does not drop the struct until the application exits.
 
-To configure opentelemetry tracer & tracing, you can use the functions from `init_tracing_opentelemetry::tracing_subscriber_ext`, but they are very opinionated (and WIP to make them more customizable and friendly), so we recommend making your composition, but look at the code (to avoid some issue) and share your feedback.
+To configure opentelemetry tracer & tracing (& metrics), you can use the functions from `init_tracing_opentelemetry::tracing_subscriber_ext`, but they are very opinionated (and WIP to make them more customizable and friendly), so we recommend making your composition, but look at the code (to avoid some issue) and share your feedback.
 
 ```txt
 pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
@@ -160,6 +160,20 @@ spec:
 - check the code of your exporter and the integration with `tracing` (as subscriber's layer)
 - check the environment variables of opentelemetry `OTEL_EXPORTER...` and `OTEL_TRACES_SAMPLER` (values are logged on target `otel::setup` )
 - check that log target `otel::tracing` enable log level `trace` (or `info` if you use `tracing_level_info` feature) to generate span to send to opentelemetry collector.
+
+## Metrics
+
+To configure opentelemetry metrics, enable the `metrics` feature, this will initialize a `SdkMeterProvider`, set it globally and add a a [`MetricsLayer`](https://docs.rs/tracing-opentelemetry/latest/tracing_opentelemetry/struct.MetricsLayer.html) to allow using `tracing` events to produce metrics.
+
+The `opentelemetry_sdk` can still be used to produce metrics as well, since we configured the `SdkMeterProvider` globally, so any Axum/Tonic middleware that does not use `tracing` but directly [opentelemetry::metrics](https://docs.rs/opentelemetry/latest/opentelemetry/metrics/struct.Meter.html) will work.
+
+Configure the following set of environment variables to configure the metrics exporter (on top of those configured above):
+
+- `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` override to `OTEL_EXPORTER_OTLP_ENDPOINT` for the url of the exporter / collector
+- `OTEL_EXPORTER_OTLP_METRICS_PROTOCOL` override to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to auto-detection based on ENDPOINT port
+- `OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` to set the timeout for the connection to the exporter
+- `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` to set the temporality preference for the exporter
+- `OTEL_METRIC_EXPORT_INTERVAL` to set frequence of metrics export in __*milliseconds*__, defaults to 60s
 
 ## Changelog - History
 

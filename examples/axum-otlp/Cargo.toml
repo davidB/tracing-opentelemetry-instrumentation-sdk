@@ -13,6 +13,7 @@ axum-tracing-opentelemetry = { path = "../../axum-tracing-opentelemetry" }
 init-tracing-opentelemetry = { path = "../../init-tracing-opentelemetry", features = [
   "otlp",
   "tracing_subscriber_ext",
+  "metrics"
 ] }
 opentelemetry = { workspace = true }
 opentelemetry-otlp = { workspace = true, default-features = false, features = [
