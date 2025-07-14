@@ -2,6 +2,11 @@
 pub mod metrics;
 pub mod traces;
 
+#[cfg(feature = "metrics")]
+use opentelemetry::metrics::MeterProvider;
+#[cfg(feature = "metrics")]
+use opentelemetry_sdk::metrics::SdkMeterProvider;
+
 use opentelemetry::trace::TracerProvider;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 
@@ -10,8 +15,8 @@ use opentelemetry_sdk::trace::SdkTracerProvider;
 /// the wrapped Tracer/Meter Provider is force to flush and to shutdown (ignoring error).
 pub struct OtelGuard {
     #[cfg(feature = "metrics")]
-    pub meter_provider: opentelemetry_sdk::metrics::SdkMeterProvider,
-    pub tracer_provider: SdkTracerProvider,
+    pub(crate) meter_provider: SdkMeterProvider,
+    pub(crate) tracer_provider: SdkTracerProvider,
 }
 
 impl OtelGuard {
@@ -22,7 +27,7 @@ impl OtelGuard {
 
     #[cfg(feature = "metrics")]
     #[must_use]
-    pub fn meter_provider(&self) -> &impl opentelemetry::metrics::MeterProvider {
+    pub fn meter_provider(&self) -> &impl MeterProvider {
         &self.meter_provider
     }
 }

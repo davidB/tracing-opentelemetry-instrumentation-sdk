@@ -20,9 +20,7 @@ opentelemetry-otlp = { workspace = true, optional = true, features = [
   "trace",
 ] }
 # opentelemetry-resource-detectors = { workspace = true } //FIXME enable when available for opentelemetry >= 0.25
-opentelemetry-stdout = { workspace = true, features = [
-  "trace", "metrics"
-], optional = true }
+opentelemetry-stdout = { workspace = true, features = ["trace"], optional = true }
 opentelemetry-semantic-conventions = { workspace = true, optional = true }
 opentelemetry-zipkin = { workspace = true, features = [], optional = true }
 opentelemetry_sdk = { workspace = true }
@@ -74,4 +72,4 @@ tls = ["opentelemetry-otlp/tls", "tonic"]
 tls-roots = ["opentelemetry-otlp/tls-roots"]
 tls-webpki-roots = ["opentelemetry-otlp/tls-webpki-roots"]
 logfmt = ["dep:tracing-logfmt"]
-metrics = ["opentelemetry-otlp/metrics", "tracing-opentelemetry/metrics"]
+metrics = ["opentelemetry-otlp/metrics", "tracing-opentelemetry/metrics", "opentelemetry-stdout/metrics"]
