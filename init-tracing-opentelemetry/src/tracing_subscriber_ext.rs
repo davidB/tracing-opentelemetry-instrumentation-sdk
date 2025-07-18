@@ -1,11 +1,21 @@
+use opentelemetry::global;
 use opentelemetry::trace::TracerProvider;
+#[cfg(feature = "metrics")]
+use opentelemetry_sdk::metrics::SdkMeterProvider;
 use opentelemetry_sdk::trace::{SdkTracerProvider, Tracer};
 use tracing::{info, level_filters::LevelFilter, Subscriber};
+#[cfg(feature = "metrics")]
+use tracing_opentelemetry::MetricsLayer;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, registry::LookupSpan, Layer};
 
-use crate::otlp::OtelGuard;
-use crate::Error;
+use crate::{
+    init_propagator, //stdio,
+    otlp,
+    otlp::OtelGuard,
+    resource::DetectResource,
+    Error,
+};
 
 #[cfg(not(feature = "logfmt"))]
 #[must_use]
@@ -81,16 +91,35 @@ pub fn build_level_filter_layer(log_directives: &str) -> Result<EnvFilter, Error
         .add_directive(directive_to_allow_otel_trace))
 }
 
-pub fn build_otel_layer<S>() -> Result<(OpenTelemetryLayer<S, Tracer>, SdkTracerProvider), Error>
+pub fn regiter_otel_layers<S>(
+    subscriber: S,
+) -> Result<(impl Subscriber + for<'span> LookupSpan<'span>, OtelGuard), Error>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
-    use crate::{
-        init_propagator, //stdio,
-        otlp,
-        resource::DetectResource,
-    };
-    use opentelemetry::global;
+    let (trace_layer, tracer_provider) = build_tracer_layer()?;
+    let subscriber = subscriber.with(trace_layer);
+
+    #[cfg(feature = "metrics")]
+    {
+        let (metrics_layer, meter_provider) = build_metrics_layer()?;
+        let subscriber = subscriber.with(metrics_layer);
+        Ok((
+            subscriber,
+            OtelGuard {
+                meter_provider,
+                tracer_provider,
+            },
+        ))
+    }
+    #[cfg(not(feature = "metrics"))]
+    Ok((subscriber, OtelGuard { tracer_provider }))
+}
+
+pub fn build_tracer_layer<S>() -> Result<(OpenTelemetryLayer<S, Tracer>, SdkTracerProvider), Error>
+where
+    S: Subscriber + for<'span> LookupSpan<'span>,
+{
     let otel_rsrc = DetectResource::default()
         //.with_fallback_service_name(env!("CARGO_PKG_NAME"))
         //.with_fallback_service_version(env!("CARGO_PKG_VERSION"))
@@ -113,6 +142,18 @@ where
     Ok((layer, tracer_provider))
 }
 
+#[cfg(feature = "metrics")]
+pub fn build_metrics_layer<S>() -> Result<(MetricsLayer<S>, SdkMeterProvider), Error>
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+{
+    let otel_rsrc = DetectResource::default().build();
+    let meter_provider = otlp::metrics::init_meterprovider(otel_rsrc, otlp::metrics::identity)?;
+    global::set_meter_provider(meter_provider.clone());
+    let layer = MetricsLayer::new(meter_provider.clone());
+    Ok((layer, meter_provider))
+}
+
 pub fn init_subscribers() -> Result<OtelGuard, Error> {
     init_subscribers_and_loglevel("")
 }
@@ -126,30 +167,11 @@ pub fn init_subscribers_and_loglevel(log_directives: &str) -> Result<OtelGuard, 
     let _guard = tracing::subscriber::set_default(subscriber);
     info!("init logging & tracing");
 
-    let (trace_layer, tracer_provider) = build_otel_layer()?;
-
-    #[cfg(not(feature = "metrics"))]
-    {
-        let subscriber = tracing_subscriber::registry()
-            .with(trace_layer)
-            .with(build_level_filter_layer(log_directives)?)
-            .with(build_logger_text());
-        tracing::subscriber::set_global_default(subscriber)?;
-        Ok(OtelGuard { tracer_provider })
-    }
-    #[cfg(feature = "metrics")]
-    {
-        let (metrics_layer, meter_provider) = crate::otlp::metrics::build_metrics_layer()?;
-        info!("init metrics");
-        let subscriber = tracing_subscriber::registry()
-            .with(metrics_layer)
-            .with(trace_layer)
-            .with(build_level_filter_layer(log_directives)?)
-            .with(build_logger_text());
-        tracing::subscriber::set_global_default(subscriber)?;
-        Ok(OtelGuard {
-            meter_provider,
-            tracer_provider,
-        })
-    }
+    let subscriber = tracing_subscriber::registry();
+    let (subscriber, otel_guard) = regiter_otel_layers(subscriber)?;
+    let subscriber = subscriber
+        .with(build_level_filter_layer(log_directives)?)
+        .with(build_logger_text());
+    tracing::subscriber::set_global_default(subscriber)?;
+    Ok(otel_guard)
 }

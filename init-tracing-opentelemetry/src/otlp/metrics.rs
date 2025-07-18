@@ -1,7 +1,4 @@
 use super::infer_protocol;
-use crate::resource::DetectResource;
-use crate::Error;
-use opentelemetry::global;
 use opentelemetry_otlp::{ExporterBuildError, MetricExporter, WithExportConfig};
 use opentelemetry_sdk::metrics::{
     MeterProviderBuilder, PeriodicReader, SdkMeterProvider, Temporality,
@@ -9,22 +6,8 @@ use opentelemetry_sdk::metrics::{
 use opentelemetry_sdk::Resource;
 use std::env;
 use std::time::Duration;
-use tracing::Subscriber;
-use tracing_opentelemetry::MetricsLayer;
-use tracing_subscriber::registry::LookupSpan;
 #[cfg(feature = "tls")]
 use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
-
-pub fn build_metrics_layer<S>() -> Result<(MetricsLayer<S>, SdkMeterProvider), Error>
-where
-    S: Subscriber + for<'a> LookupSpan<'a>,
-{
-    let otel_rsrc = DetectResource::default().build();
-    let meter_provider = init_meterprovider(otel_rsrc, identity)?;
-    global::set_meter_provider(meter_provider.clone());
-    let layer = tracing_opentelemetry::MetricsLayer::new(meter_provider.clone());
-    Ok((layer, meter_provider))
-}
 
 #[must_use]
 pub fn identity(v: MeterProviderBuilder) -> MeterProviderBuilder {
