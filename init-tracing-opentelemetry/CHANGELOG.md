@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.29.0...init-tracing-opentelemetry-v0.30.0) - 2025-07-18
+
+### <!-- 2 -->Added
+
+- add support for Opentelemetry Metrics (#249)
+
 ## [0.28.2](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.28.1...init-tracing-opentelemetry-v0.28.2) - 2025-06-03
 
 ### <!-- 1 -->Fixed
