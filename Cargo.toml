@@ -41,7 +41,7 @@ opentelemetry-zipkin = { version = "0.30", default-features = false }
 opentelemetry-otlp = { version = "0.30", default-features = false }
 opentelemetry-proto = { version = "0.30", default-features = false }
 opentelemetry-stdout = { version = "0.30" }
-rstest = "0.25"
+rstest = "0.26"
 tokio = { version = "1", default-features = false }
 tokio-stream = { version = "0.1", default-features = false }
 tonic = { version = "0.13", default-features = false } #should be sync with opentelemetry-proto
