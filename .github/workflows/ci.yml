@@ -33,7 +33,7 @@ jobs:
       RUSTC_WRAPPER: "sccache"
     steps:
       - uses: actions/checkout@v5
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@v3
       - uses: mozilla-actions/sccache-action@v0.0.9
       - run: just check
       - run: just lint
