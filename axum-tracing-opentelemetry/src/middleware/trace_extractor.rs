@@ -32,18 +32,21 @@
 //! ```
 //!
 
-use axum::extract::MatchedPath;
+use axum::extract::{ConnectInfo, MatchedPath};
 use http::{Request, Response};
 use pin_project_lite::pin_project;
 use std::{
     error::Error,
     future::Future,
+    net::SocketAddr,
     pin::Pin,
     task::{Context, Poll},
 };
 use tower::{Layer, Service};
 use tracing::Span;
-use tracing_opentelemetry_instrumentation_sdk::http as otel_http;
+use tracing_opentelemetry_instrumentation_sdk::http::{
+    self as otel_http, extract_client_ip_from_headers,
+};
 
 #[deprecated(
     since = "0.12.0",
@@ -65,15 +68,35 @@ pub type Filter = fn(&str) -> bool;
 #[derive(Default, Debug, Clone)]
 pub struct OtelAxumLayer {
     filter: Option<Filter>,
+    try_extract_client_ip: bool,
 }
 
 // add a builder like api
 impl OtelAxumLayer {
     #[must_use]
     pub fn filter(self, filter: Filter) -> Self {
-        OtelAxumLayer {
-            filter: Some(filter),
-        }
+        let mut me = self;
+        me.filter = Some(filter);
+        me
+    }
+
+    /// Enable or disable (default) the extraction of client's ip.
+    /// Extraction from (in order):
+    ///
+    /// 1. http header 'Forwarded'
+    /// 2. http header `X-Forwarded-For`
+    /// 3. socket connection ip, use the `axum::extract::ConnectionInfo` (see [`Router::into_make_service_with_connect_info`] for more details)
+    /// 4. empty (failed to extract the information)
+    ///
+    /// The extracted value could an ip v4, ip v6, a string (as `Forwarded` can use label or hide the client).
+    /// The extracted value is stored it as `client.address` in the span/trace
+    ///
+    /// [`Router::into_make_service_with_connect_info`]: axum::routing::Router::into_make_service_with_connect_info
+    #[must_use]
+    pub fn try_extract_client_ip(self, enable: bool) -> Self {
+        let mut me = self;
+        me.try_extract_client_ip = enable;
+        me
     }
 }
 
@@ -84,6 +107,7 @@ impl<S> Layer<S> for OtelAxumLayer {
         OtelAxumService {
             inner,
             filter: self.filter,
+            try_extract_client_ip: self.try_extract_client_ip,
         }
     }
 }
@@ -92,6 +116,7 @@ impl<S> Layer<S> for OtelAxumLayer {
 pub struct OtelAxumService<S> {
     inner: S,
     filter: Option<Filter>,
+    try_extract_client_ip: bool,
 }
 
 impl<S, B, B2> Service<Request<B>> for OtelAxumService<S>
@@ -115,20 +140,26 @@ where
         use tracing_opentelemetry::OpenTelemetrySpanExt;
         let req = req;
         let span = if self.filter.map_or(true, |f| f(req.uri().path())) {
-            let span = otel_http::http_server::make_span_from_request(&req);
             let route = http_route(&req);
             let method = otel_http::http_method(req.method());
-            // let client_ip = parse_x_forwarded_for(req.headers())
-            //     .or_else(|| {
-            //         req.extensions()
-            //             .get::<ConnectInfo<SocketAddr>>()
-            //             .map(|ConnectInfo(client_ip)| Cow::from(client_ip.to_string()))
-            //     })
-            //     .unwrap_or_default();
+            let client_ip = if self.try_extract_client_ip {
+                extract_client_ip_from_headers(req.headers())
+                    .map(ToString::to_string)
+                    .or_else(|| {
+                        req.extensions()
+                            .get::<ConnectInfo<SocketAddr>>()
+                            .map(|ConnectInfo(client_ip)| client_ip.to_string())
+                    })
+            } else {
+                None
+            };
+
+            let span = otel_http::http_server::make_span_from_request(&req);
             span.record("http.route", route);
             span.record("otel.name", format!("{method} {route}").trim());
-            // span.record("trace_id", find_trace_id_from_tracing(&span));
-            // span.record("client.address", client_ip);
+            if let Some(client_ip) = client_ip {
+                span.record("client.address", client_ip);
+            }
             span.set_parent(otel_http::extract_context(req.headers()));
             span
         } else {
