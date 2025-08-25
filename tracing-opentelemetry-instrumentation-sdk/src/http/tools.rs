@@ -27,22 +27,49 @@ pub fn extract_service_method(uri: &Uri) -> (&str, &str) {
     (service, method)
 }
 
-fn parse_x_forwarded_for(headers: &HeaderMap) -> Option<&str> {
+#[must_use]
+// From [X-Forwarded-For - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For)
+// > If a request goes through multiple proxies, the IP addresses of each successive proxy is listed.
+// > This means that, given well-behaved client and proxies,
+// > the rightmost IP address is the IP address of the most recent proxy and
+// > the leftmost IP address is the IP address of the originating client.
+pub fn extract_client_ip_from_headers(headers: &HeaderMap) -> Option<&str> {
+    extract_client_ip_from_forwarded(headers)
+        .or_else(|| extract_client_ip_from_x_forwarded_for(headers))
+}
+
+#[must_use]
+// From [X-Forwarded-For - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For)
+// > If a request goes through multiple proxies, the IP addresses of each successive proxy is listed.
+// > This means that, given well-behaved client and proxies,
+// > the rightmost IP address is the IP address of the most recent proxy and
+// > the leftmost IP address is the IP address of the originating client.
+fn extract_client_ip_from_x_forwarded_for(headers: &HeaderMap) -> Option<&str> {
     let value = headers.get("x-forwarded-for")?;
     let value = value.to_str().ok()?;
     let mut ips = value.split(',');
     Some(ips.next()?.trim())
 }
 
-#[inline]
-pub fn client_ip<B>(req: &http::Request<B>) -> &str {
-    parse_x_forwarded_for(req.headers())
-        // .or_else(|| {
-        //     req.extensions()
-        //         .get::<ConnectInfo<SocketAddr>>()
-        //         .map(|ConnectInfo(client_ip)| Cow::from(client_ip.to_string()))
-        // })
-        .unwrap_or_default()
+#[must_use]
+// see [Forwarded header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Forwarded)
+fn extract_client_ip_from_forwarded(headers: &HeaderMap) -> Option<&str> {
+    let value = headers.get("forwarded")?;
+    let value = value.to_str().ok()?;
+    value
+        .split(';')
+        .flat_map(|directive| directive.split(','))
+        // select the left/first "for" key
+        .find_map(|directive| directive.trim().strip_prefix("for="))
+        // ipv6 are enclosed into `["..."]`
+        // string are enclosed into `"..."`
+        .map(|directive| {
+            directive
+                .trim_start_matches('[')
+                .trim_end_matches(']')
+                .trim_matches('"')
+                .trim()
+        })
 }
 
 #[inline]
@@ -127,5 +154,58 @@ mod tests {
     fn test_extract_url_scheme(#[case] input: &str, #[case] expected: &str) {
         let uri: Uri = input.parse().unwrap();
         assert!(url_scheme(&uri) == expected);
+    }
+
+    #[rstest]
+    #[case("", "")]
+    #[case(
+        "2001:db8:85a3:8d3:1319:8a2e:370:7348",
+        "2001:db8:85a3:8d3:1319:8a2e:370:7348"
+    )]
+    #[case("203.0.113.195", "203.0.113.195")]
+    #[case("203.0.113.195,10.10.10.10", "203.0.113.195")]
+    #[case("203.0.113.195, 2001:db8:85a3:8d3:1319:8a2e:370:7348", "203.0.113.195")]
+    fn test_extract_client_ip_from_x_forwarded_for(#[case] input: &str, #[case] expected: &str) {
+        let mut headers = HeaderMap::new();
+        if !input.is_empty() {
+            headers.insert("X-Forwarded-For", input.parse().unwrap());
+        }
+
+        let expected = if expected.is_empty() {
+            None
+        } else {
+            Some(expected)
+        };
+        assert!(extract_client_ip_from_x_forwarded_for(&headers) == expected);
+    }
+
+    #[rstest]
+    #[case("", "")]
+    #[case(
+        "for=[\"2001:db8:85a3:8d3:1319:8a2e:370:7348\"]",
+        "2001:db8:85a3:8d3:1319:8a2e:370:7348"
+    )]
+    #[case("for=203.0.113.195", "203.0.113.195")]
+    #[case("for=203.0.113.195, for=10.10.10.10", "203.0.113.195")]
+    #[case(
+        "for=203.0.113.195, for=[\"2001:db8:85a3:8d3:1319:8a2e:370:7348\"]",
+        "203.0.113.195"
+    )]
+    #[case("for=\"_mdn\"", "_mdn")]
+    #[case("for=\"secret\"", "secret")]
+    #[case("for=203.0.113.195;proto=http;by=203.0.113.43", "203.0.113.195")]
+    #[case("proto=http;by=203.0.113.43", "")]
+    fn test_extract_client_ip_from_forwarded(#[case] input: &str, #[case] expected: &str) {
+        let mut headers = HeaderMap::new();
+        if !input.is_empty() {
+            headers.insert("Forwarded", input.parse().unwrap());
+        }
+
+        let expected = if expected.is_empty() {
+            None
+        } else {
+            Some(expected)
+        };
+        assert!(extract_client_ip_from_forwarded(&headers) == expected);
     }
 }
