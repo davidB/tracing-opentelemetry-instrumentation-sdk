@@ -1,4 +1,18 @@
 # Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.30.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.29.1...tracing-opentelemetry-instrumentation-sdk-v0.30.0) - 2025-08-25
+
+### <!-- 2 -->Added
+
+- *(axum)* optional extraction of `client.address` (former `client_ip`) from http headers or socket's info
+# Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
