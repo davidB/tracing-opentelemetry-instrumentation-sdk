@@ -44,7 +44,7 @@ lint: _install_rustfmt_clippy
     cargo clippy --workspace --all-features --all-targets -- --deny warnings --allow deprecated --allow unknown-lints
 
 megalinter:
-    @just _container run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "megalinter/megalinter:v7"
+    @just _container run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "oxsecurity/megalinter-documentation:v8"
 
 # Launch tests
 test: _install_cargo-nextest _install_cargo-insta
