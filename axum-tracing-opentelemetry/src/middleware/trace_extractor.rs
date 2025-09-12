@@ -139,9 +139,9 @@ where
     fn call(&mut self, req: Request<B>) -> Self::Future {
         use tracing_opentelemetry::OpenTelemetrySpanExt;
         let req = req;
-        let span = if self.filter.map_or(true, |f| f(req.uri().path())) {
+        let span = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let route = http_route(&req);
-            let method = otel_http::http_method(req.method());
+            let method = req.method();
             let client_ip = if self.try_extract_client_ip {
                 extract_client_ip_from_headers(req.headers())
                     .map(ToString::to_string)

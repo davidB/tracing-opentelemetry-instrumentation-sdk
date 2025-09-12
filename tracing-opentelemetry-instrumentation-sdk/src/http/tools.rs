@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use http::{HeaderMap, Method, Uri, Version};
+use http::{HeaderMap, Uri, Version};
 use opentelemetry::Context;
 
 use super::opentelemetry_http::{HeaderExtractor, HeaderInjector};
@@ -76,23 +76,6 @@ fn extract_client_ip_from_forwarded(headers: &HeaderMap) -> Option<&str> {
 pub fn http_target(uri: &Uri) -> &str {
     uri.path_and_query()
         .map_or("", http::uri::PathAndQuery::as_str)
-}
-
-#[inline]
-#[must_use]
-pub fn http_method(method: &Method) -> Cow<'static, str> {
-    match method {
-        &Method::CONNECT => "CONNECT".into(),
-        &Method::DELETE => "DELETE".into(),
-        &Method::GET => "GET".into(),
-        &Method::HEAD => "HEAD".into(),
-        &Method::OPTIONS => "OPTIONS".into(),
-        &Method::PATCH => "PATCH".into(),
-        &Method::POST => "POST".into(),
-        &Method::PUT => "PUT".into(),
-        &Method::TRACE => "TRACE".into(),
-        other => other.to_string().into(),
-    }
 }
 
 #[inline]
