@@ -79,7 +79,7 @@ where
         // let clone = self.inner.clone();
         // let mut inner = std::mem::replace(&mut self.inner, clone);
         let req = req;
-        let span = if self.filter.map_or(true, |f| f(req.uri().path())) {
+        let span = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let span = otel_http::grpc_server::make_span_from_request(&req);
             span.set_parent(otel_http::extract_context(req.headers()));
             span

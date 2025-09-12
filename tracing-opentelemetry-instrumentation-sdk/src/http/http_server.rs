@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use crate::http::{http_flavor, http_host, http_method, url_scheme, user_agent};
+use crate::http::{http_flavor, http_host, url_scheme, user_agent};
 use crate::otel_trace_span;
 use crate::span_type::SpanType;
 use tracing::field::Empty;
@@ -9,7 +9,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
     // [semantic-conventions/.../http-spans.md](https://github.com/open-telemetry/semantic-conventions/blob/v1.25.0/docs/http/http-spans.md)
     // [semantic-conventions/.../general/attributes.md](https://github.com/open-telemetry/semantic-conventions/blob/v1.25.0/docs/general/attributes.md)
     // Can not use const or opentelemetry_semantic_conventions::trace::* for name of records
-    let http_method = http_method(req.method());
+    let http_method = req.method();
     otel_trace_span!(
         "HTTP request",
         http.request.method = %http_method,
@@ -29,7 +29,7 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
         trace_id = Empty, // to set on response
         request_id = Empty, // to set
         exception.message = Empty, // to set on response
-        "span.type" = SpanType::Web.to_string(), // non-official open-telemetry key, only supported by Datadog
+        "span.type" = %SpanType::Web, // non-official open-telemetry key, only supported by Datadog
     )
 }
 
