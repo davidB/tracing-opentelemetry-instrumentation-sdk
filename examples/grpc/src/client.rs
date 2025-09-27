@@ -13,7 +13,8 @@ pub mod generated {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // very opinionated init of tracing, look as is source to make your own
-    let _guard = init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()
+    let _guard = init_tracing_opentelemetry::TracingConfig::production()
+        .init_subscriber()
         .expect("init subscribers");
 
     // let channel = Channel::from_static("http://[::1]:50051").connect().await?;

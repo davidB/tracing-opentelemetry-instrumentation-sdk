@@ -3,13 +3,14 @@ use opentelemetry::trace::TracerProvider;
 #[cfg(feature = "metrics")]
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 use opentelemetry_sdk::trace::{SdkTracerProvider, Tracer};
-use tracing::{info, level_filters::LevelFilter, Subscriber};
+use tracing::{level_filters::LevelFilter, Subscriber};
 #[cfg(feature = "metrics")]
 use tracing_opentelemetry::MetricsLayer;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, registry::LookupSpan, Layer};
 
 use crate::{
+    config::TracingConfig,
     init_propagator, //stdio,
     otlp,
     otlp::OtelGuard,
@@ -17,40 +18,20 @@ use crate::{
     Error,
 };
 
-#[cfg(not(feature = "logfmt"))]
 #[must_use]
+#[deprecated(
+    since = "0.31.0",
+    note = "Use `TracingConfig::default().build_layer()` instead"
+)]
+/// # Panics
+/// Panics if the logger layer cannot be built.
 pub fn build_logger_text<S>() -> Box<dyn Layer<S> + Send + Sync + 'static>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
-    use tracing_subscriber::fmt::format::FmtSpan;
-    if cfg!(debug_assertions) {
-        Box::new(
-            tracing_subscriber::fmt::layer()
-                .pretty()
-                .with_line_number(true)
-                .with_thread_names(true)
-                .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-                .with_timer(tracing_subscriber::fmt::time::uptime()),
-        )
-    } else {
-        Box::new(
-            tracing_subscriber::fmt::layer()
-                .json()
-                //.with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-                .with_timer(tracing_subscriber::fmt::time::uptime()),
-        )
-    }
-}
-
-#[cfg(feature = "logfmt")]
-#[must_use]
-pub fn build_logger_text<S>() -> Box<dyn Layer<S> + Send + Sync + 'static>
-where
-    S: Subscriber + for<'a> LookupSpan<'a>,
-{
-    //FIXME tracing_logfmt use an old version of crates, how to inject trace_id and span_id into log?
-    Box::new(tracing_logfmt::layer())
+    TracingConfig::default()
+        .build_layer()
+        .expect("Failed to build logger layer")
 }
 
 #[must_use]
@@ -154,24 +135,28 @@ where
     Ok((layer, meter_provider))
 }
 
+/// Initialize subscribers with default configuration
+///
+/// This is a convenience function that uses production-ready defaults.
+/// For more control, use `TracingConfig::production().init_subscriber()`.
+#[deprecated(
+    since = "0.31.0",
+    note = "Use `TracingConfig::production()...` instead"
+)]
 pub fn init_subscribers() -> Result<OtelGuard, Error> {
-    init_subscribers_and_loglevel("")
+    TracingConfig::production().init_subscriber()
 }
 
-/// see [`build_level_filter_layer`] for the syntax of `log_directives`
+/// Initialize subscribers with custom log directives
+///
+/// See [`build_level_filter_layer`] for the syntax of `log_directives`.
+/// For more control, use `TracingConfig::production().with_log_directives(log_directives).init_subscriber()`.
+#[deprecated(
+    since = "0.31.0",
+    note = "Use `TracingConfig::production().with_log_directives(log_directives)...` instead"
+)]
 pub fn init_subscribers_and_loglevel(log_directives: &str) -> Result<OtelGuard, Error> {
-    //setup a temporary subscriber to log output during setup
-    let subscriber = tracing_subscriber::registry()
-        .with(build_level_filter_layer(log_directives)?)
-        .with(build_logger_text());
-    let _guard = tracing::subscriber::set_default(subscriber);
-    info!("init logging & tracing");
-
-    let subscriber = tracing_subscriber::registry();
-    let (subscriber, otel_guard) = regiter_otel_layers(subscriber)?;
-    let subscriber = subscriber
-        .with(build_level_filter_layer(log_directives)?)
-        .with(build_logger_text());
-    tracing::subscriber::set_global_default(subscriber)?;
-    Ok(otel_guard)
+    TracingConfig::production()
+        .with_log_directives(log_directives)
+        .init_subscriber()
 }

@@ -5,21 +5,65 @@
 
 A set of helpers to initialize (and more) tracing + opentelemetry (compose your own or use opinionated preset)
 
-```txt
+```rust
 #[tokio::main]
-async fn main() -> Result<(), axum::BoxError> {
-    // very opinionated init of tracing, look as is source to compose your own
-    let _guard = init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Simple preset
+    let _guard = init_tracing_opentelemetry::TracingConfig::production().init_subscriber()?;
 
-    ...;
+    //...
 
     Ok(())
 }
 ```
 
-The `init_subscribers` function returns a `OtelGuard` instance. Following the guard pattern, this struct provides no functions but, when dropped, ensures that any pending traces/metrics are sent before it exits. The syntax `let _guard` is suggested to ensure that Rust does not drop the struct until the application exits.
+```rust
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // custom configuration
+    let _guard = init_tracing_opentelemetry::TracingConfig::default()
+        .with_json_format()
+        .with_stderr()
+        .with_log_directives("debug")
+        .init_subscriber()?;
 
-To configure opentelemetry tracer & tracing (& metrics), you can use the functions from `init_tracing_opentelemetry::tracing_subscriber_ext`, but they are very opinionated (and WIP to make them more customizable and friendly), so we recommend making your composition, but look at the code (to avoid some issue) and share your feedback.
+    //...
+
+    Ok(())
+}
+```
+
+The `init_subscriber()` function returns an `OtelGuard` instance. Following the guard pattern, this struct provides no functions but, when dropped, ensures that any pending traces/metrics are sent before it exits. The syntax `let _guard` is suggested to ensure that Rust does not drop the struct until the application exits.
+
+## Configuration Options
+
+### Presets
+
+- `TracingConfig::development()` - Pretty format, stderr, with debug info
+- `TracingConfig::production()` - JSON format, stdout, minimal metadata
+- `TracingConfig::debug()` - Full verbosity with all span events
+- `TracingConfig::minimal()` - Compact format, no OpenTelemetry
+- `TracingConfig::testing()` - Minimal output for tests
+
+### Custom Configuration
+
+```rust,no_run
+use init_tracing_opentelemetry::TracingConfig;
+
+TracingConfig::default()
+    .with_pretty_format()           // or .with_json_format(), .with_compact_format()
+    .with_stderr()                  // or .with_stdout(), .with_file(path)
+    .with_log_directives("debug")   // Custom log levels
+    .with_line_numbers(true)        // Include line numbers
+    .with_thread_names(true)        // Include thread names
+    .with_otel(true)                // Enable OpenTelemetry
+    .init_subscriber()
+    .expect("valid tracing configuration");
+```
+
+### Legacy API (deprecated)
+
+For backward compatibility, the old API is still available:
 
 ```txt
 pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
@@ -150,12 +194,12 @@ spec:
 
 - check you only have a single version of opentelemtry (could be part of your CI/build), use `cargo-deny` or `cargo tree`
 
-    ```sh
-    # Check only one version of opentelemetry should be used
-    # else issue with setup of global (static variable)
-    # check_single_version_opentelemtry:
-    cargo tree -i opentelemetry
-    ```
+  ```sh
+  # Check only one version of opentelemetry should be used
+  # else issue with setup of global (static variable)
+  # check_single_version_opentelemtry:
+  cargo tree -i opentelemetry
+  ```
 
 - check the code of your exporter and the integration with `tracing` (as subscriber's layer)
 - check the environment variables of opentelemetry `OTEL_EXPORTER...` and `OTEL_TRACES_SAMPLER` (values are logged on target `otel::setup` )
@@ -173,7 +217,7 @@ Configure the following set of environment variables to configure the metrics ex
 - `OTEL_EXPORTER_OTLP_METRICS_PROTOCOL` override to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to auto-detection based on ENDPOINT port
 - `OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` to set the timeout for the connection to the exporter
 - `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` to set the temporality preference for the exporter
-- `OTEL_METRIC_EXPORT_INTERVAL` to set frequence of metrics export in __*milliseconds*__, defaults to 60s
+- `OTEL_METRIC_EXPORT_INTERVAL` to set frequence of metrics export in **_milliseconds_**, defaults to 60s
 
 ## Changelog - History
 

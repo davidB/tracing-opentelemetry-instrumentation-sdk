@@ -13,6 +13,10 @@ use opentelemetry::propagation::{TextMapCompositePropagator, TextMapPropagator};
 use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
 use opentelemetry_sdk::trace::TraceError;
 
+#[cfg(feature = "tracing_subscriber_ext")]
+pub mod config;
+#[cfg(feature = "tracing_subscriber_ext")]
+pub mod formats;
 #[cfg(feature = "otlp")]
 pub mod otlp;
 #[cfg(feature = "tracer")]
@@ -113,6 +117,16 @@ fn propagator_from_string(
         ))),
     }
 }
+
+// Re-export the new configuration API for easier access
+#[cfg(feature = "tracing_subscriber_ext")]
+pub use config::{FeatureSet, LevelConfig, LogFormat, OtelConfig, TracingConfig, WriterConfig};
+
+#[cfg(feature = "tracing_subscriber_ext")]
+pub use formats::{CompactLayerBuilder, JsonLayerBuilder, LayerBuilder, PrettyLayerBuilder};
+
+#[cfg(all(feature = "tracing_subscriber_ext", feature = "logfmt"))]
+pub use formats::LogfmtLayerBuilder;
 
 #[cfg(test)]
 #[cfg(feature = "tracer")]

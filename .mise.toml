@@ -16,6 +16,7 @@ protoc = '32.1'
 "aqua:cargo-bins/cargo-binstall" = "1"
 
 [tasks.format]
+alias = "fmt"
 description = "Format the code and sort dependencies"
 run = [
   "cargo fmt",

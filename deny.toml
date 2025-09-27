@@ -213,8 +213,8 @@ skip = [
   # "matchit@0.7",   # tonic depend on axum 0.7
   # "tower@0.4",     # axum 0.7 use tower 0.5, but hyper still use 0.4
   # "sync_wrapper",   # axum direct and transive dependency use multiple version
-  "regex-syntax",
-  "regex-automata",
+  # "regex-syntax",
+  # "regex-automata",
   # "indexmap",
   # "hermit-abi",
   # "rustls-native-certs",

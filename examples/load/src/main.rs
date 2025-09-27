@@ -7,7 +7,7 @@ use tracing_opentelemetry_instrumentation_sdk::otel_trace_span;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // very opinionated init of tracing, look as is source to make your own
-    let _guard = init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+    let _guard = init_tracing_opentelemetry::TracingConfig::production().init_subscriber()?;
     let mut stats = memory_stats();
     if stats.is_none() {
         eprintln!("Couldn't get the current memory usage :(");
