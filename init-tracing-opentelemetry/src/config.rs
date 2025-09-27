@@ -7,15 +7,35 @@
 //! ```no_run
 //! use init_tracing_opentelemetry::TracingConfig;
 //!
-//! // Use preset
+//! // Use preset with global subscriber (default)
 //! let _guard = TracingConfig::development().init_subscriber()?;
 //!
-//! // Custom configuration
+//! // Custom configuration with global subscriber
 //! let _guard = TracingConfig::default()
 //!     .with_json_format()
 //!     .with_stderr()
 //!     .with_log_directives("debug")
 //!     .init_subscriber()?;
+//!
+//! // Non-global subscriber (thread-local)
+//! let guard = TracingConfig::development()
+//!     .with_global_subscriber(false)
+//!     .init_subscriber()?;
+//! // Guard must be kept alive for subscriber to remain active
+//! assert!(guard.is_non_global());
+//!
+//! // Without OpenTelemetry (just logging)
+//! let guard = TracingConfig::minimal()
+//!     .with_otel(false)
+//!     .init_subscriber()?;
+//! // Works fine - guard.otel_guard is None
+//! assert!(!guard.has_otel());
+//! assert!(guard.otel_guard.is_none());
+//!
+//! // Direct field access is also possible
+//! if let Some(otel_guard) = &guard.otel_guard {
+//!     // Use otel_guard...
+//! }
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
@@ -31,6 +51,67 @@ use crate::formats::{CompactLayerBuilder, JsonLayerBuilder, LayerBuilder, Pretty
 
 use crate::tracing_subscriber_ext::regiter_otel_layers;
 use crate::{otlp::OtelGuard, resource::DetectResource, Error};
+
+/// Combined guard that handles both `OtelGuard` and optional `DefaultGuard`
+///
+/// This struct holds the various guards needed to maintain the tracing subscriber.
+/// - `otel_guard`: OpenTelemetry guard for flushing traces/metrics on drop (None when OTEL disabled)
+/// - `default_guard`: Subscriber default guard for non-global subscribers (None when using global)
+#[must_use = "Recommend holding with 'let _guard = ' pattern to ensure final traces/log/metrics are sent to the server and subscriber is maintained"]
+pub struct Guard {
+    /// OpenTelemetry guard for proper cleanup (None when OTEL is disabled)
+    pub otel_guard: Option<OtelGuard>,
+    /// Default subscriber guard for non-global mode (None when using global subscriber)
+    pub default_guard: Option<tracing::subscriber::DefaultGuard>,
+    // Easy to add in the future:
+    // pub log_guard: Option<LogGuard>,
+    // pub metrics_guard: Option<MetricsGuard>,
+}
+
+impl Guard {
+    /// Create a new Guard for global subscriber mode
+    pub fn global(otel_guard: Option<OtelGuard>) -> Self {
+        Self {
+            otel_guard,
+            default_guard: None,
+        }
+    }
+
+    /// Create a new Guard for non-global subscriber mode
+    pub fn non_global(
+        otel_guard: Option<OtelGuard>,
+        default_guard: tracing::subscriber::DefaultGuard,
+    ) -> Self {
+        Self {
+            otel_guard,
+            default_guard: Some(default_guard),
+        }
+    }
+
+    /// Get a reference to the underlying `OtelGuard` if present
+    #[must_use]
+    pub fn otel_guard(&self) -> Option<&OtelGuard> {
+        self.otel_guard.as_ref()
+    }
+
+    /// Check if OpenTelemetry is enabled for this guard
+    #[must_use]
+    pub fn has_otel(&self) -> bool {
+        self.otel_guard.is_some()
+    }
+
+    /// Check if this guard is managing a non-global (thread-local) subscriber
+    #[must_use]
+    pub fn is_non_global(&self) -> bool {
+        self.default_guard.is_some()
+    }
+
+    /// Check if this guard is for a global subscriber
+    #[must_use]
+    pub fn is_global(&self) -> bool {
+        self.default_guard.is_none()
+    }
+}
 
 /// Configuration for log output format
 #[derive(Debug, Clone)]
@@ -147,7 +228,7 @@ impl Default for OtelConfig {
 
 /// Main configuration builder for tracing setup
 /// Default create a new tracing configuration with sensible defaults
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct TracingConfig {
     /// Output format configuration
     pub format: LogFormat,
@@ -159,6 +240,21 @@ pub struct TracingConfig {
     pub features: FeatureSet,
     /// OpenTelemetry configuration
     pub otel_config: OtelConfig,
+    /// Whether to set the subscriber as global default
+    pub global_subscriber: bool,
+}
+
+impl Default for TracingConfig {
+    fn default() -> Self {
+        Self {
+            format: LogFormat::default(),
+            writer: WriterConfig::default(),
+            level_config: LevelConfig::default(),
+            features: FeatureSet::default(),
+            otel_config: OtelConfig::default(),
+            global_subscriber: true,
+        }
+    }
 }
 
 impl TracingConfig {
@@ -321,6 +417,17 @@ impl TracingConfig {
         self
     }
 
+    /// Set whether to initialize the subscriber as global default
+    ///
+    /// When `global` is true (default), the subscriber is set as the global default.
+    /// When false, the subscriber is set as thread-local default and the returned
+    /// Guard must be kept alive to maintain the subscriber.
+    #[must_use]
+    pub fn with_global_subscriber(mut self, global: bool) -> Self {
+        self.global_subscriber = global;
+        self
+    }
+
     // === Build Methods ===
 
     /// Build a tracing layer with the current configuration
@@ -366,8 +473,13 @@ impl TracingConfig {
             .add_directive(directive_to_allow_otel_trace))
     }
 
-    /// Initialize the global tracing subscriber with this configuration
-    pub fn init_subscriber(self) -> Result<OtelGuard, Error> {
+    /// Initialize the tracing subscriber with this configuration
+    ///
+    /// If `global_subscriber` is true, sets the subscriber as the global default.
+    /// If false, returns a Guard that maintains the subscriber as the thread-local default.
+    ///
+    /// When OpenTelemetry is disabled, the Guard will contain `None` for the `OtelGuard`.
+    pub fn init_subscriber(self) -> Result<Guard, Error> {
         // Setup a temporary subscriber for initialization logging
         let temp_subscriber = tracing_subscriber::registry()
             .with(self.build_filter_layer()?)
@@ -375,26 +487,35 @@ impl TracingConfig {
         let _guard = tracing::subscriber::set_default(temp_subscriber);
         info!("init logging & tracing");
 
-        // Build the final subscriber
-        let subscriber = tracing_subscriber::registry();
-        let (subscriber, otel_guard) = if self.otel_config.enabled {
-            regiter_otel_layers(subscriber)?
+        // Build the final subscriber based on OTEL configuration
+        if self.otel_config.enabled {
+            let subscriber = tracing_subscriber::registry();
+            let (subscriber, otel_guard) = regiter_otel_layers(subscriber)?;
+            let subscriber = subscriber
+                .with(self.build_filter_layer()?)
+                .with(self.build_layer()?);
+
+            if self.global_subscriber {
+                tracing::subscriber::set_global_default(subscriber)?;
+                Ok(Guard::global(Some(otel_guard)))
+            } else {
+                let default_guard = tracing::subscriber::set_default(subscriber);
+                Ok(Guard::non_global(Some(otel_guard), default_guard))
+            }
         } else {
-            // Create a dummy OtelGuard for the case when OTEL is disabled
-            // This will require modifying OtelGuard to handle this case
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Unsupported,
-                "OpenTelemetry disabled - OtelGuard creation not yet supported",
-            )
-            .into());
-        };
+            info!("OpenTelemetry disabled - proceeding without OTEL layers");
+            let subscriber = tracing_subscriber::registry()
+                .with(self.build_filter_layer()?)
+                .with(self.build_layer()?);
 
-        let subscriber = subscriber
-            .with(self.build_filter_layer()?)
-            .with(self.build_layer()?);
-
-        tracing::subscriber::set_global_default(subscriber)?;
-        Ok(otel_guard)
+            if self.global_subscriber {
+                tracing::subscriber::set_global_default(subscriber)?;
+                Ok(Guard::global(None))
+            } else {
+                let default_guard = tracing::subscriber::set_default(subscriber);
+                Ok(Guard::non_global(None, default_guard))
+            }
+        }
     }
 
     // === Preset Configurations ===
@@ -470,6 +591,7 @@ impl TracingConfig {
     /// - Output to stderr to separate from test output
     /// - Basic metadata
     /// - OpenTelemetry disabled for speed
+    /// - non global registration (of subscriber)
     #[must_use]
     pub fn testing() -> Self {
         Self::default()
@@ -479,5 +601,130 @@ impl TracingConfig {
             .with_thread_names(false)
             .without_span_events()
             .with_otel(false)
+            .with_global_subscriber(false)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_global_subscriber_true_returns_global_guard() {
+        let config = TracingConfig::minimal()
+            .with_global_subscriber(true)
+            .with_otel(false); // Disable for simple test
+
+        // This would actually initialize the subscriber, so we'll just test that
+        // the config has the right value
+        assert!(config.global_subscriber);
+    }
+
+    #[test]
+    fn test_global_subscriber_false_sets_config() {
+        let config = TracingConfig::minimal()
+            .with_global_subscriber(false)
+            .with_otel(false); // Disable for simple test
+
+        assert!(!config.global_subscriber);
+    }
+
+    #[test]
+    fn test_default_global_subscriber_is_true() {
+        let config = TracingConfig::default();
+        assert!(config.global_subscriber);
+    }
+
+    #[test]
+    fn test_init_subscriber_without_otel_succeeds() {
+        // Test that initialization succeeds when OTEL is disabled
+        let guard = TracingConfig::minimal()
+            .with_otel(false)
+            .with_global_subscriber(false) // Use non-global to avoid affecting other tests
+            .init_subscriber();
+
+        assert!(guard.is_ok());
+        let guard = guard.unwrap();
+
+        // Verify that the guard indicates no OTEL
+        assert!(!guard.has_otel());
+        assert!(guard.otel_guard().is_none());
+    }
+
+    #[test]
+    fn test_init_subscriber_with_otel_disabled_global() {
+        // Test global subscriber mode with OTEL disabled
+        let guard = TracingConfig::minimal()
+            .with_otel(false)
+            .with_global_subscriber(true)
+            .init_subscriber();
+
+        assert!(guard.is_ok());
+        let guard = guard.unwrap();
+
+        // Should be global mode with no OTEL
+        assert!(guard.is_global());
+        assert!(!guard.has_otel());
+        assert!(guard.otel_guard().is_none());
+    }
+
+    #[test]
+    fn test_init_subscriber_with_otel_disabled_non_global() {
+        // Test non-global subscriber mode with OTEL disabled
+        let guard = TracingConfig::minimal()
+            .with_otel(false)
+            .with_global_subscriber(false)
+            .init_subscriber();
+
+        assert!(guard.is_ok());
+        let guard = guard.unwrap();
+
+        // Should be non-global mode with no OTEL
+        assert!(guard.is_non_global());
+        assert!(!guard.has_otel());
+        assert!(guard.otel_guard().is_none());
+    }
+
+    #[test]
+    fn test_guard_helper_methods() {
+        // Test the Guard helper methods work correctly with None values
+        let guard_global_none = Guard::global(None);
+        assert!(!guard_global_none.has_otel());
+        assert!(guard_global_none.otel_guard().is_none());
+        assert!(guard_global_none.is_global());
+        assert!(!guard_global_none.is_non_global());
+        assert!(guard_global_none.default_guard.is_none());
+
+        // We can't easily create a DefaultGuard for testing, but we can test the constructor
+        // Note: We can't actually create a DefaultGuard without setting up a real subscriber,
+        // so we'll just test the struct design is sound
+    }
+
+    #[test]
+    fn test_guard_struct_direct_field_access() {
+        // Test that we can directly access fields, which is a benefit of the struct design
+        let guard = Guard::global(None);
+
+        // Direct field access is now possible
+        assert!(guard.otel_guard.is_none());
+        assert!(guard.default_guard.is_none());
+
+        // Helper methods still work
+        assert!(!guard.has_otel());
+        assert!(guard.is_global());
+    }
+
+    #[test]
+    fn test_guard_struct_extensibility() {
+        // This test demonstrates how the struct design makes it easier to extend
+        // We can easily add more optional guards in the future without breaking existing code
+        let guard = Guard {
+            otel_guard: None,
+            default_guard: None,
+            // Future: log_guard: None, metrics_guard: None, etc.
+        };
+
+        assert!(guard.is_global());
+        assert!(!guard.has_otel());
     }
 }

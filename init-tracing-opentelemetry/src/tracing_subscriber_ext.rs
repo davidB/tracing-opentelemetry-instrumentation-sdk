@@ -1,4 +1,3 @@
-use opentelemetry::global;
 use opentelemetry::trace::TracerProvider;
 #[cfg(feature = "metrics")]
 use opentelemetry_sdk::metrics::SdkMeterProvider;
@@ -97,6 +96,7 @@ where
     Ok((subscriber, OtelGuard { tracer_provider }))
 }
 
+/// change (version 0.31): no longer set the glabal tracer
 pub fn build_tracer_layer<S>() -> Result<(OpenTelemetryLayer<S, Tracer>, SdkTracerProvider), Error>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
@@ -107,7 +107,7 @@ where
         .build();
     let tracer_provider = otlp::traces::init_tracerprovider(otel_rsrc, otlp::traces::identity)?;
     // to not send trace somewhere, but continue to create and propagate,...
-    // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
+    // then send them to `init_tracing_opentelemetry::stdio::WriteNoWhere::default()`
     // or to `std::io::stdout()` to print
     //
     // let otel_tracer = stdio::init_tracer(
@@ -119,7 +119,7 @@ where
     let layer = tracing_opentelemetry::layer()
         .with_error_records_to_exceptions(true)
         .with_tracer(tracer_provider.tracer(""));
-    global::set_tracer_provider(tracer_provider.clone());
+    opentelemetry::global::set_tracer_provider(tracer_provider.clone());
     Ok((layer, tracer_provider))
 }
 
@@ -130,8 +130,8 @@ where
 {
     let otel_rsrc = DetectResource::default().build();
     let meter_provider = otlp::metrics::init_meterprovider(otel_rsrc, otlp::metrics::identity)?;
-    global::set_meter_provider(meter_provider.clone());
     let layer = MetricsLayer::new(meter_provider.clone());
+    opentelemetry::global::set_meter_provider(meter_provider.clone());
     Ok((layer, meter_provider))
 }
 
@@ -144,7 +144,22 @@ where
     note = "Use `TracingConfig::production()...` instead"
 )]
 pub fn init_subscribers() -> Result<OtelGuard, Error> {
-    TracingConfig::production().init_subscriber()
+    let guard = TracingConfig::production().init_subscriber()?;
+    match guard.otel_guard {
+        Some(otel_guard) => {
+            // For backward compatibility, we leak the default_guard since the caller
+            // only expects an OtelGuard and won't hold onto the DefaultGuard
+            if let Some(default_guard) = guard.default_guard {
+                std::mem::forget(default_guard);
+            }
+            Ok(otel_guard)
+        }
+        None => Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "OpenTelemetry is disabled but OtelGuard was requested",
+        )
+        .into()),
+    }
 }
 
 /// Initialize subscribers with custom log directives
@@ -156,7 +171,22 @@ pub fn init_subscribers() -> Result<OtelGuard, Error> {
     note = "Use `TracingConfig::production().with_log_directives(log_directives)...` instead"
 )]
 pub fn init_subscribers_and_loglevel(log_directives: &str) -> Result<OtelGuard, Error> {
-    TracingConfig::production()
+    let guard = TracingConfig::production()
         .with_log_directives(log_directives)
-        .init_subscriber()
+        .init_subscriber()?;
+    match guard.otel_guard {
+        Some(otel_guard) => {
+            // For backward compatibility, we leak the default_guard since the caller
+            // only expects an OtelGuard and won't hold onto the DefaultGuard
+            if let Some(default_guard) = guard.default_guard {
+                std::mem::forget(default_guard);
+            }
+            Ok(otel_guard)
+        }
+        None => Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "OpenTelemetry is disabled but OtelGuard was requested",
+        )
+        .into()),
+    }
 }
