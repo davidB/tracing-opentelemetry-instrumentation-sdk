@@ -3,11 +3,12 @@ name: ci
 
 on:
   pull_request:
+    branches-ignore:
+      - "release-plz-*"
   push:
     branches:
       - main
       - master
-      - "releases/*"
   workflow_dispatch:
 
 concurrency:
@@ -33,12 +34,14 @@ jobs:
       RUSTC_WRAPPER: "sccache"
     steps:
       - uses: actions/checkout@v5
-      - uses: jdx/mise-action@v3
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - run: just check
-      - run: just lint
-      - run: just test
-      - run: just deny
-      #- run: just test_each_feature
-      - run: ${SCCACHE_PATH} --show-stats
-        shell: bash
+      - uses: jdx/mise-action@v3
+        with:
+          # version 2025.5.11, a symlink is created for rust setup
+          # without cache, missing components are installed
+          # with cache, nothing is installed, but as rust tool is symlinked, it is not cached => missing components failure
+          cache: false
+          cache_save: false
+          experimental: true
+      - run: mise run --jobs 1 ci
+      #- run: mise run test-each-feature
