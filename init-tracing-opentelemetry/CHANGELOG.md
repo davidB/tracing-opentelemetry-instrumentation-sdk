@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.30.1...init-tracing-opentelemetry-v0.31.0) - 2025-09-27
+
+### <!-- 2 -->Added
+
+- [**breaking**] Guard struct allow future evolution, init_subscriber can be used for non global (like test,...)
+- a more configurable tracing configuration with `TracingConfig`
+
 ## [0.30.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.29.0...init-tracing-opentelemetry-v0.30.0) - 2025-07-18
 
 ### <!-- 2 -->Added
