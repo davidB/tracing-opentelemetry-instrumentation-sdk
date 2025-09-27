@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/axum-tracing-opentelemetry-v0.30.0...axum-tracing-opentelemetry-v0.30.1) - 2025-09-27
+
 ## [0.28.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/axum-tracing-opentelemetry-v0.28.0...axum-tracing-opentelemetry-v0.28.1) - 2025-06-03
 
 ### <!-- 3 -->Removed

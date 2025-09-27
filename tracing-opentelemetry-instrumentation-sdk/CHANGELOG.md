@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.30.0...tracing-opentelemetry-instrumentation-sdk-v0.31.0) - 2025-09-27
+
+### <!-- 2 -->Added
+
+- [**breaking**] export grpc utils from `http::grpc` module
+
 ## [0.29.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.28.1...tracing-opentelemetry-instrumentation-sdk-v0.29.0) - 2025-06-03
 
 ### <!-- 2 -->Added
