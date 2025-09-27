@@ -122,7 +122,7 @@ where
         let this = self.project();
         let _guard = this.span.enter();
         let result = futures_util::ready!(this.inner.poll(cx));
-        otel_http::grpc_server::update_span_from_response_or_error(this.span, &result);
+        otel_http::grpc::update_span_from_response_or_error(this.span, &result);
         Poll::Ready(result)
     }
 }
