@@ -120,7 +120,9 @@ fn propagator_from_string(
 
 // Re-export the new configuration API for easier access
 #[cfg(feature = "tracing_subscriber_ext")]
-pub use config::{FeatureSet, LevelConfig, LogFormat, OtelConfig, TracingConfig, WriterConfig};
+pub use config::{
+    FeatureSet, Guard, LevelConfig, LogFormat, OtelConfig, TracingConfig, WriterConfig,
+};
 
 #[cfg(feature = "tracing_subscriber_ext")]
 pub use formats::{CompactLayerBuilder, JsonLayerBuilder, LayerBuilder, PrettyLayerBuilder};
