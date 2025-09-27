@@ -23,5 +23,9 @@
       matchPackageNames: ["kube", "k8s-openapi"],
       groupName: "kubers",
     },
+    {
+      matchPackageNames: ["rust"],
+      enabled: false,
+    },
   ],
 }
