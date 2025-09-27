@@ -2,16 +2,192 @@
 OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "http://127.0.0.1:4317"
 OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "grpc"
 OTEL_TRACES_SAMPLER = "always_on"
-# RUSTC_WRAPPER = "sccache"
-# RUST_WITHOUT = "rust-docs"
-ASDF_RUST_PROFILE = "minimal"
 # RUST_LOG = "warn,otel::setup=debug"
 
 [tools]
-rust = '1.82.0'
-just = '1'
+rust = { version = "1.82.0", profile = "minimal", components = "rustfmt,clippy" } # the rust tool stack (with cargo, fmt, clippy) to build source
 grpcurl = '1.9'
 protoc = '32.1'
 # grpc-health-probe = "*"
 # sccache = "0.5"
-"aqua:cargo-bins/cargo-binstall" = "1" # do not use cargo-binstall (it's a special name used by mise)
+# cargo-binstall allow to download (insteal of build) "cargo:*"
+# - do not use cargo-binstall" (it's a special name used by mise)
+# - "aqua:cargo-bins/cargo-binstall" allow to download the binary
+"aqua:cargo-bins/cargo-binstall" = "1"
+
+[tasks.format]
+description = "Format the code and sort dependencies"
+run = [
+  "cargo fmt",
+  # "cargo sort --workspace --grouped"
+]
+
+[tasks.deny]
+description = "Run cargo deny checks"
+depends = ["install:cargo-deny"]
+run = "cargo deny check"
+
+[tasks.check]
+description = "Check code with all feature combinations"
+depends = ["install:cargo-hack"]
+run = "cargo hack check --each-feature --no-dev-deps"
+wait_for = ["test", "lint"]
+
+[tasks.lint]
+description = "Lint the rust code"
+run = [
+  "cargo fmt --all -- --check",
+  "cargo clippy --workspace --all-features --all-targets -- --deny warnings --allow deprecated --allow unknown-lints",
+]
+wait_for = ["deny"]
+
+[tasks.megalinter]
+description = "Run megalinter in container"
+run = '''
+#!/usr/bin/env bash
+if command -v podman > /dev/null; then
+  podman run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "oxsecurity/megalinter-documentation:v8"
+elif command -v nerdctl > /dev/null; then
+  nerdctl run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "oxsecurity/megalinter-documentation:v8"
+elif command -v docker > /dev/null; then
+  docker run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "oxsecurity/megalinter-documentation:v8"
+else
+  echo "Container runner not found: podman, nerdctl, or docker required"
+  exit 1
+fi
+'''
+
+[tasks.test]
+description = "Launch tests"
+depends = ["install:cargo-nextest", "install:cargo-insta"]
+run = [
+  "cargo nextest run",
+  "cargo test --doc",
+]
+wait_for = ["lint"]
+
+[tasks.test-each-feature]
+description = "Test each feature separately"
+depends = ["install:cargo-hack"]
+run = "cargo hack test --each-feature -- --test-threads=1"
+
+[tasks.set-version]
+description = "Set version across all workspace crates"
+run = '''
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]; then
+  echo "Usage: mise run set-version <version>"
+  exit 1
+fi
+version="$1"
+sed -i "s/^version = .*/version = \"$version\"/" Cargo.toml
+release-plz set-version axum-tracing-opentelemetry@"$version"
+release-plz set-version fake-opentelemetry-collector@"$version"
+release-plz set-version init-tracing-opentelemetry@"$version"
+# release-plz set-version testing-tracing-opentelemetry@"$version"
+release-plz set-version tonic-tracing-opentelemetry@"$version"
+release-plz set-version tracing-opentelemetry-instrumentation-sdk@"$version"
+'''
+
+# Tool installation tasks (on demand vs upfraont like with [tools]
+[tasks."install:cargo-deny"]
+hide = true
+description = "Install cargo-deny"
+run = 'cargo binstall -y cargo-deny || cargo install --locked cargo-deny'
+
+[tasks."install:cargo-nextest"]
+hide = true
+description = "Install cargo-nextest"
+run = 'cargo binstall -y cargo-nextest || cargo install --locked cargo-nextest'
+
+[tasks."install:cargo-insta"]
+hide = true
+description = "Install cargo-insta"
+run = 'cargo binstall -y cargo-insta || cargo install --locked cargo-insta'
+
+[tasks."install:cargo-release"]
+hide = true
+description = "Install cargo-release"
+run = 'cargo binstall -y cargo-release || cargo install --locked cargo-release'
+
+[tasks."install:git-cliff"]
+hide = true
+description = "Install git-cliff"
+run = 'cargo binstall -y git-cliff || cargo install --locked git-cliff'
+
+[tasks."install:cargo-hack"]
+hide = true
+description = "Install cargo-hack"
+run = 'cargo binstall -y cargo-hack || cargo install --locked cargo-hack'
+
+# Container and example tasks
+[tasks.run-jaeger]
+description = "Run Jaeger all-in-one container"
+run = '''
+#!/usr/bin/env bash
+
+container_cmd=""
+if command -v podman > /dev/null; then
+  container_cmd="podman"
+elif command -v nerdctl > /dev/null; then
+  container_cmd="nerdctl"
+elif command -v docker > /dev/null; then
+  container_cmd="docker"
+else
+  echo "Container runner not found: podman, nerdctl, or docker required"
+  exit 1
+fi
+
+$container_cmd run --rm --name jaeger \
+  -e COLLECTOR_ZIPKIN_HOST_PORT=9411 \
+  -e COLLECTOR_OTLP_ENABLED=true \
+  -p 6831:6831/udp \
+  -p 6832:6832/udp \
+  -p 5778:5778 \
+  -p 16686:16686 \
+  -p 4317:4317 \
+  -p 4318:4318 \
+  -p 14250:14250 \
+  -p 14268:14268 \
+  -p 14269:14269 \
+  -p 9411:9411 \
+  docker.io/jaegertracing/all-in-one:latest
+'''
+
+[tasks.run-example-grpc-server]
+description = "Run gRPC server example"
+run = 'cd examples/grpc && OTEL_SERVICE_NAME=grpc-server cargo run --bin server'
+
+[tasks.run-example-grpc-client]
+description = "Run gRPC client example"
+run = '''
+grpcurl -plaintext 127.0.0.1:50051 list
+cd examples/grpc && OTEL_SERVICE_NAME=grpc-client cargo run --bin client
+'''
+
+[tasks.run-example-axum-otlp-server]
+description = "Run axum-otlp server example"
+run = 'cd examples/axum-otlp && OTEL_SERVICE_NAME=axum-otlp-4317 cargo run'
+
+[tasks.run-example-axum-otlp-server-http]
+description = "Run axum-otlp server example over HTTP"
+run = 'cd examples/axum-otlp && OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://localhost:4318/v1/traces" OTEL_SERVICE_NAME=axum-otlp-4318 cargo run --features otlp-over-http'
+
+[tasks.run-example-http-server]
+description = "Run HTTP server example (alias for axum-otlp)"
+depends = ["run-example-axum-otlp-server"]
+
+[tasks.run-example-http-client]
+description = "Run HTTP client example"
+run = '''
+# curl -i http://127.0.0.1:3003/health
+curl -i http://127.0.0.1:3003/
+'''
+
+[tasks.run-example-load]
+description = "Run load test example"
+run = 'cd examples/load && cargo run --release 2>/dev/null'
+
+[tasks.ci]
+depends = ["check", "lint", "test", "deny"]
