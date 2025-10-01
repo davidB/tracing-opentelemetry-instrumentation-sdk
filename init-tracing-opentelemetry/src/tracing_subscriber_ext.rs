@@ -124,7 +124,8 @@ where
 }
 
 #[cfg(feature = "metrics")]
-pub fn build_metrics_layer<S>() -> Result<(MetricsLayer<S>, SdkMeterProvider), Error>
+pub fn build_metrics_layer<S>(
+) -> Result<(MetricsLayer<S, SdkMeterProvider>, SdkMeterProvider), Error>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {

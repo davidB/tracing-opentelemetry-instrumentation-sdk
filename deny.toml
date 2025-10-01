@@ -223,7 +223,7 @@ skip = [
   # "rand", # until tonic & tower upgrade
   # "rand_chacha", # until tonic & tower upgrade
   # "rand_core", # until tonic & tower upgrade
-  "socket2",
+  # "socket2",
   "wasi",
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
