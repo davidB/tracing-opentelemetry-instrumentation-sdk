@@ -12,10 +12,11 @@ expression: otel_spans
   end_time_unix_nano: "[timestamp]"
   attributes:
     busy_ns: ignore
-    code.filepath: ignore
-    code.lineno: ignore
-    code.namespace: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor::tests\")) })"
+    code.file.path: "Some(AnyValue { value: Some(StringValue(\"axum-tracing-opentelemetry/src/middleware/trace_extractor.rs\")) })"
+    code.line.number: "Some(AnyValue { value: Some(IntValue(256)) })"
+    code.module.name: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor::tests\")) })"
     idle_ns: ignore
+    target: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor::tests\")) })"
     thread.id: ignore
     thread.name: "Some(AnyValue { value: Some(StringValue(\"middleware::trace_extractor::tests::check_span_event::case_7\")) })"
   dropped_attributes_count: 0
@@ -36,9 +37,9 @@ expression: otel_spans
   end_time_unix_nano: "[timestamp]"
   attributes:
     busy_ns: ignore
-    code.filepath: ignore
-    code.lineno: ignore
-    code.namespace: "Some(AnyValue { value: Some(StringValue(\"tracing_opentelemetry_instrumentation_sdk::http::http_server\")) })"
+    code.file.path: "Some(AnyValue { value: Some(StringValue(\"tracing-opentelemetry-instrumentation-sdk/src/http/http_server.rs\")) })"
+    code.line.number: "Some(AnyValue { value: Some(IntValue(13)) })"
+    code.module.name: "Some(AnyValue { value: Some(StringValue(\"tracing_opentelemetry_instrumentation_sdk::http::http_server\")) })"
     http.request.method: "Some(AnyValue { value: Some(StringValue(\"GET\")) })"
     http.response.status_code: "Some(AnyValue { value: Some(StringValue(\"200\")) })"
     http.route: "Some(AnyValue { value: Some(StringValue(\"/with_child_span\")) })"
@@ -46,6 +47,7 @@ expression: otel_spans
     network.protocol.version: "Some(AnyValue { value: Some(StringValue(\"1.1\")) })"
     server.address: "Some(AnyValue { value: Some(StringValue(\"\")) })"
     span.type: "Some(AnyValue { value: Some(StringValue(\"web\")) })"
+    target: "Some(AnyValue { value: Some(StringValue(\"otel::tracing\")) })"
     thread.id: ignore
     thread.name: "Some(AnyValue { value: Some(StringValue(\"middleware::trace_extractor::tests::check_span_event::case_7\")) })"
     url.path: "Some(AnyValue { value: Some(StringValue(\"/with_child_span\")) })"
@@ -59,4 +61,3 @@ expression: otel_spans
   status:
     message: ""
     code: STATUS_CODE_UNSET
-

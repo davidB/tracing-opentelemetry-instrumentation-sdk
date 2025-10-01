@@ -1,7 +1,6 @@
 ---
 source: testing-tracing-opentelemetry/src/lib.rs
 expression: otel_spans
-snapshot_kind: text
 ---
 - trace_id: "[trace_id:lg32]"
   span_id: "[span_id:lg16]"
@@ -13,9 +12,9 @@ snapshot_kind: text
   end_time_unix_nano: "[timestamp]"
   attributes:
     busy_ns: ignore
-    code.filepath: ignore
-    code.lineno: ignore
-    code.namespace: "Some(AnyValue { value: Some(StringValue(\"tracing_opentelemetry_instrumentation_sdk::http::http_server\")) })"
+    code.file.path: "Some(AnyValue { value: Some(StringValue(\"tracing-opentelemetry-instrumentation-sdk/src/http/http_server.rs\")) })"
+    code.line.number: "Some(AnyValue { value: Some(IntValue(13)) })"
+    code.module.name: "Some(AnyValue { value: Some(StringValue(\"tracing_opentelemetry_instrumentation_sdk::http::http_server\")) })"
     http.request.method: "Some(AnyValue { value: Some(StringValue(\"GET\")) })"
     http.response.status_code: "Some(AnyValue { value: Some(StringValue(\"200\")) })"
     http.route: "Some(AnyValue { value: Some(StringValue(\"/nest/{nest_id}\")) })"
@@ -23,6 +22,7 @@ snapshot_kind: text
     network.protocol.version: "Some(AnyValue { value: Some(StringValue(\"1.1\")) })"
     server.address: "Some(AnyValue { value: Some(StringValue(\"\")) })"
     span.type: "Some(AnyValue { value: Some(StringValue(\"web\")) })"
+    target: "Some(AnyValue { value: Some(StringValue(\"otel::tracing\")) })"
     thread.id: ignore
     thread.name: "Some(AnyValue { value: Some(StringValue(\"middleware::trace_extractor::tests::check_span_event::case_9\")) })"
     url.path: "Some(AnyValue { value: Some(StringValue(\"/nest/123\")) })"

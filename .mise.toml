@@ -60,10 +60,18 @@ fi
 
 [tasks.test]
 description = "Launch tests"
-depends = ["install:cargo-nextest", "install:cargo-insta"]
+depends = ["install:cargo-nextest"]
 run = [
   "cargo nextest run",
   "cargo test --doc",
+]
+wait_for = ["lint"]
+
+[tasks."test:review"]
+description = "Launch snapshot test and review result (accept or reject)"
+depends = ["install:cargo-insta"]
+run = [
+  "cargo insta review",
 ]
 wait_for = ["lint"]
 

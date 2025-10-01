@@ -81,7 +81,9 @@ where
         let req = req;
         let span = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let span = otel_http::grpc_server::make_span_from_request(&req);
-            span.set_parent(otel_http::extract_context(req.headers()));
+            if let Err(error) = span.set_parent(otel_http::extract_context(req.headers())) {
+                tracing::warn!(?error, "can not set parent trace_id to span");
+            }
             span
         } else {
             tracing::Span::none()
