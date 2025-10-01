@@ -14,14 +14,23 @@ To collect and visualize trace on local, some ofthe simplest solutions:
 
 [CtrlSpice/otel-desktop-viewer: desktop-collector](https://github.com/CtrlSpice/otel-desktop-viewer)
 
+```sh
+# also available via `brew install --cask ctrlspice/tap/otel-desktop-viewer`
+# For AMD64 (most common)
+# docker/nerdctl/podman or any container runner
+docker run -p 8000:8000 -p 4317:4317 -p 4318:4318 ghcr.io/ctrlspice/otel-desktop-viewer:latest-amd64
+
+open http://localhost:8000
+```
+
 ### Jaeger all-in-one
 
 ```sh
 # launch Jaeger with OpenTelemetry, Jaeger, Zipking,... mode.
 # see https://www.jaegertracing.io/docs/1.49/getting-started/#all-in-one
 
-# nerdctl or docker or any container runner
-nerdctl run --rm --name jaeger \
+# docker/nerdctl/podman or any container runner
+docker run --rm --name jaeger \
   -e COLLECTOR_ZIPKIN_HOST_PORT:9411 \
   -e COLLECTOR_OTLP_ENABLED:true \
   -p 6831:6831/udp \
