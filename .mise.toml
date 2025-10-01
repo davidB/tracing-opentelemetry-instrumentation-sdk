@@ -81,15 +81,10 @@ depends = ["install:cargo-hack"]
 run = "cargo hack test --each-feature -- --test-threads=1"
 
 [tasks.set-version]
-description = "Set version across all workspace crates"
+description = "Set version across all workspace crates (Usage: mise run set-version <version>)"
 run = '''
 #!/usr/bin/env bash
-
-if [ $# -eq 0 ]; then
-  echo "Usage: mise run set-version <version>"
-  exit 1
-fi
-version="$1"
+version="{{arg(name="version")}}"
 sed -i "s/^version = .*/version = \"$version\"/" Cargo.toml
 release-plz set-version axum-tracing-opentelemetry@"$version"
 release-plz set-version fake-opentelemetry-collector@"$version"
