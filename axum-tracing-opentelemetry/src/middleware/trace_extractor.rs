@@ -158,7 +158,7 @@ where
             span.record("http.route", route);
             span.record("otel.name", format!("{method} {route}").trim());
             if let Some(client_ip) = client_ip {
-                span.record("client.address", client_ip);
+                span.record("http.client.address", client_ip);
             }
             if let Err(error) = span.set_parent(otel_http::extract_context(req.headers())) {
                 tracing::warn!(?error, "can not set parent trace_id to span");
