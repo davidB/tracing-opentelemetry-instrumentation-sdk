@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/axum-tracing-opentelemetry-v0.32.0...axum-tracing-opentelemetry-v0.32.1) - 2025-10-14
+
+### Wip
+
+- use `opentelemetry-semantic-conventions` instead of `static &str`
+
 ## [0.30.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/axum-tracing-opentelemetry-v0.30.0...axum-tracing-opentelemetry-v0.30.1) - 2025-09-27
 
 ## [0.28.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/axum-tracing-opentelemetry-v0.28.0...axum-tracing-opentelemetry-v0.28.1) - 2025-06-03
