@@ -33,6 +33,7 @@ pub const TRACING_LEVEL: tracing::Level = tracing::Level::INFO;
 ///
 /// [Fields] and [attributes] are set using the same syntax as the [`tracing::span!`]
 /// macro.
+//TODO find a way to use opentelemetry_semantic_conventions::attribute::* as part of the field
 #[macro_export]
 macro_rules! otel_trace_span {
     (parent: $parent:expr, $name:expr, $($field:tt)*) => {

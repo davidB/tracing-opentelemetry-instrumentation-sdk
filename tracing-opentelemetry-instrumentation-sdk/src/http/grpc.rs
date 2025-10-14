@@ -1,4 +1,7 @@
 use http::HeaderMap;
+use opentelemetry_semantic_conventions::attribute::{
+    EXCEPTION_MESSAGE, OTEL_STATUS_CODE, RPC_GRPC_STATUS_CODE,
+};
 
 /// [`gRPC` status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md#status-codes-and-their-use-in-grpc)
 /// copied from tonic
@@ -67,12 +70,12 @@ pub fn update_span_from_response<B>(
     let status = status_from_http_header(response.headers())
         .or_else(|| status_from_http_status(response.status()))
         .unwrap_or(GrpcCode::Ok as u16);
-    span.record("rpc.grpc.status_code", status);
+    span.record(RPC_GRPC_STATUS_CODE, status);
 
     if status_is_error(status, is_spankind_server) {
-        span.record("otel.status_code", "ERROR");
+        span.record(OTEL_STATUS_CODE, "ERROR");
     } else {
-        span.record("otel.status_code", "OK");
+        span.record(OTEL_STATUS_CODE, "OK");
     }
 }
 
@@ -122,12 +125,12 @@ fn update_span_from_error<E>(span: &tracing::Span, error: &E)
 where
     E: std::error::Error,
 {
-    span.record("otel.status_code", "ERROR");
-    span.record("rpc.grpc.status_code", 2);
-    span.record("exception.message", error.to_string());
+    span.record(OTEL_STATUS_CODE, "ERROR");
+    span.record(RPC_GRPC_STATUS_CODE, 2);
+    span.record(EXCEPTION_MESSAGE, error.to_string());
     error
         .source()
-        .map(|s| span.record("exception.message", s.to_string()));
+        .map(|s| span.record(EXCEPTION_MESSAGE, s.to_string()));
 }
 
 pub fn update_span_from_response_or_error<B, E>(

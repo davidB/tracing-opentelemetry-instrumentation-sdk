@@ -18,6 +18,9 @@ license.workspace = true
 [dependencies]
 http = { workspace = true, optional = true }
 opentelemetry = { workspace = true }
+opentelemetry-semantic-conventions = { workspace = true, features = [
+  "semconv_experimental",
+] }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 

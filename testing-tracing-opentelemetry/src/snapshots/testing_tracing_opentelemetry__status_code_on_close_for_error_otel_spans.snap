@@ -13,7 +13,7 @@ expression: otel_spans
   attributes:
     busy_ns: ignore
     code.file.path: "Some(AnyValue { value: Some(StringValue(\"tracing-opentelemetry-instrumentation-sdk/src/http/http_server.rs\")) })"
-    code.line.number: "Some(AnyValue { value: Some(IntValue(13)) })"
+    code.line.number: "Some(AnyValue { value: Some(IntValue(15)) })"
     code.module.name: "Some(AnyValue { value: Some(StringValue(\"tracing_opentelemetry_instrumentation_sdk::http::http_server\")) })"
     http.request.method: "Some(AnyValue { value: Some(StringValue(\"GET\")) })"
     http.response.status_code: "Some(AnyValue { value: Some(StringValue(\"500\")) })"
