@@ -24,6 +24,7 @@ http = { workspace = true }
 opentelemetry = { workspace = true, features = [
   "trace",
 ], default-features = false }
+opentelemetry-semantic-conventions = { workspace = true }
 pin-project-lite = "0.2"
 tower = { workspace = true }
 tracing = { workspace = true }

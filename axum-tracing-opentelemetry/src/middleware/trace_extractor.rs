@@ -34,6 +34,7 @@
 
 use axum::extract::{ConnectInfo, MatchedPath};
 use http::{Request, Response};
+use opentelemetry_semantic_conventions::attribute::{CLIENT_ADDRESS, HTTP_ROUTE};
 use pin_project_lite::pin_project;
 use std::{
     error::Error,
@@ -155,10 +156,10 @@ where
             };
 
             let span = otel_http::http_server::make_span_from_request(&req);
-            span.record("http.route", route);
+            span.record(HTTP_ROUTE, route);
             span.record("otel.name", format!("{method} {route}").trim());
             if let Some(client_ip) = client_ip {
-                span.record("client.address", client_ip);
+                span.record(CLIENT_ADDRESS, client_ip);
             }
             if let Err(error) = span.set_parent(otel_http::extract_context(req.headers())) {
                 tracing::warn!(?error, "can not set parent trace_id to span");

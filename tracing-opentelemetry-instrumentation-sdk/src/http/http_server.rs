@@ -3,6 +3,8 @@ use std::error::Error;
 use crate::http::{http_flavor, http_host, url_scheme, user_agent};
 use crate::otel_trace_span;
 use crate::span_type::SpanType;
+use opentelemetry_semantic_conventions::attribute::OTEL_STATUS_CODE;
+use opentelemetry_semantic_conventions::trace::{EXCEPTION_MESSAGE, HTTP_RESPONSE_STATUS_CODE};
 use tracing::field::Empty;
 
 pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
@@ -35,16 +37,16 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
 
 pub fn update_span_from_response<B>(span: &tracing::Span, response: &http::Response<B>) {
     let status = response.status();
-    span.record("http.response.status_code", status.as_u16());
+    span.record(HTTP_RESPONSE_STATUS_CODE, status.as_u16());
 
     if status.is_server_error() {
-        span.record("otel.status_code", "ERROR");
+        span.record(OTEL_STATUS_CODE, "ERROR");
         // see [http-spans.md#status](https://github.com/open-telemetry/semantic-conventions/blob/v1.25.0/docs/http/http-spans.md#status)
         // Span Status MUST be left unset if HTTP status code was in the 1xx, 2xx or 3xx ranges,
         // unless there was another error (e.g., network error receiving the response body;
         // or 3xx codes with max redirects exceeded), in which case status MUST be set to Error.
         // } else {
-        //     span.record("otel.status_code", "OK");
+        //     span.record(OTEL_STATUS_CODE, "OK");
     }
 }
 
@@ -52,12 +54,12 @@ pub fn update_span_from_error<E>(span: &tracing::Span, error: &E)
 where
     E: Error,
 {
-    span.record("otel.status_code", "ERROR");
-    //span.record("http.status_code", 500);
-    span.record("exception.message", error.to_string());
+    span.record(OTEL_STATUS_CODE, "ERROR");
+    //span.record(HTTP_RESPONSE_STATUS_CODE, 500);
+    span.record(EXCEPTION_MESSAGE, error.to_string());
     error
         .source()
-        .map(|s| span.record("exception.message", s.to_string()));
+        .map(|s| span.record(EXCEPTION_MESSAGE, s.to_string()));
 }
 
 pub fn update_span_from_response_or_error<B, E>(
