@@ -5,7 +5,7 @@ OTEL_TRACES_SAMPLER = "always_on"
 # RUST_LOG = "warn,otel::setup=debug"
 
 [tools]
-rust = { version = "1.82.0", profile = "minimal", components = "rustfmt,clippy" } # the rust tool stack (with cargo, fmt, clippy) to build source
+rust = { version = "1.91.0", profile = "minimal", components = "rustfmt,clippy" } # the rust tool stack (with cargo, fmt, clippy) to build source
 grpcurl = '1.9'
 protoc = '33.0'
 # grpc-health-probe = "*"
