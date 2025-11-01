@@ -42,8 +42,10 @@
 use std::path::{Path, PathBuf};
 
 use tracing::{info, level_filters::LevelFilter, Subscriber};
-use tracing_subscriber::fmt::format::FmtSpan;
-use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, registry::LookupSpan, Layer};
+use tracing_subscriber::{
+    filter::EnvFilter, fmt::format::FmtSpan, layer::SubscriberExt, registry::LookupSpan, Layer,
+    Registry,
+};
 
 #[cfg(feature = "logfmt")]
 use crate::formats::LogfmtLayerBuilder;
@@ -480,20 +482,40 @@ impl TracingConfig {
     ///
     /// When OpenTelemetry is disabled, the Guard will contain `None` for the `OtelGuard`.
     pub fn init_subscriber(self) -> Result<Guard, Error> {
+        self.init_subscriber_ext(Self::transform_identity)
+    }
+
+    fn transform_identity(s: Registry) -> Registry {
+        s
+    }
+
+    /// `transform` parameter allow to customize the registry/subscriber before
+    /// the setup of opentelemetry, log, logfilter.
+    /// ```text
+    /// let guard = TracingConfig::default()
+    ///    .with_json_format()
+    ///    .with_stderr()
+    ///    .init_subscriber_ext(|subscriber| subscriber.with(my_layer))?;
+    /// ```
+    pub fn init_subscriber_ext<F, SOut>(self, transform: F) -> Result<Guard, Error>
+    where
+        SOut: Subscriber + for<'a> LookupSpan<'a> + Send + Sync,
+        F: FnOnce(Registry) -> SOut,
+    {
         // Setup a temporary subscriber for initialization logging
         let temp_subscriber = tracing_subscriber::registry()
-            .with(self.build_filter_layer()?)
-            .with(self.build_layer()?);
+            .with(self.build_layer()?)
+            .with(self.build_filter_layer()?);
         let _guard = tracing::subscriber::set_default(temp_subscriber);
         info!("init logging & tracing");
 
         // Build the final subscriber based on OTEL configuration
         if self.otel_config.enabled {
-            let subscriber = tracing_subscriber::registry();
+            let subscriber = transform(tracing_subscriber::registry());
             let (subscriber, otel_guard) = regiter_otel_layers(subscriber)?;
             let subscriber = subscriber
-                .with(self.build_filter_layer()?)
-                .with(self.build_layer()?);
+                .with(self.build_layer()?)
+                .with(self.build_filter_layer()?);
 
             if self.global_subscriber {
                 tracing::subscriber::set_global_default(subscriber)?;
@@ -504,9 +526,9 @@ impl TracingConfig {
             }
         } else {
             info!("OpenTelemetry disabled - proceeding without OTEL layers");
-            let subscriber = tracing_subscriber::registry()
-                .with(self.build_filter_layer()?)
-                .with(self.build_layer()?);
+            let subscriber = transform(tracing_subscriber::registry())
+                .with(self.build_layer()?)
+                .with(self.build_filter_layer()?);
 
             if self.global_subscriber {
                 tracing::subscriber::set_global_default(subscriber)?;
@@ -726,5 +748,24 @@ mod tests {
 
         assert!(guard.is_global());
         assert!(!guard.has_otel());
+    }
+
+    #[tokio::test]
+    async fn test_init_with_transform() {
+        use std::time::Duration;
+        use tokio_blocked::TokioBlockedLayer;
+        let blocked =
+            TokioBlockedLayer::new().with_warn_busy_single_poll(Some(Duration::from_micros(150)));
+
+        let guard = TracingConfig::default()
+            .with_json_format()
+            .with_stderr()
+            .with_log_directives("debug")
+            .with_global_subscriber(false)
+            .init_subscriber_ext(|subscriber| subscriber.with(blocked))
+            .unwrap();
+
+        assert!(!guard.is_global());
+        assert!(guard.has_otel());
     }
 }
