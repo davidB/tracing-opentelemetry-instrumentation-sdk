@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.32.1...init-tracing-opentelemetry-v0.33.0) - 2025-11-02
+
+### <!-- 2 -->Added
+
+- allow to customize the tracing configuration (registry) with additional layers ([#281](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/281))
+
 ## [0.31.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.30.1...init-tracing-opentelemetry-v0.31.0) - 2025-09-27
 
 ### <!-- 2 -->Added
