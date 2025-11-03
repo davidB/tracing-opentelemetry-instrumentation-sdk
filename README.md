@@ -10,6 +10,8 @@ A set of rust crates to help working with tracing + opentelemetry
 
 To collect and visualize trace on local, some ofthe simplest solutions:
 
+![screenshot](examples/axum-otlp/Screenshot-20251103_1308.jpg)
+
 ### Otel Desktop Viewer
 
 [CtrlSpice/otel-desktop-viewer: desktop-collector](https://github.com/CtrlSpice/otel-desktop-viewer)
@@ -31,19 +33,12 @@ open http://localhost:8000
 
 # docker/nerdctl/podman or any container runner
 docker run --rm --name jaeger \
-  -e COLLECTOR_ZIPKIN_HOST_PORT:9411 \
-  -e COLLECTOR_OTLP_ENABLED:true \
-  -p 6831:6831/udp \
-  -p 6832:6832/udp \
-  -p 5778:5778 \
   -p 16686:16686 \
   -p 4317:4317 \
   -p 4318:4318 \
-  -p 14250:14250 \
-  -p 14268:14268 \
-  -p 14269:14269 \
+  -p 5778:5778 \
   -p 9411:9411 \
-  jaegertracing/all-in-one:1.49
+  cr.jaegertracing.io/jaegertracing/jaeger:latest
 
 open http://localhost:16686
 ```

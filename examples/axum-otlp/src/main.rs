@@ -46,10 +46,18 @@ async fn health() -> impl IntoResponse {
 #[tracing::instrument]
 async fn index() -> impl IntoResponse {
     tracing::info!(monotonic_counter.index = 1);
+    sleep_10ms().await;
+    sleep_10ms().await;
+    sleep_10ms().await;
     let trace_id = find_current_trace_id();
     dbg!(&trace_id);
     //std::thread::sleep(std::time::Duration::from_secs(1));
     axum::Json(json!({ "my_trace_id": trace_id }))
+}
+
+#[tracing::instrument]
+async fn sleep_10ms() {
+    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 }
 
 async fn proxy_handler(Path((service, path)): Path<(String, String)>) -> impl IntoResponse {

@@ -44,19 +44,7 @@ wait_for = ["deny"]
 
 [tasks.megalinter]
 description = "Run megalinter in container"
-run = '''
-#!/usr/bin/env bash
-if command -v podman > /dev/null; then
-  podman run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "oxsecurity/megalinter-documentation:v8"
-elif command -v nerdctl > /dev/null; then
-  nerdctl run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "oxsecurity/megalinter-documentation:v8"
-elif command -v docker > /dev/null; then
-  docker run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "oxsecurity/megalinter-documentation:v8"
-else
-  echo "Container runner not found: podman, nerdctl, or docker required"
-  exit 1
-fi
-'''
+run = 'docker run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "oxsecurity/megalinter-documentation:v8"'
 
 [tasks.test]
 description = "Launch tests"
@@ -125,39 +113,28 @@ hide = true
 description = "Install cargo-hack"
 run = 'cargo binstall -y cargo-hack || cargo install --locked cargo-hack'
 
-# Container and example tasks
+
+[tasks.run-otel-desktop-viewer]
+description = "Run otel-desktop-viewer as receiver and viewer of otel trace"
+run = [
+  '# Viewer: open http://localhost:8000',
+  'docker run -p 8000:8000 -p 4317:4317 -p 4318:4318 ghcr.io/ctrlspice/otel-desktop-viewer:latest-amd64',
+]
+
 [tasks.run-jaeger]
 description = "Run Jaeger all-in-one container"
-run = '''
-#!/usr/bin/env bash
-
-container_cmd=""
-if command -v podman > /dev/null; then
-  container_cmd="podman"
-elif command -v nerdctl > /dev/null; then
-  container_cmd="nerdctl"
-elif command -v docker > /dev/null; then
-  container_cmd="docker"
-else
-  echo "Container runner not found: podman, nerdctl, or docker required"
-  exit 1
-fi
-
-$container_cmd run --rm --name jaeger \
-  -e COLLECTOR_ZIPKIN_HOST_PORT=9411 \
-  -e COLLECTOR_OTLP_ENABLED=true \
-  -p 6831:6831/udp \
-  -p 6832:6832/udp \
-  -p 5778:5778 \
-  -p 16686:16686 \
-  -p 4317:4317 \
-  -p 4318:4318 \
-  -p 14250:14250 \
-  -p 14268:14268 \
-  -p 14269:14269 \
-  -p 9411:9411 \
-  docker.io/jaegertracing/all-in-one:latest
-'''
+run = [
+  "# Viewer: open http://localhost:16686",
+  '''
+  docker run --rm --name jaeger \
+    -p 16686:16686 \
+    -p 4317:4317 \
+    -p 4318:4318 \
+    -p 5778:5778 \
+    -p 9411:9411 \
+    cr.jaegertracing.io/jaegertracing/jaeger:latest
+  '''
+]
 
 [tasks.run-example-grpc-server]
 description = "Run gRPC server example"
