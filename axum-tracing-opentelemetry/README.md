@@ -20,8 +20,8 @@ use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer}
 
 #[tokio::main]
 async fn main() -> Result<(), axum::BoxError> {
-    // very opinionated init of tracing, look at the source to make your own
-    let _guard = init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
+    // very opinionated init of tracing, look as is source to make your own
+    let _guard = init_tracing_opentelemetry::TracingConfig::production().init_subscriber()?;
 
     let app = app();
     // run it
@@ -44,6 +44,8 @@ fn app() -> Router {
 ```
 
 For more info about how to initialize, you can look at crate [`init-tracing-opentelemetry`] or [`tracing-opentelemetry`].
+
+![screenshot](../examples/axum-otlp/Screenshot-20251103_1308.jpg)
 
 ## Changelog - History
 
