@@ -81,3 +81,7 @@ metrics = [
   "tracing-opentelemetry/metrics",
   "opentelemetry-stdout/metrics",
 ]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docs_rs"]
