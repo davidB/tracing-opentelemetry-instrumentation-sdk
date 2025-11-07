@@ -6,6 +6,9 @@
 #![allow(clippy::missing_errors_doc)]
 #![doc = include_str!("../README.md")]
 
+pub use opentelemetry_sdk;
+pub use tracing_opentelemetry;
+
 mod error;
 pub use error::Error;
 
