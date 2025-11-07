@@ -121,6 +121,56 @@ impl LayerBuilder for JsonLayerBuilder {
     }
 }
 
+/// Builder for full-formatted logs (default `tracing` style)
+#[derive(Debug, Default, Clone)]
+pub struct FullLayerBuilder;
+
+impl LayerBuilder for FullLayerBuilder {
+    fn build_layer<S>(
+        &self,
+        config: &TracingConfig,
+    ) -> Result<Box<dyn Layer<S> + Send + Sync + 'static>, Error>
+    where
+        S: Subscriber + for<'a> LookupSpan<'a>,
+    {
+        let mut layer =
+            tracing_subscriber::fmt::layer().with_timer(tracing_subscriber::fmt::time::uptime());
+
+        // Configure line numbers
+        if config.features.line_numbers {
+            layer = layer.with_line_number(true);
+        }
+
+        // Configure thread names
+        if config.features.thread_names {
+            layer = layer.with_thread_names(true);
+        }
+
+        // Configure span events
+        if let Some(span_events) = &config.features.span_events {
+            layer = layer.with_span_events(span_events.clone());
+        }
+
+        // Configure target display
+        if !config.features.target_display {
+            layer = layer.with_target(false);
+        }
+
+        // Configure writer
+        match &config.writer {
+            WriterConfig::Stdout => Ok(Box::new(layer.with_writer(std::io::stdout))),
+            WriterConfig::Stderr => Ok(Box::new(layer.with_writer(std::io::stderr))),
+            WriterConfig::File(path) => {
+                let file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)?;
+                Ok(Box::new(layer.with_writer(file)))
+            }
+        }
+    }
+}
+
 /// Builder for compact-formatted logs (minimal style)
 #[derive(Debug, Default, Clone)]
 pub struct CompactLayerBuilder;

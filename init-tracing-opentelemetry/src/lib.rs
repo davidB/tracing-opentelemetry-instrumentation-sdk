@@ -125,7 +125,9 @@ pub use config::{
 };
 
 #[cfg(feature = "tracing_subscriber_ext")]
-pub use formats::{CompactLayerBuilder, JsonLayerBuilder, LayerBuilder, PrettyLayerBuilder};
+pub use formats::{
+    CompactLayerBuilder, FullLayerBuilder, JsonLayerBuilder, LayerBuilder, PrettyLayerBuilder,
+};
 
 #[cfg(all(feature = "tracing_subscriber_ext", feature = "logfmt"))]
 pub use formats::LogfmtLayerBuilder;

@@ -49,7 +49,9 @@ use tracing_subscriber::{
 
 #[cfg(feature = "logfmt")]
 use crate::formats::LogfmtLayerBuilder;
-use crate::formats::{CompactLayerBuilder, JsonLayerBuilder, LayerBuilder, PrettyLayerBuilder};
+use crate::formats::{
+    CompactLayerBuilder, FullLayerBuilder, JsonLayerBuilder, LayerBuilder, PrettyLayerBuilder,
+};
 
 use crate::tracing_subscriber_ext::regiter_otel_layers;
 use crate::{otlp::OtelGuard, resource::DetectResource, Error};
@@ -122,6 +124,8 @@ pub enum LogFormat {
     Pretty,
     /// Structured JSON output (production)
     Json,
+    /// Single-line output
+    Full,
     /// Single-line compact output
     Compact,
     /// Key=value logfmt format
@@ -279,6 +283,12 @@ impl TracingConfig {
     #[must_use]
     pub fn with_json_format(self) -> Self {
         self.with_format(LogFormat::Json)
+    }
+
+    /// Use full formatted output
+    #[must_use]
+    pub fn with_full_format(self) -> Self {
+        self.with_format(LogFormat::Full)
     }
 
     /// Use compact formatted output
@@ -440,6 +450,7 @@ impl TracingConfig {
         match &self.format {
             LogFormat::Pretty => PrettyLayerBuilder.build_layer(self),
             LogFormat::Json => JsonLayerBuilder.build_layer(self),
+            LogFormat::Full => FullLayerBuilder.build_layer(self),
             LogFormat::Compact => CompactLayerBuilder.build_layer(self),
             #[cfg(feature = "logfmt")]
             LogFormat::Logfmt => LogfmtLayerBuilder.build_layer(self),
