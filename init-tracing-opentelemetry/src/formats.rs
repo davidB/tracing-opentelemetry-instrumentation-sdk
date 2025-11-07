@@ -5,6 +5,7 @@
 
 use tracing::Subscriber;
 use tracing_subscriber::fmt;
+use tracing_subscriber::fmt::time::Uptime;
 use tracing_subscriber::{registry::LookupSpan, Layer};
 
 use crate::config::{TracingConfig, WriterConfig};
@@ -30,6 +31,7 @@ where
     L: Send + Sync + 'static,
     fmt::format::Format<L, T>: fmt::FormatEvent<S, N>,
     T: Send + Sync + 'static,
+    fmt::format::Format<L, Uptime>: fmt::FormatEvent<S, N>,
 {
     // Configure file names
     if config.features.file_names {
@@ -61,6 +63,9 @@ where
         layer = layer.with_target(false);
     }
 
+    // Configure timer
+    let layer = layer.with_timer(tracing_subscriber::fmt::time::uptime());
+
     // Configure writer
     match &config.writer {
         WriterConfig::Stdout => Ok(Box::new(layer.with_writer(std::io::stdout))),
@@ -87,9 +92,7 @@ impl LayerBuilder for PrettyLayerBuilder {
     where
         S: Subscriber + for<'a> LookupSpan<'a>,
     {
-        let layer = tracing_subscriber::fmt::layer()
-            .pretty()
-            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let layer = tracing_subscriber::fmt::layer().pretty();
 
         configure_layer(layer, config)
     }
@@ -107,9 +110,7 @@ impl LayerBuilder for JsonLayerBuilder {
     where
         S: Subscriber + for<'a> LookupSpan<'a>,
     {
-        let layer = tracing_subscriber::fmt::layer()
-            .json()
-            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let layer = tracing_subscriber::fmt::layer().json();
 
         configure_layer(layer, config)
     }
@@ -127,8 +128,7 @@ impl LayerBuilder for FullLayerBuilder {
     where
         S: Subscriber + for<'a> LookupSpan<'a>,
     {
-        let layer =
-            tracing_subscriber::fmt::layer().with_timer(tracing_subscriber::fmt::time::uptime());
+        let layer = tracing_subscriber::fmt::layer();
 
         configure_layer(layer, config)
     }
@@ -146,9 +146,7 @@ impl LayerBuilder for CompactLayerBuilder {
     where
         S: Subscriber + for<'a> LookupSpan<'a>,
     {
-        let layer = tracing_subscriber::fmt::layer()
-            .compact()
-            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let layer = tracing_subscriber::fmt::layer().compact();
 
         configure_layer(layer, config)
     }
