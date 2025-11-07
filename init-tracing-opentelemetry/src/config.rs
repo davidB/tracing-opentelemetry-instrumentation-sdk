@@ -183,6 +183,8 @@ impl Default for LevelConfig {
 #[derive(Debug, Clone)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct FeatureSet {
+    /// Include file names in output
+    pub file_names: bool,
     /// Include line numbers in output
     pub line_numbers: bool,
     /// Include thread names in output
@@ -198,6 +200,7 @@ pub struct FeatureSet {
 impl Default for FeatureSet {
     fn default() -> Self {
         Self {
+            file_names: true,
             line_numbers: cfg!(debug_assertions),
             thread_names: cfg!(debug_assertions),
             uptime_timer: true,
@@ -363,6 +366,13 @@ impl TracingConfig {
     }
 
     // === Feature Configuration ===
+
+    /// Enable or disable file names in output
+    #[must_use]
+    pub fn with_file_names(mut self, enabled: bool) -> Self {
+        self.features.file_names = enabled;
+        self
+    }
 
     /// Enable or disable line numbers in output
     #[must_use]

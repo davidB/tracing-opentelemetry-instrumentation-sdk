@@ -35,6 +35,11 @@ impl LayerBuilder for PrettyLayerBuilder {
             .pretty()
             .with_timer(tracing_subscriber::fmt::time::uptime());
 
+        // Configure file names
+        if config.features.file_names {
+            layer = layer.with_file(true);
+        }
+
         // Configure line numbers
         if config.features.line_numbers {
             layer = layer.with_line_number(true);
@@ -86,6 +91,11 @@ impl LayerBuilder for JsonLayerBuilder {
             .json()
             .with_timer(tracing_subscriber::fmt::time::uptime());
 
+        // Configure file names
+        if config.features.file_names {
+            layer = layer.with_file(true);
+        }
+
         // Configure line numbers
         if config.features.line_numbers {
             layer = layer.with_line_number(true);
@@ -135,6 +145,11 @@ impl LayerBuilder for FullLayerBuilder {
     {
         let mut layer =
             tracing_subscriber::fmt::layer().with_timer(tracing_subscriber::fmt::time::uptime());
+
+        // Configure file names
+        if config.features.file_names {
+            layer = layer.with_file(true);
+        }
 
         // Configure line numbers
         if config.features.line_numbers {
@@ -186,6 +201,11 @@ impl LayerBuilder for CompactLayerBuilder {
         let mut layer = tracing_subscriber::fmt::layer()
             .compact()
             .with_timer(tracing_subscriber::fmt::time::uptime());
+
+        // Configure file names
+        if config.features.file_names {
+            layer = layer.with_file(true);
+        }
 
         // Configure line numbers
         if config.features.line_numbers {
