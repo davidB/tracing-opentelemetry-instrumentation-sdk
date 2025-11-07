@@ -19,7 +19,7 @@ authors = ["David Bernard"]
 license = "CC0-1.0"
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
 repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
-rust-version = "1.82.0"
+rust-version = "1.83.0"
 
 [workspace.dependencies]
 assert2 = "0.3"
