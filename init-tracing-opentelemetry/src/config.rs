@@ -143,6 +143,23 @@ impl Default for LogFormat {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LogTimer {
+    None,
+    Time,
+    Uptime,
+}
+
+impl Default for LogTimer {
+    fn default() -> Self {
+        if cfg!(debug_assertions) {
+            LogTimer::Uptime
+        } else {
+            LogTimer::Time
+        }
+    }
+}
+
 /// Configuration for log output destination
 #[derive(Debug, Clone, Default)]
 pub enum WriterConfig {
@@ -191,8 +208,8 @@ pub struct FeatureSet {
     pub thread_names: bool,
     /// Include thread IDs in output
     pub thread_ids: bool,
-    /// Use uptime timer instead of wall clock
-    pub uptime_timer: bool,
+    /// Configure time logging (wall clock, uptime or none)
+    pub timer: LogTimer,
     /// Configure span event logging
     pub span_events: Option<FmtSpan>,
     /// Display target information
@@ -206,7 +223,7 @@ impl Default for FeatureSet {
             line_numbers: cfg!(debug_assertions),
             thread_names: cfg!(debug_assertions),
             thread_ids: false,
-            uptime_timer: true,
+            timer: LogTimer::default(),
             span_events: if cfg!(debug_assertions) {
                 Some(FmtSpan::NEW | FmtSpan::CLOSE)
             } else {
@@ -414,8 +431,20 @@ impl TracingConfig {
 
     /// Enable or disable uptime timer (vs wall clock)
     #[must_use]
+    #[deprecated = "Use `TracingConfig::with_timer` instead"]
     pub fn with_uptime_timer(mut self, enabled: bool) -> Self {
-        self.features.uptime_timer = enabled;
+        self.features.timer = if enabled {
+            LogTimer::Uptime
+        } else {
+            LogTimer::Time
+        };
+        self
+    }
+
+    /// Configure time logging (wall clock, uptime or none)
+    #[must_use]
+    pub fn with_timer(mut self, timer: LogTimer) -> Self {
+        self.features.timer = timer;
         self
     }
 

@@ -5,10 +5,10 @@
 
 use tracing::Subscriber;
 use tracing_subscriber::fmt;
-use tracing_subscriber::fmt::time::Uptime;
+use tracing_subscriber::fmt::time::{time, uptime, Uptime};
 use tracing_subscriber::{registry::LookupSpan, Layer};
 
-use crate::config::{TracingConfig, WriterConfig};
+use crate::config::{LogTimer, TracingConfig, WriterConfig};
 use crate::Error;
 
 /// Trait for building format-specific tracing layers
@@ -29,9 +29,10 @@ where
     S: Subscriber + for<'a> LookupSpan<'a>,
     N: for<'writer> fmt::FormatFields<'writer> + Send + Sync + 'static,
     L: Send + Sync + 'static,
-    fmt::format::Format<L, T>: fmt::FormatEvent<S, N>,
-    T: Send + Sync + 'static,
+    fmt::format::Format<L, ()>: fmt::FormatEvent<S, N>,
     fmt::format::Format<L, Uptime>: fmt::FormatEvent<S, N>,
+    fmt::format::Format<L>: fmt::FormatEvent<S, N>,
+    W: for<'writer> fmt::MakeWriter<'writer> + Send + Sync + 'static,
 {
     // Configure file names
     if config.features.file_names {
@@ -63,10 +64,25 @@ where
         layer = layer.with_target(false);
     }
 
-    // Configure timer
-    let layer = layer.with_timer(tracing_subscriber::fmt::time::uptime());
+    // Configure timer and writer
+    match config.features.timer {
+        LogTimer::None => configure_writer(layer.without_time(), config),
+        LogTimer::Time => configure_writer(layer.with_timer(time()), config),
+        LogTimer::Uptime => configure_writer(layer.with_timer(uptime()), config),
+    }
+}
 
-    // Configure writer
+fn configure_writer<S, N, L, T, W>(
+    layer: fmt::Layer<S, N, fmt::format::Format<L, T>, W>,
+    config: &TracingConfig,
+) -> Result<Box<dyn Layer<S> + Send + Sync + 'static>, Error>
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+    N: for<'writer> fmt::FormatFields<'writer> + Send + Sync + 'static,
+    L: Send + Sync + 'static,
+    T: Send + Sync + 'static,
+    fmt::format::Format<L, T>: fmt::FormatEvent<S, N>,
+{
     match &config.writer {
         WriterConfig::Stdout => Ok(Box::new(layer.with_writer(std::io::stdout))),
         WriterConfig::Stderr => Ok(Box::new(layer.with_writer(std::io::stderr))),
