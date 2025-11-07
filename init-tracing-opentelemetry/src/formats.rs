@@ -50,6 +50,11 @@ impl LayerBuilder for PrettyLayerBuilder {
             layer = layer.with_thread_names(true);
         }
 
+        // Configure thread IDs
+        if config.features.thread_ids {
+            layer = layer.with_thread_ids(true);
+        }
+
         // Configure span events
         if let Some(span_events) = &config.features.span_events {
             layer = layer.with_span_events(span_events.clone());
@@ -104,6 +109,11 @@ impl LayerBuilder for JsonLayerBuilder {
         // Configure thread names
         if config.features.thread_names {
             layer = layer.with_thread_names(true);
+        }
+
+        // Configure thread IDs
+        if config.features.thread_ids {
+            layer = layer.with_thread_ids(true);
         }
 
         // Configure span events (typically disabled in production JSON)
@@ -161,6 +171,11 @@ impl LayerBuilder for FullLayerBuilder {
             layer = layer.with_thread_names(true);
         }
 
+        // Configure thread IDs
+        if config.features.thread_ids {
+            layer = layer.with_thread_ids(true);
+        }
+
         // Configure span events
         if let Some(span_events) = &config.features.span_events {
             layer = layer.with_span_events(span_events.clone());
@@ -215,6 +230,11 @@ impl LayerBuilder for CompactLayerBuilder {
         // Configure thread names
         if config.features.thread_names {
             layer = layer.with_thread_names(true);
+        }
+
+        // Configure thread IDs
+        if config.features.thread_ids {
+            layer = layer.with_thread_ids(true);
         }
 
         // Configure span events

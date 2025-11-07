@@ -189,6 +189,8 @@ pub struct FeatureSet {
     pub line_numbers: bool,
     /// Include thread names in output
     pub thread_names: bool,
+    /// Include thread IDs in output
+    pub thread_ids: bool,
     /// Use uptime timer instead of wall clock
     pub uptime_timer: bool,
     /// Configure span event logging
@@ -203,6 +205,7 @@ impl Default for FeatureSet {
             file_names: true,
             line_numbers: cfg!(debug_assertions),
             thread_names: cfg!(debug_assertions),
+            thread_ids: false,
             uptime_timer: true,
             span_events: if cfg!(debug_assertions) {
                 Some(FmtSpan::NEW | FmtSpan::CLOSE)
@@ -385,6 +388,13 @@ impl TracingConfig {
     #[must_use]
     pub fn with_thread_names(mut self, enabled: bool) -> Self {
         self.features.thread_names = enabled;
+        self
+    }
+
+    /// Enable or disable thread IDs in output
+    #[must_use]
+    pub fn with_thread_ids(mut self, enabled: bool) -> Self {
+        self.features.thread_ids = enabled;
         self
     }
 
