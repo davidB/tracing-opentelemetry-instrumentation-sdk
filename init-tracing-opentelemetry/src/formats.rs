@@ -5,6 +5,7 @@
 
 use tracing::Subscriber;
 use tracing_subscriber::fmt;
+use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::fmt::time::{time, uptime, Uptime};
 use tracing_subscriber::{registry::LookupSpan, Layer};
 
@@ -35,34 +36,27 @@ where
     W: for<'writer> fmt::MakeWriter<'writer> + Send + Sync + 'static,
 {
     // Configure file names
-    if config.features.file_names {
-        layer = layer.with_file(true);
-    }
+    layer = layer.with_file(config.features.file_names);
 
     // Configure line numbers
-    if config.features.line_numbers {
-        layer = layer.with_line_number(true);
-    }
+    layer = layer.with_line_number(config.features.line_numbers);
 
     // Configure thread names
-    if config.features.thread_names {
-        layer = layer.with_thread_names(true);
-    }
+    layer = layer.with_thread_names(config.features.thread_names);
 
     // Configure thread IDs
-    if config.features.thread_ids {
-        layer = layer.with_thread_ids(true);
-    }
+    layer = layer.with_thread_ids(config.features.thread_ids);
 
     // Configure span events
-    if let Some(span_events) = &config.features.span_events {
-        layer = layer.with_span_events(span_events.clone());
-    }
+    let span_events = config
+        .features
+        .span_events
+        .as_ref()
+        .map_or(FmtSpan::NONE, ToOwned::to_owned);
+    layer = layer.with_span_events(span_events);
 
     // Configure target display
-    if !config.features.target_display {
-        layer = layer.with_target(false);
-    }
+    layer = layer.with_target(config.features.target_display);
 
     // Configure timer and writer
     match config.features.timer {
