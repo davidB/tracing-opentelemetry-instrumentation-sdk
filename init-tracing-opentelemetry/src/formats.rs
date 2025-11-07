@@ -10,7 +10,7 @@ use tracing_subscriber::fmt::time::{time, uptime, Uptime};
 use tracing_subscriber::{registry::LookupSpan, Layer};
 
 use crate::config::{LogTimer, TracingConfig, WriterConfig};
-use crate::Error;
+use crate::{Error, FeatureSet};
 
 /// Trait for building format-specific tracing layers
 pub trait LayerBuilder: Send + Sync {
@@ -35,40 +35,40 @@ where
     fmt::format::Format<L>: fmt::FormatEvent<S, N>,
     W: for<'writer> fmt::MakeWriter<'writer> + Send + Sync + 'static,
 {
-    // Configure file names
-    layer = layer.with_file(config.features.file_names);
-
-    // Configure line numbers
-    layer = layer.with_line_number(config.features.line_numbers);
-
-    // Configure thread names
-    layer = layer.with_thread_names(config.features.thread_names);
-
-    // Configure thread IDs
-    layer = layer.with_thread_ids(config.features.thread_ids);
-
-    // Configure span events
-    let span_events = config
-        .features
-        .span_events
+    // NOTE: Destructure to make sure we don’t miss a feature
+    let FeatureSet {
+        file_names,
+        line_numbers,
+        thread_names,
+        thread_ids,
+        timer,
+        span_events,
+        target_display,
+    } = &config.features;
+    let span_events = span_events
         .as_ref()
         .map_or(FmtSpan::NONE, ToOwned::to_owned);
-    layer = layer.with_span_events(span_events);
 
-    // Configure target display
-    layer = layer.with_target(config.features.target_display);
+    // Configure features
+    layer = layer
+        .with_file(*file_names)
+        .with_line_number(*line_numbers)
+        .with_thread_names(*thread_names)
+        .with_thread_ids(*thread_ids)
+        .with_span_events(span_events)
+        .with_target(*target_display);
 
     // Configure timer and writer
-    match config.features.timer {
-        LogTimer::None => configure_writer(layer.without_time(), config),
-        LogTimer::Time => configure_writer(layer.with_timer(time()), config),
-        LogTimer::Uptime => configure_writer(layer.with_timer(uptime()), config),
+    match timer {
+        LogTimer::None => configure_writer(layer.without_time(), &config.writer),
+        LogTimer::Time => configure_writer(layer.with_timer(time()), &config.writer),
+        LogTimer::Uptime => configure_writer(layer.with_timer(uptime()), &config.writer),
     }
 }
 
 fn configure_writer<S, N, L, T, W>(
     layer: fmt::Layer<S, N, fmt::format::Format<L, T>, W>,
-    config: &TracingConfig,
+    writer: &WriterConfig,
 ) -> Result<Box<dyn Layer<S> + Send + Sync + 'static>, Error>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
@@ -77,7 +77,7 @@ where
     T: Send + Sync + 'static,
     fmt::format::Format<L, T>: fmt::FormatEvent<S, N>,
 {
-    match &config.writer {
+    match writer {
         WriterConfig::Stdout => Ok(Box::new(layer.with_writer(std::io::stdout))),
         WriterConfig::Stderr => Ok(Box::new(layer.with_writer(std::io::stderr))),
         WriterConfig::File(path) => {
