@@ -4,8 +4,10 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 #![doc = include_str!("../README.md")]
+#![cfg_attr(docs_rs, feature(doc_cfg))]
 
 #[cfg(feature = "http")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "http")))]
 pub mod http;
 mod span_type;
 

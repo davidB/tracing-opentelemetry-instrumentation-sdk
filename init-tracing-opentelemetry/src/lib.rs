@@ -5,6 +5,7 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::missing_errors_doc)]
 #![doc = include_str!("../README.md")]
+#![cfg_attr(docs_rs, feature(doc_cfg))]
 
 mod error;
 pub use error::Error;
@@ -14,16 +15,22 @@ use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
 use opentelemetry_sdk::trace::TraceError;
 
 #[cfg(feature = "tracing_subscriber_ext")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "tracing_subscriber_ext")))]
 pub mod config;
 #[cfg(feature = "tracing_subscriber_ext")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "tracing_subscriber_ext")))]
 pub mod formats;
 #[cfg(feature = "otlp")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "otlp")))]
 pub mod otlp;
 #[cfg(feature = "tracer")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "tracer")))]
 pub mod resource;
 #[cfg(feature = "stdout")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "stdout")))]
 pub mod stdio;
 #[cfg(feature = "tracing_subscriber_ext")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "tracing_subscriber_ext")))]
 pub mod tracing_subscriber_ext;
 
 /// Configure the global propagator based on content of the env variable [OTEL_PROPAGATORS](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_propagators)
