@@ -7,6 +7,9 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(docs_rs, feature(doc_cfg))]
 
+pub use opentelemetry_sdk;
+pub use tracing_opentelemetry;
+
 mod error;
 pub use error::Error;
 
