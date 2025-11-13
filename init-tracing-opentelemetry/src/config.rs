@@ -53,7 +53,7 @@ use crate::formats::{
     CompactLayerBuilder, FullLayerBuilder, JsonLayerBuilder, LayerBuilder, PrettyLayerBuilder,
 };
 
-use crate::tracing_subscriber_ext::regiter_otel_layers;
+use crate::tracing_subscriber_ext::register_otel_layers_with_resource;
 use crate::{otlp::OtelGuard, resource::DetectResource, Error};
 
 /// Combined guard that handles both `OtelGuard` and optional `DefaultGuard`
@@ -572,10 +572,13 @@ impl TracingConfig {
         // Build the final subscriber based on OTEL configuration
         if self.otel_config.enabled {
             let subscriber = transform(tracing_subscriber::registry());
-            let (subscriber, otel_guard) = regiter_otel_layers(subscriber)?;
-            let subscriber = subscriber
-                .with(self.build_layer()?)
-                .with(self.build_filter_layer()?);
+            let layer = self.build_layer()?;
+            let filter_layer = self.build_filter_layer()?;
+            let (subscriber, otel_guard) = register_otel_layers_with_resource(
+                subscriber,
+                self.otel_config.resource_config.unwrap_or_default().build(),
+            )?;
+            let subscriber = subscriber.with(layer).with(filter_layer);
 
             if self.global_subscriber {
                 tracing::subscriber::set_global_default(subscriber)?;
