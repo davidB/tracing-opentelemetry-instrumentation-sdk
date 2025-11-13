@@ -1,7 +1,10 @@
 use opentelemetry::trace::TracerProvider;
 #[cfg(feature = "metrics")]
 use opentelemetry_sdk::metrics::SdkMeterProvider;
-use opentelemetry_sdk::trace::{SdkTracerProvider, Tracer};
+use opentelemetry_sdk::{
+    trace::{SdkTracerProvider, Tracer},
+    Resource,
+};
 use tracing::{level_filters::LevelFilter, Subscriber};
 #[cfg(feature = "metrics")]
 use tracing_opentelemetry::MetricsLayer;
@@ -77,23 +80,30 @@ pub fn regiter_otel_layers<S>(
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
-    let (trace_layer, tracer_provider) = build_tracer_layer()?;
-    let subscriber = subscriber.with(trace_layer);
+    register_otel_layers_with_resource(subscriber, DetectResource::default().build())
+}
 
+pub fn register_otel_layers_with_resource<S>(
+    subscriber: S,
+    otel_rsrc: Resource,
+) -> Result<(impl Subscriber + for<'span> LookupSpan<'span>, OtelGuard), Error>
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+{
     #[cfg(feature = "metrics")]
-    {
-        let (metrics_layer, meter_provider) = build_metrics_layer()?;
-        let subscriber = subscriber.with(metrics_layer);
-        Ok((
-            subscriber,
-            OtelGuard {
-                meter_provider,
-                tracer_provider,
-            },
-        ))
-    }
-    #[cfg(not(feature = "metrics"))]
-    Ok((subscriber, OtelGuard { tracer_provider }))
+    let (metrics_layer, meter_provider) = build_metrics_layer_with_resource(otel_rsrc.clone())?;
+    let (trace_layer, tracer_provider) = build_tracer_layer_with_resource(otel_rsrc)?;
+    let subscriber = subscriber.with(trace_layer);
+    #[cfg(feature = "metrics")]
+    let subscriber = subscriber.with(metrics_layer);
+    Ok((
+        subscriber,
+        OtelGuard {
+            #[cfg(feature = "metrics")]
+            meter_provider,
+            tracer_provider,
+        },
+    ))
 }
 
 /// change (version 0.31): no longer set the glabal tracer
@@ -101,10 +111,20 @@ pub fn build_tracer_layer<S>() -> Result<(OpenTelemetryLayer<S, Tracer>, SdkTrac
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
 {
-    let otel_rsrc = DetectResource::default()
-        //.with_fallback_service_name(env!("CARGO_PKG_NAME"))
-        //.with_fallback_service_version(env!("CARGO_PKG_VERSION"))
-        .build();
+    build_tracer_layer_with_resource(
+        DetectResource::default()
+            //.with_fallback_service_name(env!("CARGO_PKG_NAME"))
+            //.with_fallback_service_version(env!("CARGO_PKG_VERSION"))
+            .build(),
+    )
+}
+
+pub fn build_tracer_layer_with_resource<S>(
+    otel_rsrc: Resource,
+) -> Result<(OpenTelemetryLayer<S, Tracer>, SdkTracerProvider), Error>
+where
+    S: Subscriber + for<'span> LookupSpan<'span>,
+{
     let tracer_provider = otlp::traces::init_tracerprovider(otel_rsrc, otlp::traces::identity)?;
     // to not send trace somewhere, but continue to create and propagate,...
     // then send them to `init_tracing_opentelemetry::stdio::WriteNoWhere::default()`
@@ -127,9 +147,18 @@ where
 pub fn build_metrics_layer<S>(
 ) -> Result<(MetricsLayer<S, SdkMeterProvider>, SdkMeterProvider), Error>
 where
+    S: Subscriber + for<'span> LookupSpan<'span>,
+{
+    build_metrics_layer_with_resource(DetectResource::default().build())
+}
+
+#[cfg(feature = "metrics")]
+pub fn build_metrics_layer_with_resource<S>(
+    otel_rsrc: Resource,
+) -> Result<(MetricsLayer<S, SdkMeterProvider>, SdkMeterProvider), Error>
+where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
-    let otel_rsrc = DetectResource::default().build();
     let meter_provider = otlp::metrics::init_meterprovider(otel_rsrc, otlp::metrics::identity)?;
     let layer = MetricsLayer::new(meter_provider.clone());
     opentelemetry::global::set_meter_provider(meter_provider.clone());
