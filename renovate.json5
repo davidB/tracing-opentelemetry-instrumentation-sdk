@@ -4,6 +4,7 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: ["config:recommended"],
   additionalReviewers: ["davidB"],
+  ignoreDeps: [ "rust" ], // to keep mise, rust-toolchain aligned to MSRV
   packageRules: [
     {
       matchUpdateTypes: ["patch", "pin", "digest"],
