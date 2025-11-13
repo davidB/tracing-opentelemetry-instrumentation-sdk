@@ -14,6 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.33.0...init-tracing-opentelemetry-v0.34.0) - 2025-11-13
+
+### <!-- 1 -->Fixed
+
+- *(init-tracing-opentelemetry)* apply custom resource configuration to OpenTelemetry layers ([#297](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/297))
+- Fix timers, booleans add support for `Layer::without_time` ([#295](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/295))
+
+### <!-- 2 -->Added
+
+- Add support for `Layer::with_thread_ids`
+- Add support for `Layer::with_file`
+- add support for `tracing_subscriber::fmt::format::Full` ([#291](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/291))
+- add in features to docs.rs rendered content. ([#287](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/287))
+
 ## [0.33.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.32.1...init-tracing-opentelemetry-v0.33.0) - 2025-11-02
 
 ### <!-- 2 -->Added

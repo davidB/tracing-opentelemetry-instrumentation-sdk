@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.2](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.32.1...tracing-opentelemetry-instrumentation-sdk-v0.32.2) - 2025-11-13
+
+### <!-- 2 -->Added
+
+- add in features to docs.rs rendered content. ([#287](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/287))
+
 ## [0.32.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.32.0...tracing-opentelemetry-instrumentation-sdk-v0.32.1) - 2025-10-14
 
 ### Wip
