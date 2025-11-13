@@ -4,10 +4,13 @@
 //! using the strategy pattern with the [`LayerBuilder`] trait.
 
 use tracing::Subscriber;
+use tracing_subscriber::fmt;
+use tracing_subscriber::fmt::format::FmtSpan;
+use tracing_subscriber::fmt::time::{time, uptime, Uptime};
 use tracing_subscriber::{registry::LookupSpan, Layer};
 
-use crate::config::{TracingConfig, WriterConfig};
-use crate::Error;
+use crate::config::{LogTimer, TracingConfig, WriterConfig};
+use crate::{Error, FeatureSet};
 
 /// Trait for building format-specific tracing layers
 pub trait LayerBuilder: Send + Sync {
@@ -17,6 +20,74 @@ pub trait LayerBuilder: Send + Sync {
     ) -> Result<Box<dyn Layer<S> + Send + Sync + 'static>, Error>
     where
         S: Subscriber + for<'a> LookupSpan<'a>;
+}
+
+fn configure_layer<S, N, L, T, W>(
+    mut layer: fmt::Layer<S, N, fmt::format::Format<L, T>, W>,
+    config: &TracingConfig,
+) -> Result<Box<dyn Layer<S> + Send + Sync + 'static>, Error>
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+    N: for<'writer> fmt::FormatFields<'writer> + Send + Sync + 'static,
+    L: Send + Sync + 'static,
+    fmt::format::Format<L, ()>: fmt::FormatEvent<S, N>,
+    fmt::format::Format<L, Uptime>: fmt::FormatEvent<S, N>,
+    fmt::format::Format<L>: fmt::FormatEvent<S, N>,
+    W: for<'writer> fmt::MakeWriter<'writer> + Send + Sync + 'static,
+{
+    // NOTE: Destructure to make sure we don’t miss a feature
+    let FeatureSet {
+        file_names,
+        line_numbers,
+        thread_names,
+        thread_ids,
+        timer,
+        span_events,
+        target_display,
+    } = &config.features;
+    let span_events = span_events
+        .as_ref()
+        .map_or(FmtSpan::NONE, ToOwned::to_owned);
+
+    // Configure features
+    layer = layer
+        .with_file(*file_names)
+        .with_line_number(*line_numbers)
+        .with_thread_names(*thread_names)
+        .with_thread_ids(*thread_ids)
+        .with_span_events(span_events)
+        .with_target(*target_display);
+
+    // Configure timer and writer
+    match timer {
+        LogTimer::None => configure_writer(layer.without_time(), &config.writer),
+        LogTimer::Time => configure_writer(layer.with_timer(time()), &config.writer),
+        LogTimer::Uptime => configure_writer(layer.with_timer(uptime()), &config.writer),
+    }
+}
+
+fn configure_writer<S, N, L, T, W>(
+    layer: fmt::Layer<S, N, fmt::format::Format<L, T>, W>,
+    writer: &WriterConfig,
+) -> Result<Box<dyn Layer<S> + Send + Sync + 'static>, Error>
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+    N: for<'writer> fmt::FormatFields<'writer> + Send + Sync + 'static,
+    L: Send + Sync + 'static,
+    T: Send + Sync + 'static,
+    fmt::format::Format<L, T>: fmt::FormatEvent<S, N>,
+{
+    match writer {
+        WriterConfig::Stdout => Ok(Box::new(layer.with_writer(std::io::stdout))),
+        WriterConfig::Stderr => Ok(Box::new(layer.with_writer(std::io::stderr))),
+        WriterConfig::File(path) => {
+            let file = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)?;
+            Ok(Box::new(layer.with_writer(file)))
+        }
+    }
 }
 
 /// Builder for pretty-formatted logs (development style)
@@ -31,52 +102,9 @@ impl LayerBuilder for PrettyLayerBuilder {
     where
         S: Subscriber + for<'a> LookupSpan<'a>,
     {
-        let mut layer = tracing_subscriber::fmt::layer()
-            .pretty()
-            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let layer = tracing_subscriber::fmt::layer().pretty();
 
-        // Configure file names
-        if config.features.file_names {
-            layer = layer.with_file(true);
-        }
-
-        // Configure line numbers
-        if config.features.line_numbers {
-            layer = layer.with_line_number(true);
-        }
-
-        // Configure thread names
-        if config.features.thread_names {
-            layer = layer.with_thread_names(true);
-        }
-
-        // Configure thread IDs
-        if config.features.thread_ids {
-            layer = layer.with_thread_ids(true);
-        }
-
-        // Configure span events
-        if let Some(span_events) = &config.features.span_events {
-            layer = layer.with_span_events(span_events.clone());
-        }
-
-        // Configure target display
-        if !config.features.target_display {
-            layer = layer.with_target(false);
-        }
-
-        // Configure writer
-        match &config.writer {
-            WriterConfig::Stdout => Ok(Box::new(layer.with_writer(std::io::stdout))),
-            WriterConfig::Stderr => Ok(Box::new(layer.with_writer(std::io::stderr))),
-            WriterConfig::File(path) => {
-                let file = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)?;
-                Ok(Box::new(layer.with_writer(file)))
-            }
-        }
+        configure_layer(layer, config)
     }
 }
 
@@ -92,52 +120,9 @@ impl LayerBuilder for JsonLayerBuilder {
     where
         S: Subscriber + for<'a> LookupSpan<'a>,
     {
-        let mut layer = tracing_subscriber::fmt::layer()
-            .json()
-            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let layer = tracing_subscriber::fmt::layer().json();
 
-        // Configure file names
-        if config.features.file_names {
-            layer = layer.with_file(true);
-        }
-
-        // Configure line numbers
-        if config.features.line_numbers {
-            layer = layer.with_line_number(true);
-        }
-
-        // Configure thread names
-        if config.features.thread_names {
-            layer = layer.with_thread_names(true);
-        }
-
-        // Configure thread IDs
-        if config.features.thread_ids {
-            layer = layer.with_thread_ids(true);
-        }
-
-        // Configure span events (typically disabled in production JSON)
-        if let Some(span_events) = &config.features.span_events {
-            layer = layer.with_span_events(span_events.clone());
-        }
-
-        // Configure target display
-        if !config.features.target_display {
-            layer = layer.with_target(false);
-        }
-
-        // Configure writer
-        match &config.writer {
-            WriterConfig::Stdout => Ok(Box::new(layer.with_writer(std::io::stdout))),
-            WriterConfig::Stderr => Ok(Box::new(layer.with_writer(std::io::stderr))),
-            WriterConfig::File(path) => {
-                let file = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)?;
-                Ok(Box::new(layer.with_writer(file)))
-            }
-        }
+        configure_layer(layer, config)
     }
 }
 
@@ -153,51 +138,9 @@ impl LayerBuilder for FullLayerBuilder {
     where
         S: Subscriber + for<'a> LookupSpan<'a>,
     {
-        let mut layer =
-            tracing_subscriber::fmt::layer().with_timer(tracing_subscriber::fmt::time::uptime());
+        let layer = tracing_subscriber::fmt::layer();
 
-        // Configure file names
-        if config.features.file_names {
-            layer = layer.with_file(true);
-        }
-
-        // Configure line numbers
-        if config.features.line_numbers {
-            layer = layer.with_line_number(true);
-        }
-
-        // Configure thread names
-        if config.features.thread_names {
-            layer = layer.with_thread_names(true);
-        }
-
-        // Configure thread IDs
-        if config.features.thread_ids {
-            layer = layer.with_thread_ids(true);
-        }
-
-        // Configure span events
-        if let Some(span_events) = &config.features.span_events {
-            layer = layer.with_span_events(span_events.clone());
-        }
-
-        // Configure target display
-        if !config.features.target_display {
-            layer = layer.with_target(false);
-        }
-
-        // Configure writer
-        match &config.writer {
-            WriterConfig::Stdout => Ok(Box::new(layer.with_writer(std::io::stdout))),
-            WriterConfig::Stderr => Ok(Box::new(layer.with_writer(std::io::stderr))),
-            WriterConfig::File(path) => {
-                let file = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)?;
-                Ok(Box::new(layer.with_writer(file)))
-            }
-        }
+        configure_layer(layer, config)
     }
 }
 
@@ -213,52 +156,9 @@ impl LayerBuilder for CompactLayerBuilder {
     where
         S: Subscriber + for<'a> LookupSpan<'a>,
     {
-        let mut layer = tracing_subscriber::fmt::layer()
-            .compact()
-            .with_timer(tracing_subscriber::fmt::time::uptime());
+        let layer = tracing_subscriber::fmt::layer().compact();
 
-        // Configure file names
-        if config.features.file_names {
-            layer = layer.with_file(true);
-        }
-
-        // Configure line numbers
-        if config.features.line_numbers {
-            layer = layer.with_line_number(true);
-        }
-
-        // Configure thread names
-        if config.features.thread_names {
-            layer = layer.with_thread_names(true);
-        }
-
-        // Configure thread IDs
-        if config.features.thread_ids {
-            layer = layer.with_thread_ids(true);
-        }
-
-        // Configure span events
-        if let Some(span_events) = &config.features.span_events {
-            layer = layer.with_span_events(span_events.clone());
-        }
-
-        // Configure target display
-        if !config.features.target_display {
-            layer = layer.with_target(false);
-        }
-
-        // Configure writer
-        match &config.writer {
-            WriterConfig::Stdout => Ok(Box::new(layer.with_writer(std::io::stdout))),
-            WriterConfig::Stderr => Ok(Box::new(layer.with_writer(std::io::stderr))),
-            WriterConfig::File(path) => {
-                let file = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)?;
-                Ok(Box::new(layer.with_writer(file)))
-            }
-        }
+        configure_layer(layer, config)
     }
 }
 
