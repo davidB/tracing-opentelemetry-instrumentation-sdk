@@ -525,14 +525,13 @@ impl TracingConfig {
             let subscriber = transform(tracing_subscriber::registry());
             let layer = self.build_layer()?;
             let filter_layer = self.build_filter_layer()?;
-            let global_subscriber = self.global_subscriber;
             let (subscriber, otel_guard) = register_otel_layers_with_resource(
                 subscriber,
                 self.otel_config.resource_config.unwrap_or_default().build(),
             )?;
             let subscriber = subscriber.with(layer).with(filter_layer);
 
-            if global_subscriber {
+            if self.global_subscriber {
                 tracing::subscriber::set_global_default(subscriber)?;
                 Ok(Guard::global(Some(otel_guard)))
             } else {
