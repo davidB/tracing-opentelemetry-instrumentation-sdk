@@ -2,22 +2,22 @@ mod common;
 mod logs;
 mod metrics;
 mod trace;
-pub use logs::ExportedLog;
-use opentelemetry_proto::tonic::collector::metrics::v1::metrics_service_server::MetricsServiceServer;
-use opentelemetry_sdk::metrics::{PeriodicReader, SdkMeterProvider};
-pub use trace::ExportedSpan;
 
 use logs::*;
 use metrics::*;
 use trace::*;
 
-use std::net::SocketAddr;
-use std::time::{Duration, Instant};
+pub use logs::ExportedLog;
+pub use trace::ExportedSpan;
 
 use futures::StreamExt;
 use opentelemetry_otlp::{LogExporter, MetricExporter, SpanExporter, WithExportConfig};
 use opentelemetry_proto::tonic::collector::logs::v1::logs_service_server::LogsServiceServer;
+use opentelemetry_proto::tonic::collector::metrics::v1::metrics_service_server::MetricsServiceServer;
 use opentelemetry_proto::tonic::collector::trace::v1::trace_service_server::TraceServiceServer;
+use opentelemetry_sdk::metrics::{PeriodicReader, SdkMeterProvider};
+use std::net::SocketAddr;
+use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Receiver;
 use tokio_stream::wrappers::TcpListenerStream;
