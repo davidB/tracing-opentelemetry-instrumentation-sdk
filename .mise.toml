@@ -14,6 +14,7 @@ protoc = '33.1'
 # - do not use cargo-binstall" (it's a special name used by mise)
 # - "aqua:cargo-bins/cargo-binstall" allow to download the binary
 "aqua:cargo-bins/cargo-binstall" = "1"
+cargo-insta = "latest"
 
 [tasks.format]
 alias = "fmt"

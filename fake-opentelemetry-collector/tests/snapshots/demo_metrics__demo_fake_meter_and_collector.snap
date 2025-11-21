@@ -1,0 +1,101 @@
+---
+source: fake-opentelemetry-collector/tests/demo_metrics.rs
+expression: otel_metrics
+---
+- metrics:
+    - name: test_gauge
+      description: A test gauge
+      unit: km/s
+      data:
+        Gauge:
+          data_points:
+            - attributes:
+                foo: "\"Some(AnyValue { value: Some(StringValue(\\\"bar\\\")) })\""
+              start_time_unix_nano: "[timestamp]"
+              time_unix_nano: "[timestamp]"
+              exemplars: []
+              flags: 0
+              value:
+                AsDouble: 123.456
+    - name: test_updown_counter
+      description: A test up-down-counter
+      unit: m/s^2
+      data:
+        Sum:
+          data_points:
+            - attributes:
+                foo: "\"Some(AnyValue { value: Some(StringValue(\\\"bar\\\")) })\""
+              start_time_unix_nano: "[timestamp]"
+              time_unix_nano: "[timestamp]"
+              exemplars: []
+              flags: 0
+              value:
+                AsInt: -50
+          aggregation_temporality: 2
+          is_monotonic: false
+    - name: test_counter
+      description: A test counter
+      unit: Jigawatts
+      data:
+        Sum:
+          data_points:
+            - attributes:
+                foo: "\"Some(AnyValue { value: Some(StringValue(\\\"bar\\\")) })\""
+              start_time_unix_nano: "[timestamp]"
+              time_unix_nano: "[timestamp]"
+              exemplars: []
+              flags: 0
+              value:
+                AsInt: 25
+          aggregation_temporality: 2
+          is_monotonic: true
+    - name: test_histogram
+      description: A test histogram
+      unit: ft/in^2
+      data:
+        Histogram:
+          data_points:
+            - attributes:
+                foo: "\"Some(AnyValue { value: Some(StringValue(\\\"bar\\\")) })\""
+              start_time_unix_nano: "[timestamp]"
+              time_unix_nano: "[timestamp]"
+              count: 2
+              sum: 23
+              bucket_counts:
+                - 0
+                - 0
+                - 1
+                - 1
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+              explicit_bounds:
+                - 0
+                - 5
+                - 10
+                - 25
+                - 50
+                - 75
+                - 100
+                - 250
+                - 500
+                - 750
+                - 1000
+                - 2500
+                - 5000
+                - 7500
+                - 10000
+              flags: 0
+              min: 10
+              max: 13
+              exemplars: []
+          aggregation_temporality: 2
