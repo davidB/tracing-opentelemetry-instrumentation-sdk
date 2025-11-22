@@ -18,6 +18,7 @@ opentelemetry-otlp = { workspace = true, features = [
   "grpc-tonic",
   "logs",
   "trace",
+  "metrics",
 ] }
 opentelemetry-proto = { workspace = true, features = [
   "gen-tonic",

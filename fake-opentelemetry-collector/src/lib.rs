@@ -1,19 +1,24 @@
 mod common;
 mod logs;
+mod metrics;
 mod trace;
-pub use logs::ExportedLog;
-pub use trace::ExportedSpan;
 
 use logs::*;
+use metrics::*;
 use trace::*;
 
-use std::net::SocketAddr;
-use std::time::{Duration, Instant};
+pub use logs::ExportedLog;
+pub use metrics::ExportedMetric;
+pub use trace::ExportedSpan;
 
 use futures::StreamExt;
-use opentelemetry_otlp::{LogExporter, SpanExporter, WithExportConfig};
+use opentelemetry_otlp::{LogExporter, MetricExporter, SpanExporter, WithExportConfig};
 use opentelemetry_proto::tonic::collector::logs::v1::logs_service_server::LogsServiceServer;
+use opentelemetry_proto::tonic::collector::metrics::v1::metrics_service_server::MetricsServiceServer;
 use opentelemetry_proto::tonic::collector::trace::v1::trace_service_server::TraceServiceServer;
+use opentelemetry_sdk::metrics::{PeriodicReader, SdkMeterProvider};
+use std::net::SocketAddr;
+use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Receiver;
 use tokio_stream::wrappers::TcpListenerStream;
@@ -23,6 +28,7 @@ pub struct FakeCollectorServer {
     address: SocketAddr,
     req_rx: mpsc::Receiver<ExportedSpan>,
     log_rx: mpsc::Receiver<ExportedLog>,
+    metrics_rx: mpsc::Receiver<ExportedMetric>,
     handle: tokio::task::JoinHandle<()>,
 }
 
@@ -40,13 +46,16 @@ impl FakeCollectorServer {
 
         let (req_tx, req_rx) = mpsc::channel::<ExportedSpan>(64);
         let (log_tx, log_rx) = mpsc::channel::<ExportedLog>(64);
+        let (metrics_tx, metrics_rx) = mpsc::channel::<ExportedMetric>(64);
         let trace_service = TraceServiceServer::new(FakeTraceService::new(req_tx));
         let logs_service = LogsServiceServer::new(FakeLogsService::new(log_tx));
+        let metrics_service = MetricsServiceServer::new(FakeMetricsService::new(metrics_tx));
         let handle = tokio::task::spawn(async move {
             debug!("start FakeCollectorServer http://{addr}"); //Devskim: ignore DS137138)
             tonic::transport::Server::builder()
                 .add_service(trace_service)
                 .add_service(logs_service)
+                .add_service(metrics_service)
                 .serve_with_incoming(stream)
                 .await
                 .expect("Server failed");
@@ -56,6 +65,7 @@ impl FakeCollectorServer {
             address: addr,
             req_rx,
             log_rx,
+            metrics_rx,
             handle,
         })
     }
@@ -78,6 +88,14 @@ impl FakeCollectorServer {
 
     pub async fn exported_logs(&mut self, at_least: usize, timeout: Duration) -> Vec<ExportedLog> {
         recv_many(&mut self.log_rx, at_least, timeout).await
+    }
+
+    pub async fn exported_metrics(
+        &mut self,
+        at_least: usize,
+        timeout: Duration,
+    ) -> Vec<ExportedMetric> {
+        recv_many(&mut self.metrics_rx, at_least, timeout).await
     }
 
     pub fn abort(self) {
@@ -124,4 +142,18 @@ pub async fn setup_logger_provider(
                 .expect("failed to install logging"),
         )
         .build()
+}
+
+pub async fn setup_meter_provider(
+    fake_server: &FakeCollectorServer,
+) -> opentelemetry_sdk::metrics::SdkMeterProvider {
+    let exporter = MetricExporter::builder()
+        .with_tonic()
+        .with_endpoint(fake_server.endpoint())
+        .build()
+        .expect("failed to install metrics");
+
+    let reader = PeriodicReader::builder(exporter).build();
+
+    SdkMeterProvider::builder().with_reader(reader).build()
 }
