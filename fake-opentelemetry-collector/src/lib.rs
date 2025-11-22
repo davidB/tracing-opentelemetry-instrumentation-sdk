@@ -8,6 +8,7 @@ use metrics::*;
 use trace::*;
 
 pub use logs::ExportedLog;
+pub use metrics::ExportedMetric;
 pub use trace::ExportedSpan;
 
 use futures::StreamExt;
