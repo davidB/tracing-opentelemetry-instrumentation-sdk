@@ -14,7 +14,7 @@ use opentelemetry_semantic_conventions::resource;
 /// # }
 ///
 /// ```
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct DetectResource {
     fallback_service_name: Option<&'static str>,
     fallback_service_version: Option<&'static str>,
@@ -40,7 +40,7 @@ impl DetectResource {
     }
 
     #[must_use]
-    pub fn build(mut self) -> Resource {
+    pub fn build(&mut self) -> Resource {
         //Box::new(OsResourceDetector), //FIXME enable when available for opentelemetry >= 0.25
         //Box::new(ProcessResourceDetector),
         let rsrc = Resource::builder()
