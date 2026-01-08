@@ -7,9 +7,12 @@ categories = ["development-tools::debugging", "development-tools::profiling"]
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/init-tracing-opentelemetry"
 edition.workspace = true
 version = "0.34.0"
-authors.workspace = true
 repository.workspace = true
 license.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docs_rs"]
 
 [dependencies]
 opentelemetry = { workspace = true }
@@ -82,9 +85,6 @@ metrics = [
   "opentelemetry-stdout/metrics",
 ]
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docs_rs"]
-
+[lints]
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(docs_rs)'] }

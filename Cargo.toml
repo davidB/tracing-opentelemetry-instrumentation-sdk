@@ -9,17 +9,21 @@ members = [
   "tonic-tracing-opentelemetry",
   "tracing-opentelemetry-instrumentation-sdk",
 ]
-
 exclude = ["target"]
 
 [workspace.package]
 edition = "2021"
 version = "0.32.0"
-authors = ["David Bernard"]
 license = "CC0-1.0"
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
 repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
 rust-version = "1.83.0"
+
+[workspace.metadata.release]
+pre-release-commit-message = "🚀 (cargo-release) version {{version}}"
+tag-prefix = ""
+tag-name = "{{prefix}}{{version}}"
+tag-message = "🔖 {{version}}"
 
 [workspace.dependencies]
 assert2 = "0.3"
@@ -54,9 +58,3 @@ opt-level = 3
 
 [profile.dev.package.similar]
 opt-level = 3
-
-[workspace.metadata.release]
-pre-release-commit-message = "🚀 (cargo-release) version {{version}}"
-tag-prefix = ""
-tag-name = "{{prefix}}{{version}}"
-tag-message = "🔖 {{version}}"

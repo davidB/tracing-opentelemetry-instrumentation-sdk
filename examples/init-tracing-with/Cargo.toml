@@ -3,7 +3,6 @@ name = "init-tracing-with"
 publish = false
 edition.workspace = true
 version.workspace = true
-authors.workspace = true
 repository.workspace = true
 license.workspace = true
 

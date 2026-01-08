@@ -11,9 +11,12 @@ categories = [
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/tracing-opentelemetry-instrumentation-sdk"
 edition.workspace = true
 version = "0.32.2"
-authors.workspace = true
 repository.workspace = true
 license.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docs_rs"]
 
 [dependencies]
 http = { workspace = true, optional = true }
@@ -34,9 +37,6 @@ http = ["dep:http"]
 # to use level `info` instead of `trace` to create otel span
 tracing_level_info = []
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docs_rs"]
-
+[lints]
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(docs_rs)'] }

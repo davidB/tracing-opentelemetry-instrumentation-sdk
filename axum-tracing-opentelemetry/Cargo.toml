@@ -12,7 +12,6 @@ homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/
 rust-version.workspace = true
 edition.workspace = true
 version = "0.32.2"
-authors.workspace = true
 repository.workspace = true
 license.workspace = true
 
