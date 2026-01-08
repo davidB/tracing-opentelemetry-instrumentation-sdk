@@ -3,7 +3,6 @@ name = "bug_234_tls"
 publish = false
 edition.workspace = true
 version.workspace = true
-authors.workspace = true
 repository.workspace = true
 license.workspace = true
 
