@@ -1,3 +1,6 @@
+#![allow(deprecated)]
+use std::borrow::Cow;
+
 use opentelemetry::trace::TracerProvider;
 #[cfg(feature = "metrics")]
 use opentelemetry_sdk::metrics::SdkMeterProvider;
@@ -74,6 +77,7 @@ pub fn build_level_filter_layer(log_directives: &str) -> Result<EnvFilter, Error
         .add_directive(directive_to_allow_otel_trace))
 }
 
+#[deprecated(since = "0.31.0", note = "Use `TracingConfig` instead")]
 pub fn regiter_otel_layers<S>(
     subscriber: S,
 ) -> Result<(impl Subscriber + for<'span> LookupSpan<'span>, OtelGuard), Error>
@@ -83,6 +87,7 @@ where
     register_otel_layers_with_resource(subscriber, DetectResource::default().build())
 }
 
+#[deprecated(since = "0.31.0", note = "Use `TracingConfig` instead")]
 pub fn register_otel_layers_with_resource<S>(
     subscriber: S,
     otel_rsrc: Resource,
@@ -106,7 +111,8 @@ where
     ))
 }
 
-/// change (version 0.31): no longer set the glabal tracer
+/// change (version 0.31): no longer set the global tracer
+#[deprecated(since = "0.31.0", note = "Use `TracingConfig` instead")]
 pub fn build_tracer_layer<S>() -> Result<(OpenTelemetryLayer<S, Tracer>, SdkTracerProvider), Error>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
@@ -119,8 +125,19 @@ where
     )
 }
 
+#[deprecated(since = "0.31.0", note = "Use `TracingConfig` instead")]
 pub fn build_tracer_layer_with_resource<S>(
     otel_rsrc: Resource,
+) -> Result<(OpenTelemetryLayer<S, Tracer>, SdkTracerProvider), Error>
+where
+    S: Subscriber + for<'span> LookupSpan<'span>,
+{
+    build_tracer_layer_with_resource_and_name(otel_rsrc, "")
+}
+
+pub(crate) fn build_tracer_layer_with_resource_and_name<S>(
+    otel_rsrc: Resource,
+    tracer_name: impl Into<Cow<'static, str>>,
 ) -> Result<(OpenTelemetryLayer<S, Tracer>, SdkTracerProvider), Error>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
@@ -138,11 +155,12 @@ where
     init_propagator()?;
     let layer = tracing_opentelemetry::layer()
         .with_error_records_to_exceptions(true)
-        .with_tracer(tracer_provider.tracer(""));
+        .with_tracer(tracer_provider.tracer(tracer_name));
     opentelemetry::global::set_tracer_provider(tracer_provider.clone());
     Ok((layer, tracer_provider))
 }
 
+#[deprecated(since = "0.31.0", note = "Use `TracingConfig` instead")]
 #[cfg(feature = "metrics")]
 pub fn build_metrics_layer<S>(
 ) -> Result<(MetricsLayer<S, SdkMeterProvider>, SdkMeterProvider), Error>
@@ -152,6 +170,7 @@ where
     build_metrics_layer_with_resource(DetectResource::default().build())
 }
 
+#[deprecated(since = "0.31.0", note = "Use `TracingConfig` instead")]
 #[cfg(feature = "metrics")]
 pub fn build_metrics_layer_with_resource<S>(
     otel_rsrc: Resource,

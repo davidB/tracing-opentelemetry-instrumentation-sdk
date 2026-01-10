@@ -38,6 +38,7 @@
 //! }
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
+#![allow(deprecated)]
 
 use std::path::{Path, PathBuf};
 
@@ -53,7 +54,9 @@ use crate::formats::{
     CompactLayerBuilder, FullLayerBuilder, JsonLayerBuilder, LayerBuilder, PrettyLayerBuilder,
 };
 
-use crate::tracing_subscriber_ext::register_otel_layers_with_resource;
+#[cfg(feature = "metrics")]
+use crate::tracing_subscriber_ext::build_metrics_layer_with_resource;
+use crate::tracing_subscriber_ext::build_tracer_layer_with_resource_and_name;
 use crate::{otlp::OtelGuard, resource::DetectResource, Error};
 
 /// Combined guard that handles both `OtelGuard` and optional `DefaultGuard`
@@ -271,6 +274,8 @@ pub struct TracingConfig {
     pub otel_config: OtelConfig,
     /// Whether to set the subscriber as global default
     pub global_subscriber: bool,
+    /// name of the tracer (default `""`)
+    pub tracer_name: String,
 }
 
 impl Default for TracingConfig {
@@ -282,6 +287,7 @@ impl Default for TracingConfig {
             features: FeatureSet::default(),
             otel_config: OtelConfig::default(),
             global_subscriber: true,
+            tracer_name: String::new(),
         }
     }
 }
@@ -382,6 +388,13 @@ impl TracingConfig {
     #[must_use]
     pub fn with_otel_trace_level(mut self, level: LevelFilter) -> Self {
         self.level_config.otel_trace_level = level;
+        self
+    }
+
+    /// Set the name of the tracer (default `""`)
+    #[must_use]
+    pub fn with_otel_tracer_name(mut self, name: impl Into<String>) -> Self {
+        self.tracer_name = name.into();
         self
     }
 
@@ -574,10 +587,7 @@ impl TracingConfig {
             let subscriber = transform(tracing_subscriber::registry());
             let layer = self.build_layer()?;
             let filter_layer = self.build_filter_layer()?;
-            let (subscriber, otel_guard) = register_otel_layers_with_resource(
-                subscriber,
-                self.otel_config.resource_config.unwrap_or_default().build(),
-            )?;
+            let (subscriber, otel_guard) = self.register_otel_layers_with_resource(subscriber)?;
             let subscriber = subscriber.with(layer).with(filter_layer);
 
             if self.global_subscriber {
@@ -601,6 +611,36 @@ impl TracingConfig {
                 Ok(Guard::non_global(None, default_guard))
             }
         }
+    }
+
+    fn register_otel_layers_with_resource<S>(
+        &self,
+        subscriber: S,
+    ) -> Result<(impl Subscriber + for<'span> LookupSpan<'span>, OtelGuard), Error>
+    where
+        S: Subscriber + for<'a> LookupSpan<'a>,
+    {
+        let otel_rsrc = self
+            .otel_config
+            .resource_config
+            .clone()
+            .unwrap_or_default()
+            .build();
+        #[cfg(feature = "metrics")]
+        let (metrics_layer, meter_provider) = build_metrics_layer_with_resource(otel_rsrc.clone())?;
+        let (trace_layer, tracer_provider) =
+            build_tracer_layer_with_resource_and_name(otel_rsrc, self.tracer_name.clone())?;
+        let subscriber = subscriber.with(trace_layer);
+        #[cfg(feature = "metrics")]
+        let subscriber = subscriber.with(metrics_layer);
+        Ok((
+            subscriber,
+            OtelGuard {
+                #[cfg(feature = "metrics")]
+                meter_provider,
+                tracer_provider,
+            },
+        ))
     }
 
     // === Preset Configurations ===

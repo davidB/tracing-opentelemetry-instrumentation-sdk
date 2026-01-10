@@ -224,7 +224,7 @@ skip = [
   # "rand_chacha", # until tonic & tower upgrade
   # "rand_core", # until tonic & tower upgrade
   # "socket2",
-  "wasi",
+  # "wasi",
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
