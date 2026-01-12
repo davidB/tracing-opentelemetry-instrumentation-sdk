@@ -100,6 +100,7 @@ allow = [
   "Unicode-3.0",
   # "Unicode-DFS-2016",
   "Unlicense",
+  "Zlib"
 ]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
@@ -218,7 +219,7 @@ skip = [
   # "indexmap",
   # "hermit-abi",
   # "rustls-native-certs",
-  # "hashbrown",
+  "hashbrown",
   "getrandom",
   # "rand", # until tonic & tower upgrade
   # "rand_chacha", # until tonic & tower upgrade
