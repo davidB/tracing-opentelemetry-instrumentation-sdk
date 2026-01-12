@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.34.0...init-tracing-opentelemetry-v0.35.0) - 2026-01-12
+
+### <!-- 2 -->Added
+
+- allow to define otel tracer's name via `TracerConfig` ([#313](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/313))
+
 ## [0.34.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.33.0...init-tracing-opentelemetry-v0.34.0) - 2025-11-13
 
 ### <!-- 1 -->Fixed
