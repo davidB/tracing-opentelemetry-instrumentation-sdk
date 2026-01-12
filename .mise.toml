@@ -7,7 +7,7 @@ OTEL_TRACES_SAMPLER = "always_on"
 [tools]
 rust = { version = "1.83.0", profile = "minimal", components = "rustfmt,clippy" } # the rust tool stack (with cargo, fmt, clippy) to build source
 grpcurl = '1.9'
-protoc = '33.3'
+protoc = '33.4'
 # grpc-health-probe = "*"
 # sccache = "0.5"
 # cargo-binstall allow to download (insteal of build) "cargo:*"
