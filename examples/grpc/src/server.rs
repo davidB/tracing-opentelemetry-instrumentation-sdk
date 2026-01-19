@@ -1,7 +1,7 @@
 use generated::greeter_server::{Greeter, GreeterServer};
 use generated::{HelloReply, HelloRequest, StatusRequest};
 use tonic::Code;
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::{Request, Response, Status, transport::Server};
 use tonic_tracing_opentelemetry::middleware::{filters, server};
 
 pub mod generated {

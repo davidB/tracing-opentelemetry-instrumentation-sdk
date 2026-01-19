@@ -1,5 +1,5 @@
-use fake_opentelemetry_collector::{setup_meter_provider, FakeCollectorServer};
-use opentelemetry::{global, KeyValue};
+use fake_opentelemetry_collector::{FakeCollectorServer, setup_meter_provider};
+use opentelemetry::{KeyValue, global};
 use std::time::Duration;
 use tracing::debug;
 

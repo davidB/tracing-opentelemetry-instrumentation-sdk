@@ -92,7 +92,7 @@ fn propagator_from_string(
         ))),
         #[cfg(not(feature = "zipkin"))]
         "b3" => Err(TraceError::from(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'b3', try to enable compile feature 'zipkin'"
+            "unsupported propagators form env OTEL_PROPAGATORS: 'b3', try to enable compile feature 'zipkin'",
         )),
         #[cfg(feature = "zipkin")]
         "b3multi" => Ok(Some(Box::new(
@@ -102,15 +102,15 @@ fn propagator_from_string(
         ))),
         #[cfg(not(feature = "zipkin"))]
         "b3multi" => Err(TraceError::from(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'b3multi', try to enable compile feature 'zipkin'"
+            "unsupported propagators form env OTEL_PROPAGATORS: 'b3multi', try to enable compile feature 'zipkin'",
         )),
         #[cfg(feature = "jaeger")]
         "jaeger" => Ok(Some(Box::new(
-            opentelemetry_jaeger_propagator::Propagator::default()
+            opentelemetry_jaeger_propagator::Propagator::default(),
         ))),
         #[cfg(not(feature = "jaeger"))]
         "jaeger" => Err(TraceError::from(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'jaeger', try to enable compile feature 'jaeger'"
+            "unsupported propagators form env OTEL_PROPAGATORS: 'jaeger', try to enable compile feature 'jaeger'",
         )),
         #[cfg(feature = "xray")]
         "xray" => Ok(Some(Box::new(
@@ -118,7 +118,7 @@ fn propagator_from_string(
         ))),
         #[cfg(not(feature = "xray"))]
         "xray" => Err(TraceError::from(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'xray', try to enable compile feature 'xray'"
+            "unsupported propagators form env OTEL_PROPAGATORS: 'xray', try to enable compile feature 'xray'",
         )),
         "none" => Ok(None),
         unknown => Err(TraceError::from(format!(

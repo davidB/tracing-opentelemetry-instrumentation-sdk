@@ -2,7 +2,7 @@
 #![allow(clippy::default_constructed_unit_structs)] // warning since 1.71
 
 use axum::extract::Path;
-use axum::{response::IntoResponse, routing::get, BoxError, Router};
+use axum::{BoxError, Router, response::IntoResponse, routing::get};
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use serde_json::json;
 use std::net::SocketAddr;

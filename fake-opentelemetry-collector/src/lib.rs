@@ -116,7 +116,14 @@ pub async fn setup_tracer_provider(
     fake_server: &FakeCollectorServer,
 ) -> opentelemetry_sdk::trace::SdkTracerProvider {
     // if the environment variable is set (in test or in caller), `with_endpoint` value is ignored
-    std::env::remove_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
+    // if std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT").is_ok() {
+    //     panic!(
+    //         "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT is set, but it should not be, conflict with fake collector"
+    //     );
+    // }
+    unsafe {
+        std::env::remove_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"); // unsafe
+    }
 
     opentelemetry_sdk::trace::SdkTracerProvider::builder()
         .with_batch_exporter(

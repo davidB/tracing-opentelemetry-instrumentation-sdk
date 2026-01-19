@@ -5,22 +5,22 @@ use opentelemetry::trace::TracerProvider;
 #[cfg(feature = "metrics")]
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 use opentelemetry_sdk::{
-    trace::{SdkTracerProvider, Tracer},
     Resource,
+    trace::{SdkTracerProvider, Tracer},
 };
-use tracing::{level_filters::LevelFilter, Subscriber};
+use tracing::{Subscriber, level_filters::LevelFilter};
 #[cfg(feature = "metrics")]
 use tracing_opentelemetry::MetricsLayer;
 use tracing_opentelemetry::OpenTelemetryLayer;
-use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, registry::LookupSpan, Layer};
+use tracing_subscriber::{Layer, filter::EnvFilter, layer::SubscriberExt, registry::LookupSpan};
 
 use crate::{
+    Error,
     config::TracingConfig,
     init_propagator, //stdio,
     otlp,
     otlp::OtelGuard,
     resource::DetectResource,
-    Error,
 };
 
 #[must_use]
@@ -162,8 +162,8 @@ where
 
 #[deprecated(since = "0.31.0", note = "Use `TracingConfig` instead")]
 #[cfg(feature = "metrics")]
-pub fn build_metrics_layer<S>(
-) -> Result<(MetricsLayer<S, SdkMeterProvider>, SdkMeterProvider), Error>
+pub fn build_metrics_layer<S>()
+-> Result<(MetricsLayer<S, SdkMeterProvider>, SdkMeterProvider), Error>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
 {

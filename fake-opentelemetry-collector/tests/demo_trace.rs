@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use fake_opentelemetry_collector::{setup_tracer_provider, FakeCollectorServer};
+use fake_opentelemetry_collector::{FakeCollectorServer, setup_tracer_provider};
 use opentelemetry::trace::TracerProvider;
 use opentelemetry::trace::{Span, SpanKind, Tracer};
 use tracing::debug;
