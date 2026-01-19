@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/releases/tag/init-tracing-opentelemetry-v0.36.0) - 2026-01-19
+
+### <!-- 2 -->Added
+
+- *(deps)* update to rust 1.87 & edition 2024 ([#317](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/317))
+
 ## [0.36.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.35.0...init-tracing-opentelemetry-v0.36.0) - 2026-01-19
 
 ### <!-- 2 -->Added
