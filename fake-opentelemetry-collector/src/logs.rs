@@ -1,6 +1,6 @@
 use crate::common::cnv_attributes;
 use opentelemetry_proto::tonic::collector::logs::v1::{
-    logs_service_server::LogsService, ExportLogsServiceRequest, ExportLogsServiceResponse,
+    ExportLogsServiceRequest, ExportLogsServiceResponse, logs_service_server::LogsService,
 };
 use serde::Serialize;
 use std::collections::BTreeMap;

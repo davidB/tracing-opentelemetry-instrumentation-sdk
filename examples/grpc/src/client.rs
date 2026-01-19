@@ -1,7 +1,7 @@
 use generated::greeter_client::GreeterClient;
 use generated::{HelloRequest, StatusRequest};
-use tonic::transport::Channel;
 use tonic::Code;
+use tonic::transport::Channel;
 use tonic_tracing_opentelemetry::middleware::client::OtelGrpcLayer;
 use tower::ServiceBuilder;
 

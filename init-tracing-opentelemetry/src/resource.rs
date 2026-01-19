@@ -1,6 +1,6 @@
 use opentelemetry::KeyValue;
 // use opentelemetry_resource_detectors::OsResourceDetector;
-use opentelemetry_sdk::{resource::ResourceDetector, Resource};
+use opentelemetry_sdk::{Resource, resource::ResourceDetector};
 use opentelemetry_semantic_conventions::resource;
 
 /// To log detected value set environement variable `RUST_LOG="...,otel::setup::resource=debug"`

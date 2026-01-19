@@ -42,10 +42,10 @@
 
 use std::path::{Path, PathBuf};
 
-use tracing::{info, level_filters::LevelFilter, Subscriber};
+use tracing::{Subscriber, info, level_filters::LevelFilter};
 use tracing_subscriber::{
-    filter::EnvFilter, fmt::format::FmtSpan, layer::SubscriberExt, registry::LookupSpan, Layer,
-    Registry,
+    Layer, Registry, filter::EnvFilter, fmt::format::FmtSpan, layer::SubscriberExt,
+    registry::LookupSpan,
 };
 
 #[cfg(feature = "logfmt")]
@@ -57,7 +57,7 @@ use crate::formats::{
 #[cfg(feature = "metrics")]
 use crate::tracing_subscriber_ext::build_metrics_layer_with_resource;
 use crate::tracing_subscriber_ext::build_tracer_layer_with_resource_and_name;
-use crate::{otlp::OtelGuard, resource::DetectResource, Error};
+use crate::{Error, otlp::OtelGuard, resource::DetectResource};
 
 /// Combined guard that handles both `OtelGuard` and optional `DefaultGuard`
 ///

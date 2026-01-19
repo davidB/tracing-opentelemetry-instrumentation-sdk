@@ -6,8 +6,8 @@
 use tracing::Subscriber;
 use tracing_subscriber::fmt;
 use tracing_subscriber::fmt::format::FmtSpan;
-use tracing_subscriber::fmt::time::{time, uptime, Uptime};
-use tracing_subscriber::{registry::LookupSpan, Layer};
+use tracing_subscriber::fmt::time::{Uptime, time, uptime};
+use tracing_subscriber::{Layer, registry::LookupSpan};
 
 use crate::config::{LogTimer, TracingConfig, WriterConfig};
 use crate::{Error, FeatureSet};

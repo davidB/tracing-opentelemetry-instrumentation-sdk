@@ -1,9 +1,9 @@
 use super::infer_protocol;
 use opentelemetry_otlp::{ExporterBuildError, MetricExporter, WithExportConfig};
+use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::metrics::{
     MeterProviderBuilder, PeriodicReader, SdkMeterProvider, Temporality,
 };
-use opentelemetry_sdk::Resource;
 use std::env;
 use std::time::Duration;
 #[cfg(feature = "tls")]
@@ -68,11 +68,15 @@ where
                 .build()?,
         ),
         Some(x) => {
-            tracing::warn!("unknown '{x}' env var set or infered for OTEL_EXPORTER_OTLP_METRICS_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no metric exporter will be created");
+            tracing::warn!(
+                "unknown '{x}' env var set or infered for OTEL_EXPORTER_OTLP_METRICS_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no metric exporter will be created"
+            );
             None
         }
         None => {
-            tracing::warn!("no env var set or infered for OTEL_EXPORTER_OTLP_METRICS_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no metric exporter will be created");
+            tracing::warn!(
+                "no env var set or infered for OTEL_EXPORTER_OTLP_METRICS_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no metric exporter will be created"
+            );
             None
         }
     };

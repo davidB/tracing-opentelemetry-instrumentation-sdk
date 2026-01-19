@@ -4,9 +4,9 @@ use opentelemetry_sdk::propagation::TraceContextPropagator;
 use serde_json::Value;
 use std::sync::mpsc::{self, Receiver, SyncSender};
 use tracing_subscriber::{
-    fmt::{format::FmtSpan, MakeWriter},
-    util::SubscriberInitExt,
     EnvFilter,
+    fmt::{MakeWriter, format::FmtSpan},
+    util::SubscriberInitExt,
 };
 
 pub fn assert_trace(

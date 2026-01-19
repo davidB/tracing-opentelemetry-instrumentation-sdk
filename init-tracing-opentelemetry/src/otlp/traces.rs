@@ -1,6 +1,6 @@
 use super::infer_protocol;
 use opentelemetry_otlp::{ExporterBuildError, SpanExporter};
-use opentelemetry_sdk::{trace::SdkTracerProvider, trace::TracerProviderBuilder, Resource};
+use opentelemetry_sdk::{Resource, trace::SdkTracerProvider, trace::TracerProviderBuilder};
 #[cfg(feature = "tls")]
 use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
 
@@ -32,11 +32,15 @@ where
         ),
         Some("grpc") => Some(SpanExporter::builder().with_tonic().build()?),
         Some(x) => {
-            tracing::warn!("unknown '{x}' env var set or infered for OTEL_EXPORTER_OTLP_TRACES_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no span exporter will be created");
+            tracing::warn!(
+                "unknown '{x}' env var set or infered for OTEL_EXPORTER_OTLP_TRACES_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no span exporter will be created"
+            );
             None
         }
         None => {
-            tracing::warn!("no env var set or infered for OTEL_EXPORTER_OTLP_TRACES_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no span exporter will be created");
+            tracing::warn!(
+                "no env var set or infered for OTEL_EXPORTER_OTLP_TRACES_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL; no span exporter will be created"
+            );
             None
         }
     };

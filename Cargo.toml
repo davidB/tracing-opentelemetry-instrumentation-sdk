@@ -12,12 +12,12 @@ members = [
 exclude = ["target"]
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 version = "0.32.0"
 license = "CC0-1.0"
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
 repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
-rust-version = "1.83.0"
+rust-version = "1.87.0"
 
 [workspace.metadata.release]
 pre-release-commit-message = "🚀 (cargo-release) version {{version}}"

@@ -1,7 +1,7 @@
 //! based on https://github.com/open-telemetry/opentelemetry-rust/blob/main/opentelemetry-otlp/tests/smoke.rs
 use crate::common::cnv_attributes;
 use opentelemetry_proto::tonic::collector::trace::v1::{
-    trace_service_server::TraceService, ExportTraceServiceRequest, ExportTraceServiceResponse,
+    ExportTraceServiceRequest, ExportTraceServiceResponse, trace_service_server::TraceService,
 };
 use serde::Serialize;
 use std::collections::BTreeMap;

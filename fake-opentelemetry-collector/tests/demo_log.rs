@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use fake_opentelemetry_collector::{setup_logger_provider, FakeCollectorServer};
+use fake_opentelemetry_collector::{FakeCollectorServer, setup_logger_provider};
 use opentelemetry::logs::{LogRecord, Logger, LoggerProvider, Severity};
 use tracing::debug;
 

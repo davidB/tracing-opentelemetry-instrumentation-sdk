@@ -1,8 +1,8 @@
 use crate::common::cnv_attributes;
 use opentelemetry_proto::tonic::{
     collector::metrics::v1::{
-        metrics_service_server::MetricsService, ExportMetricsServiceRequest,
-        ExportMetricsServiceResponse,
+        ExportMetricsServiceRequest, ExportMetricsServiceResponse,
+        metrics_service_server::MetricsService,
     },
     metrics::v1 as otel_metrics,
 };

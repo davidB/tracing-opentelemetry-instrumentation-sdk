@@ -217,10 +217,10 @@ fn http_route<B>(req: &Request<B>) -> &str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{body::Body, routing::get, Router};
+    use axum::{Router, body::Body, routing::get};
     use http::{Request, StatusCode};
     use rstest::rstest;
-    use testing_tracing_opentelemetry::{assert_trace, FakeEnvironment};
+    use testing_tracing_opentelemetry::{FakeEnvironment, assert_trace};
     use tower::Service;
 
     #[rstest]

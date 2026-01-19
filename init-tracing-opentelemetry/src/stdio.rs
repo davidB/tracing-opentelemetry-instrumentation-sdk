@@ -1,11 +1,11 @@
 use crate::Error;
-use opentelemetry::trace::TracerProvider as _;
 use opentelemetry::InstrumentationScope;
+use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace as sdktrace;
 use opentelemetry_sdk::trace::BatchSpanProcessor;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use opentelemetry_sdk::trace::TracerProviderBuilder;
-use opentelemetry_sdk::Resource;
 use std::fmt::Debug;
 use std::io::Write;
 
