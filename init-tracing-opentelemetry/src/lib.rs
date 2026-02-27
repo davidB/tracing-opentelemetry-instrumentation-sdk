@@ -144,14 +144,14 @@ pub use formats::LogfmtLayerBuilder;
 #[cfg(test)]
 #[cfg(feature = "tracer")]
 mod tests {
-    use assert2::let_assert;
+    use assert2::assert;
 
     #[test]
     fn init_tracing_failed_on_invalid_propagator() {
-        let_assert!(Err(_) = super::propagator_from_string("xxxxxx"));
+        assert!(let Err(_) = super::propagator_from_string("xxxxxx"));
 
         // std::env::set_var("OTEL_PROPAGATORS", "xxxxxx");
         // dbg!(std::env::var("OTEL_PROPAGATORS"));
-        // let_assert!(Err(_) = init_tracing());
+        // assert!(let Err(_) = init_tracing());
     }
 }

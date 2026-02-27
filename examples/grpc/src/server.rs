@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .register_encoded_file_descriptor_set(generated::FILE_DESCRIPTOR_SET)
         .build_v1()?;
 
-    println!("GreeterServer listening on {}", addr);
+    println!("GreeterServer listening on {addr}");
 
     Server::builder()
         .timeout(std::time::Duration::from_secs(10))

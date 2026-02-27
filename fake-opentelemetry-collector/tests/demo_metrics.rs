@@ -59,135 +59,135 @@ async fn demo_fake_meter_and_collector() {
     insta::assert_yaml_snapshot!(otel_metrics, {
         // Validate gauge metric
         "[0].metrics[0].name" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(name) = value.as_str());
+            assert2::assert!(let Some(name) = value.as_str());
             assert_eq!(name, "test_gauge");
             name.to_string()
         }),
         "[0].metrics[0].description" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(desc) = value.as_str());
+            assert2::assert!(let Some(desc) = value.as_str());
             assert_eq!(desc, "A test gauge");
             desc.to_string()
         }),
         "[0].metrics[0].unit" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(unit) = value.as_str());
+            assert2::assert!(let Some(unit) = value.as_str());
             assert_eq!(unit, "km/s");
             unit.to_string()
         }),
         "[0].metrics[0].data.Gauge.data_points[0].value.AsDouble" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(val) = value.as_f64());
+            assert2::assert!(let Some(val) = value.as_f64());
             assert!((val - 123.456).abs() < 0.001);
             format!("{val}")
         }),
 
         // Validate up-down counter
         "[0].metrics[1].name" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(name) = value.as_str());
+            assert2::assert!(let Some(name) = value.as_str());
             assert_eq!(name, "test_updown_counter");
             name.to_string()
         }),
         "[0].metrics[1].description" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(desc) = value.as_str());
+            assert2::assert!(let Some(desc) = value.as_str());
             assert_eq!(desc, "A test up-down-counter");
             desc.to_string()
         }),
         "[0].metrics[1].unit" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(unit) = value.as_str());
+            assert2::assert!(let Some(unit) = value.as_str());
             assert_eq!(unit, "m/s^2");
             unit.to_string()
         }),
         "[0].metrics[1].data.Sum.data_points[0].value.AsInt" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(val) = value.as_i64());
+            assert2::assert!(let Some(val) = value.as_i64());
             assert_eq!(val, -50);
             format!("{val}")
         }),
         "[0].metrics[1].data.Sum.is_monotonic" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(monotonic) = value.as_bool());
+            assert2::assert!(let Some(monotonic) = value.as_bool());
             assert!(!monotonic);
             format!("{monotonic}")
         }),
         "[0].metrics[1].data.Sum.aggregation_temporality" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(temporality) = value.as_u64());
+            assert2::assert!(let Some(temporality) = value.as_u64());
             assert_eq!(temporality, 2); // Cumulative
             format!("{temporality}")
         }),
 
         // Validate counter
         "[0].metrics[2].name" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(name) = value.as_str());
+            assert2::assert!(let Some(name) = value.as_str());
             assert_eq!(name, "test_counter");
             name.to_string()
         }),
         "[0].metrics[2].description" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(desc) = value.as_str());
+            assert2::assert!(let Some(desc) = value.as_str());
             assert_eq!(desc, "A test counter");
             desc.to_string()
         }),
         "[0].metrics[2].unit" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(unit) = value.as_str());
+            assert2::assert!(let Some(unit) = value.as_str());
             assert_eq!(unit, "Jigawatts");
             unit.to_string()
         }),
         "[0].metrics[2].data.Sum.data_points[0].value.AsInt" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(val) = value.as_i64());
+            assert2::assert!(let Some(val) = value.as_i64());
             assert_eq!(val, 25);
             format!("{val}")
         }),
         "[0].metrics[2].data.Sum.is_monotonic" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(monotonic) = value.as_bool());
+            assert2::assert!(let Some(monotonic) = value.as_bool());
             assert!(monotonic);
             format!("{monotonic}")
         }),
         "[0].metrics[2].data.Sum.aggregation_temporality" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(temporality) = value.as_u64());
+            assert2::assert!(let Some(temporality) = value.as_u64());
             assert_eq!(temporality, 2); // Cumulative
             format!("{temporality}")
         }),
 
         // Validate histogram
         "[0].metrics[3].name" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(name) = value.as_str());
+            assert2::assert!(let Some(name) = value.as_str());
             assert_eq!(name, "test_histogram");
             name.to_string()
         }),
         "[0].metrics[3].description" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(desc) = value.as_str());
+            assert2::assert!(let Some(desc) = value.as_str());
             assert_eq!(desc, "A test histogram");
             desc.to_string()
         }),
         "[0].metrics[3].unit" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(unit) = value.as_str());
+            assert2::assert!(let Some(unit) = value.as_str());
             assert_eq!(unit, "ft/in^2");
             unit.to_string()
         }),
         "[0].metrics[3].data.Histogram.data_points[0].count" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(count) = value.as_u64());
+            assert2::assert!(let Some(count) = value.as_u64());
             assert_eq!(count, 2);
             format!("{count}")
         }),
         "[0].metrics[3].data.Histogram.data_points[0].sum" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(sum) = value.as_u64());
+            assert2::assert!(let Some(sum) = value.as_u64());
             assert_eq!(sum, 23); // 10 + 13
             format!("{sum}")
         }),
         "[0].metrics[3].data.Histogram.data_points[0].min" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(min) = value.as_u64());
+            assert2::assert!(let Some(min) = value.as_u64());
             assert_eq!(min, 10);
             format!("{min}")
         }),
         "[0].metrics[3].data.Histogram.data_points[0].max" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(max) = value.as_u64());
+            assert2::assert!(let Some(max) = value.as_u64());
             assert_eq!(max, 13);
             format!("{max}")
         }),
         "[0].metrics[3].data.Histogram.aggregation_temporality" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(temporality) = value.as_u64());
+            assert2::assert!(let Some(temporality) = value.as_u64());
             assert_eq!(temporality, 2); // Cumulative
             format!("{temporality}")
         }),
 
         // Validate attributes for all metrics
         "[].metrics[].data.**.attributes.foo" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(attr_value) = value.as_str());
+            assert2::assert!(let Some(attr_value) = value.as_str());
             assert!(attr_value.contains("bar"));
             "\"Some(AnyValue { value: Some(StringValue(\\\"bar\\\")) })\""
         }),

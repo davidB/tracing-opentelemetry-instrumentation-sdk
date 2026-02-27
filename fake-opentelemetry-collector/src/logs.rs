@@ -28,7 +28,7 @@ impl From<opentelemetry_proto::tonic::logs::v1::LogRecord> for ExportedLog {
             observed_time_unix_nano: value.observed_time_unix_nano,
             severity_number: value.severity_number,
             severity_text: value.severity_text,
-            body: value.body.map(|value| format!("{:?}", value)),
+            body: value.body.map(|value| format!("{value:?}")),
             attributes: cnv_attributes(&value.attributes),
             dropped_attributes_count: value.dropped_attributes_count,
             flags: value.flags,

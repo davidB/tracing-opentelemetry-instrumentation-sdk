@@ -5,15 +5,20 @@ OTEL_TRACES_SAMPLER = "always_on"
 # RUST_LOG = "warn,otel::setup=debug"
 
 [tools]
-rust = { version = "1.87.0", profile = "minimal", components = "rustfmt,clippy" } # the rust tool stack (with cargo, fmt, clippy) to build source
-grpcurl = '1.9'
-protoc = '34.0'
+rust = { version = "1.88.0", profile = "minimal", components = "rustfmt,clippy" }  # the rust tool stack (with cargo, fmt, clippy) to build source
+grpcurl = "1.9"
+protoc = "34.0"
 # grpc-health-probe = "*"
 # sccache = "0.5"
 # cargo-binstall allow to download (insteal of build) "cargo:*"
 # - do not use cargo-binstall" (it's a special name used by mise)
 # - "aqua:cargo-bins/cargo-binstall" allow to download the binary
 "aqua:cargo-bins/cargo-binstall" = "1"
+
+[tasks.autofix]
+description = "Automatically fix some linting issues & format code"
+depends_post = ["format"]
+run = "cargo clippy --all-features --fix --allow-dirty"
 
 [tasks.format]
 alias = "fmt"
@@ -86,39 +91,38 @@ release-plz set-version tracing-opentelemetry-instrumentation-sdk@"$version"
 [tasks."install:cargo-deny"]
 hide = true
 description = "Install cargo-deny"
-run = 'cargo binstall -y cargo-deny || cargo install --locked cargo-deny'
+run = "cargo binstall -y cargo-deny || cargo install --locked cargo-deny"
 
 [tasks."install:cargo-nextest"]
 hide = true
 description = "Install cargo-nextest"
-run = 'cargo binstall -y cargo-nextest || cargo install --locked cargo-nextest'
+run = "cargo binstall -y cargo-nextest || cargo install --locked cargo-nextest"
 
 [tasks."install:cargo-insta"]
 hide = true
 description = "Install cargo-insta"
-run = 'cargo binstall -y cargo-insta || cargo install --locked cargo-insta'
+run = "cargo binstall -y cargo-insta || cargo install --locked cargo-insta"
 
 [tasks."install:cargo-release"]
 hide = true
 description = "Install cargo-release"
-run = 'cargo binstall -y cargo-release || cargo install --locked cargo-release'
+run = "cargo binstall -y cargo-release || cargo install --locked cargo-release"
 
 [tasks."install:git-cliff"]
 hide = true
 description = "Install git-cliff"
-run = 'cargo binstall -y git-cliff || cargo install --locked git-cliff'
+run = "cargo binstall -y git-cliff || cargo install --locked git-cliff"
 
 [tasks."install:cargo-hack"]
 hide = true
 description = "Install cargo-hack"
-run = 'cargo binstall -y cargo-hack || cargo install --locked cargo-hack'
-
+run = "cargo binstall -y cargo-hack || cargo install --locked cargo-hack"
 
 [tasks.run-otel-desktop-viewer]
 description = "Run otel-desktop-viewer as receiver and viewer of otel trace"
 run = [
-  '# Viewer: open http://localhost:8000',
-  'docker run -p 8000:8000 -p 4317:4317 -p 4318:4318 ghcr.io/ctrlspice/otel-desktop-viewer:latest-amd64',
+  "# Viewer: open http://localhost:8000",
+  "docker run -p 8000:8000 -p 4317:4317 -p 4318:4318 ghcr.io/ctrlspice/otel-desktop-viewer:latest-amd64",
 ]
 
 [tasks.run-jaeger]
@@ -138,7 +142,7 @@ run = [
 
 [tasks.run-example-grpc-server]
 description = "Run gRPC server example"
-run = 'cd examples/grpc && OTEL_SERVICE_NAME=grpc-server cargo run --bin server'
+run = "cd examples/grpc && OTEL_SERVICE_NAME=grpc-server cargo run --bin server"
 
 [tasks.run-example-grpc-client]
 description = "Run gRPC client example"
@@ -149,7 +153,7 @@ cd examples/grpc && OTEL_SERVICE_NAME=grpc-client cargo run --bin client
 
 [tasks.run-example-axum-otlp-server]
 description = "Run axum-otlp server example"
-run = 'cd examples/axum-otlp && OTEL_SERVICE_NAME=axum-otlp-4317 cargo run'
+run = "cd examples/axum-otlp && OTEL_SERVICE_NAME=axum-otlp-4317 cargo run"
 
 [tasks.run-example-axum-otlp-server-http]
 description = "Run axum-otlp server example over HTTP"
@@ -168,7 +172,7 @@ curl -i http://127.0.0.1:3003/
 
 [tasks.run-example-load]
 description = "Run load test example"
-run = 'cd examples/load && cargo run --release 2>/dev/null'
+run = "cd examples/load && cargo run --release 2>/dev/null"
 
 [tasks.ci]
 depends = ["check", "lint", "test", "deny"]
