@@ -1,4 +1,4 @@
-use assert2::{check, let_assert};
+use assert2::{assert, check};
 use opentelemetry::trace::TracerProvider;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use serde_json::Value;
@@ -32,7 +32,7 @@ pub fn assert_trace(
         "[].fields[\"time.busy\"]" => "[duration]",
         "[].fields[\"time.idle\"]" => "[duration]",
         "[].span.trace_id" => insta::dynamic_redaction(move |value, _path| {
-            let_assert!(Some(tracing_trace_id) = value.as_str());
+            assert!(let Some(tracing_trace_id) = value.as_str());
             check!(trace_id_1 == tracing_trace_id);
             if is_trace_id_constant {
                 tracing_trace_id.to_string()
@@ -41,7 +41,7 @@ pub fn assert_trace(
             }
         }),
         "[].spans[].trace_id" => insta::dynamic_redaction(move |value, _path| {
-            let_assert!(Some(tracing_trace_id) = value.as_str());
+            assert!(let Some(tracing_trace_id) = value.as_str());
             check!(trace_id_2 == tracing_trace_id);
             if is_trace_id_constant {
                 tracing_trace_id.to_string()
@@ -55,24 +55,24 @@ pub fn assert_trace(
         "[].end_time_unix_nano" => "[timestamp]",
         "[].events[].time_unix_nano" => "[timestamp]",
         "[].trace_id" => insta::dynamic_redaction(move |value, _path| {
-            let_assert!(Some(otel_trace_id) = value.as_str());
+            assert!(let Some(otel_trace_id) = value.as_str());
             //FIXME check!(trace_id_3 == otel_trace_id);
             format!("[trace_id:lg{}]", otel_trace_id.len())
         }),
         "[].span_id" => insta::dynamic_redaction(|value, _path| {
-            let_assert!(Some(span_id) = value.as_str());
+            assert!(let Some(span_id) = value.as_str());
             format!("[span_id:lg{}]", span_id.len())
         }),
         "[].parent_span_id" => insta::dynamic_redaction(|value, _path| {
-            let_assert!(Some(span_id) = value.as_str());
+            assert!(let Some(span_id) = value.as_str());
             format!("[span_id:lg{}]", span_id.len())
         }),
         "[].links[].trace_id" => insta::dynamic_redaction(|value, _path| {
-            let_assert!(Some(otel_trace_id) = value.as_str());
+            assert!(let Some(otel_trace_id) = value.as_str());
             format!("[trace_id:lg{}]", otel_trace_id.len())
         }),
         "[].links[].span_id" => insta::dynamic_redaction(|value, _path| {
-            let_assert!(Some(span_id) = value.as_str());
+            assert!(let Some(span_id) = value.as_str());
             format!("[span_id:lg{}]", span_id.len())
         }),
         "[].attributes.busy_ns" => "ignore",

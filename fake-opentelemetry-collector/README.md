@@ -48,19 +48,19 @@ async fn demo_fake_tracer_and_collector() {
         "[].end_time_unix_nano" => "[timestamp]",
         "[].events[].time_unix_nano" => "[timestamp]",
         "[].trace_id" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(trace_id) = value.as_str());
+            assert2::assert!(let Some(trace_id) = value.as_str());
             format!("[trace_id:lg{}]", trace_id.len())
         }),
         "[].span_id" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(span_id) = value.as_str());
+            assert2::assert!(let Some(span_id) = value.as_str());
             format!("[span_id:lg{}]", span_id.len())
         }),
         "[].links[].trace_id" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(trace_id) = value.as_str());
+            assert2::assert!(let Some(trace_id) = value.as_str());
             format!("[trace_id:lg{}]", trace_id.len())
         }),
         "[].links[].span_id" => insta::dynamic_redaction(|value, _path| {
-            assert2::let_assert!(Some(span_id) = value.as_str());
+            assert2::assert!(let Some(span_id) = value.as_str());
             format!("[span_id:lg{}]", span_id.len())
         }),
     });

@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let response = client.say_hello(request).await?;
 
-        println!("RESPONSE={:?}", response);
+        println!("RESPONSE={response:?}");
     }
     {
         let request = tonic::Request::new(StatusRequest {
@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let response = client.say_status(request).await;
 
-        println!("RESPONSE={:?}", response);
+        println!("RESPONSE={response:?}");
     }
     {
         let request = tonic::Request::new(StatusRequest {
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let response = client.say_status(request).await;
 
-        println!("RESPONSE={:?}", response);
+        println!("RESPONSE={response:?}");
     }
 
     Ok(())
