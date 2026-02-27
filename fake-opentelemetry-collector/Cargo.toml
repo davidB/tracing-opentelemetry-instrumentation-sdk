@@ -5,7 +5,7 @@ readme = "README.md"
 keywords = ["tracing", "opentelemetry", "faker", "mock"]
 categories = ["development-tools::testing"]
 edition.workspace = true
-version = "0.34.0"
+version = "0.34.1"
 repository.workspace = true
 license.workspace = true
 
