@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: jdx/mise-action@v3
+      - uses: jdx/mise-action@v4
         with:
           # version 2025.5.11, a symlink is created for rust setup
           # without cache, missing components are installed
