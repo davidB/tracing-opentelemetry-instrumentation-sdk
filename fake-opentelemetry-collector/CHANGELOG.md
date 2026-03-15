@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/fake-opentelemetry-collector-v0.34.0...fake-opentelemetry-collector-v0.34.1) - 2026-03-15
+
+### <!-- 1 -->Fixed
+
+- MSRV (bump to 1.88) & api changes in dependencies, reformat ([#325](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/325))
+
 ## [0.34.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/fake-opentelemetry-collector-v0.33.1...fake-opentelemetry-collector-v0.34.0) - 2026-01-19
 
 ### <!-- 2 -->Added
