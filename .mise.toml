@@ -4,6 +4,16 @@ OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "grpc"
 OTEL_TRACES_SAMPLER = "always_on"
 # RUST_LOG = "warn,otel::setup=debug"
 
+# [settings]
+# auto_install_disable_tools = [
+#   "cargo:cargo-deny",
+#   "cargo:cargo-hack",
+#   "cargo:cargo-insta",
+#   "cargo:cargo-nextest",
+#   "cargo:cargo-release",
+#   "git-cliff",
+# ]
+
 [tools]
 rust = { version = "1.88.0", profile = "minimal", components = "rustfmt,clippy" }  # the rust tool stack (with cargo, fmt, clippy) to build source
 grpcurl = "1.9"
@@ -14,6 +24,12 @@ protoc = "34.0"
 # - do not use cargo-binstall" (it's a special name used by mise)
 # - "aqua:cargo-bins/cargo-binstall" allow to download the binary
 "aqua:cargo-bins/cargo-binstall" = "1"
+"cargo:cargo-deny" = "latest"
+"cargo:cargo-nextest" = "latest"
+"cargo:cargo-insta" = "latest"
+"cargo:cargo-release" = "latest"
+"cargo:cargo-hack" = "latest"
+"git-cliff" = "latest"
 
 [tasks.autofix]
 description = "Automatically fix some linting issues & format code"
@@ -30,12 +46,10 @@ run = [
 
 [tasks.deny]
 description = "Run cargo deny checks"
-depends = ["install:cargo-deny"]
 run = "cargo deny check"
 
 [tasks.check]
 description = "Check code with all feature combinations"
-depends = ["install:cargo-hack"]
 run = "cargo hack check --each-feature --no-dev-deps"
 wait_for = ["test", "lint"]
 
@@ -53,7 +67,6 @@ run = 'docker run --pull always --rm -it -v "$PWD:/tmp/lint:rw" "oxsecurity/mega
 
 [tasks.test]
 description = "Launch tests"
-depends = ["install:cargo-nextest"]
 run = [
   "cargo nextest run",
   "cargo test --doc",
@@ -62,7 +75,6 @@ wait_for = ["lint"]
 
 [tasks."test:review"]
 description = "Launch snapshot test and review result (accept or reject)"
-depends = ["install:cargo-insta"]
 run = [
   "cargo insta review",
 ]
@@ -70,7 +82,6 @@ wait_for = ["lint"]
 
 [tasks.test-each-feature]
 description = "Test each feature separately"
-depends = ["install:cargo-hack"]
 run = "cargo hack test --each-feature -- --test-threads=1"
 
 [tasks.set-version]
@@ -86,37 +97,6 @@ release-plz set-version init-tracing-opentelemetry@"$version"
 release-plz set-version tonic-tracing-opentelemetry@"$version"
 release-plz set-version tracing-opentelemetry-instrumentation-sdk@"$version"
 '''
-
-# Tool installation tasks (on demand vs upfraont like with [tools]
-[tasks."install:cargo-deny"]
-hide = true
-description = "Install cargo-deny"
-run = "cargo binstall -y cargo-deny || cargo install --locked cargo-deny"
-
-[tasks."install:cargo-nextest"]
-hide = true
-description = "Install cargo-nextest"
-run = "cargo binstall -y cargo-nextest || cargo install --locked cargo-nextest"
-
-[tasks."install:cargo-insta"]
-hide = true
-description = "Install cargo-insta"
-run = "cargo binstall -y cargo-insta || cargo install --locked cargo-insta"
-
-[tasks."install:cargo-release"]
-hide = true
-description = "Install cargo-release"
-run = "cargo binstall -y cargo-release || cargo install --locked cargo-release"
-
-[tasks."install:git-cliff"]
-hide = true
-description = "Install git-cliff"
-run = "cargo binstall -y git-cliff || cargo install --locked git-cliff"
-
-[tasks."install:cargo-hack"]
-hide = true
-description = "Install cargo-hack"
-run = "cargo binstall -y cargo-hack || cargo install --locked cargo-hack"
 
 [tasks.run-otel-desktop-viewer]
 description = "Run otel-desktop-viewer as receiver and viewer of otel trace"
