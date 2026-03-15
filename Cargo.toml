@@ -14,7 +14,7 @@ exclude = ["target"]
 [workspace.package]
 version = "0.32.0"
 edition = "2024"
-rust-version = "1.88.0"
+rust-version = "1.91.0"
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
 repository = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
 license = "CC0-1.0"
