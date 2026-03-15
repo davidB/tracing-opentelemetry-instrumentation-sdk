@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - *(deps)* MSRV bump rust to 1.91
 
+## [0.32.4](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.32.3...tracing-opentelemetry-instrumentation-sdk-v0.32.4) - 2026-03-15
+
+### <!-- 1 -->Fixed
+
+- *(deps)* MSRV bump rust to 1.91
+
 ## [0.32.2](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.32.1...tracing-opentelemetry-instrumentation-sdk-v0.32.2) - 2025-11-13
 
 ### <!-- 2 -->Added
