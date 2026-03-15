@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - MSRV (bump to 1.88) & api changes in dependencies, reformat ([#325](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/325))
 
+## [0.36.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.36.0...init-tracing-opentelemetry-v0.36.1) - 2026-03-15
+
+### <!-- 1 -->Fixed
+
+- MSRV (bump to 1.88) & api changes in dependencies, reformat ([#325](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/325))
+
 ## [0.36.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/releases/tag/init-tracing-opentelemetry-v0.36.0) - 2026-01-19
 
 ### <!-- 2 -->Added
