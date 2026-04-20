@@ -1,25 +1,40 @@
+#[cfg(feature = "logs")]
+pub mod logs;
 #[cfg(feature = "metrics")]
 pub mod metrics;
 pub mod traces;
 
+#[cfg(feature = "logs")]
+use opentelemetry::logs::LoggerProvider;
 #[cfg(feature = "metrics")]
 use opentelemetry::metrics::MeterProvider;
+#[cfg(feature = "logs")]
+use opentelemetry_sdk::logs::SdkLoggerProvider;
 #[cfg(feature = "metrics")]
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 
 use opentelemetry::trace::TracerProvider;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 
-#[must_use = "Recommend holding with 'let _guard = ' pattern to ensure final traces/metrics are sent to the server"]
+#[must_use = "Recommend holding with 'let _guard = ' pattern to ensure final traces/logs/metrics are sent to the server"]
 /// On Drop of the `OtelGuard` instance,
-/// the wrapped Tracer/Meter Provider is force to flush and to shutdown (ignoring error).
+/// the wrapped Tracer/Logger/Meter Provider is force to flush and to shutdown (ignoring error).
+#[allow(clippy::struct_field_names)]
 pub struct OtelGuard {
+    #[cfg(feature = "logs")]
+    pub(crate) logger_provider: SdkLoggerProvider,
     #[cfg(feature = "metrics")]
     pub(crate) meter_provider: SdkMeterProvider,
     pub(crate) tracer_provider: SdkTracerProvider,
 }
 
 impl OtelGuard {
+    #[cfg(feature = "logs")]
+    #[must_use]
+    pub fn logger_provider(&self) -> &impl LoggerProvider {
+        &self.logger_provider
+    }
+
     #[must_use]
     pub fn tracer_provider(&self) -> &impl TracerProvider {
         &self.tracer_provider
@@ -37,6 +52,11 @@ impl Drop for OtelGuard {
     fn drop(&mut self) {
         let _ = self.tracer_provider.force_flush();
         let _ = self.tracer_provider.shutdown();
+        #[cfg(feature = "logs")]
+        {
+            let _ = self.logger_provider.force_flush();
+            let _ = self.logger_provider.shutdown();
+        }
         #[cfg(feature = "metrics")]
         {
             let _ = self.meter_provider.force_flush();

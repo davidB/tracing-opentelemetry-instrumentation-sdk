@@ -54,6 +54,8 @@ use crate::formats::{
     CompactLayerBuilder, FullLayerBuilder, JsonLayerBuilder, LayerBuilder, PrettyLayerBuilder,
 };
 
+#[cfg(feature = "logs")]
+use crate::tracing_subscriber_ext::build_logger_layer_with_resource;
 #[cfg(feature = "metrics")]
 use crate::tracing_subscriber_ext::build_metrics_layer_with_resource;
 use crate::tracing_subscriber_ext::build_tracer_layer_with_resource_and_name;
@@ -244,6 +246,8 @@ pub struct OtelConfig {
     pub enabled: bool,
     /// Resource configuration for OTEL
     pub resource_config: Option<DetectResource>,
+    /// Enable log export via OTLP
+    pub logs_enabled: bool,
     /// Enable metrics collection
     pub metrics_enabled: bool,
 }
@@ -253,6 +257,7 @@ impl Default for OtelConfig {
         Self {
             enabled: true,
             resource_config: None,
+            logs_enabled: cfg!(feature = "logs"),
             metrics_enabled: cfg!(feature = "metrics"),
         }
     }
@@ -477,6 +482,13 @@ impl TracingConfig {
         self
     }
 
+    /// Enable or disable log export via OTLP
+    #[must_use]
+    pub fn with_logs(mut self, enabled: bool) -> Self {
+        self.otel_config.logs_enabled = enabled;
+        self
+    }
+
     /// Enable or disable metrics collection
     #[must_use]
     pub fn with_metrics(mut self, enabled: bool) -> Self {
@@ -626,16 +638,22 @@ impl TracingConfig {
             .clone()
             .unwrap_or_default()
             .build();
+        #[cfg(feature = "logs")]
+        let (logs_layer, logger_provider) = build_logger_layer_with_resource(otel_rsrc.clone())?;
         #[cfg(feature = "metrics")]
         let (metrics_layer, meter_provider) = build_metrics_layer_with_resource(otel_rsrc.clone())?;
         let (trace_layer, tracer_provider) =
             build_tracer_layer_with_resource_and_name(otel_rsrc, self.tracer_name.clone())?;
         let subscriber = subscriber.with(trace_layer);
+        #[cfg(feature = "logs")]
+        let subscriber = subscriber.with(logs_layer);
         #[cfg(feature = "metrics")]
         let subscriber = subscriber.with(metrics_layer);
         Ok((
             subscriber,
             OtelGuard {
+                #[cfg(feature = "logs")]
+                logger_provider,
                 #[cfg(feature = "metrics")]
                 meter_provider,
                 tracer_provider,
