@@ -646,7 +646,7 @@ impl TracingConfig {
             build_tracer_layer_with_resource_and_name(otel_rsrc, self.tracer_name.clone())?;
         let subscriber = subscriber.with(trace_layer);
         #[cfg(feature = "logs")]
-        let subscriber = subscriber.with(logs_layer);
+        let subscriber = subscriber.with(self.otel_config.logs_enabled.then_some(logs_layer));
         #[cfg(feature = "metrics")]
         let subscriber = subscriber.with(metrics_layer);
         Ok((
