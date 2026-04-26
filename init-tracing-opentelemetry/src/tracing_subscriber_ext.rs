@@ -2,6 +2,10 @@
 use std::borrow::Cow;
 
 use opentelemetry::trace::TracerProvider;
+#[cfg(feature = "logs")]
+use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
+#[cfg(feature = "logs")]
+use opentelemetry_sdk::logs::{SdkLogger, SdkLoggerProvider};
 #[cfg(feature = "metrics")]
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 use opentelemetry_sdk::{
@@ -95,15 +99,21 @@ pub fn register_otel_layers_with_resource<S>(
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
+    #[cfg(feature = "logs")]
+    let (logs_layer, logger_provider) = build_logger_layer_with_resource(otel_rsrc.clone())?;
     #[cfg(feature = "metrics")]
     let (metrics_layer, meter_provider) = build_metrics_layer_with_resource(otel_rsrc.clone())?;
     let (trace_layer, tracer_provider) = build_tracer_layer_with_resource(otel_rsrc)?;
     let subscriber = subscriber.with(trace_layer);
+    #[cfg(feature = "logs")]
+    let subscriber = subscriber.with(logs_layer);
     #[cfg(feature = "metrics")]
     let subscriber = subscriber.with(metrics_layer);
     Ok((
         subscriber,
         OtelGuard {
+            #[cfg(feature = "logs")]
+            logger_provider,
             #[cfg(feature = "metrics")]
             meter_provider,
             tracer_provider,
@@ -133,6 +143,21 @@ where
     S: Subscriber + for<'span> LookupSpan<'span>,
 {
     build_tracer_layer_with_resource_and_name(otel_rsrc, "")
+}
+
+#[cfg(feature = "logs")]
+pub(crate) fn build_logger_layer_with_resource(
+    otel_rsrc: Resource,
+) -> Result<
+    (
+        OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>,
+        SdkLoggerProvider,
+    ),
+    crate::Error,
+> {
+    let logger_provider = otlp::logs::init_loggerprovider(otel_rsrc, otlp::logs::identity)?;
+    let layer = OpenTelemetryTracingBridge::new(&logger_provider);
+    Ok((layer, logger_provider))
 }
 
 pub(crate) fn build_tracer_layer_with_resource_and_name<S>(

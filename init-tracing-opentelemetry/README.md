@@ -253,6 +253,56 @@ Configure the following set of environment variables to configure the metrics ex
 - `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` to set the temporality preference for the exporter
 - `OTEL_METRIC_EXPORT_INTERVAL` to set frequence of metrics export in **_milliseconds_**, defaults to 60s
 
+## Logs
+
+To configure OpenTelemetry log export, enable the `logs` feature. This initializes a `SdkLoggerProvider` and adds a log bridge layer so that `tracing` events are forwarded to the OpenTelemetry log pipeline and exported via OTLP.
+
+```toml
+[dependencies]
+init-tracing-opentelemetry = { version = "*", features = ["otlp", "logs"] }
+```
+
+Standard `tracing` macros emit logs that are automatically bridged:
+
+```rust
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let _guard = init_tracing_opentelemetry::TracingConfig::production().init_subscriber()?;
+
+    tracing::error!("This is ground control to Major Tom");
+    tracing::warn!("Houston, we have a problem");
+    tracing::info!("We have contact");
+    tracing::debug!("Roger, copy that");
+
+    Ok(())
+}
+```
+
+Log export can be toggled at runtime via `.with_logs(bool)`:
+
+```rust,no_run
+TracingConfig::default()
+    .with_logs(false)   // disable log export (default: enabled when feature is active)
+    .init_subscriber()?;
+```
+
+Configure the following environment variables to control the logs exporter (in addition to the shared variables above):
+
+- `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` overrides `OTEL_EXPORTER_OTLP_ENDPOINT` for the log pipeline; for HTTP the path `/v1/logs` is appended automatically
+- `OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` overrides `OTEL_EXPORTER_OTLP_PROTOCOL`, falls back to port-based auto-detection
+
+```sh
+# For GRPC:
+export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="http://localhost:4317"
+export OTEL_EXPORTER_OTLP_LOGS_PROTOCOL="grpc"
+
+# For HTTP:
+export OTEL_EXPORTER_OTLP_LOGS_ENDPOINT="http://127.0.0.1:4318/v1/logs"
+export OTEL_EXPORTER_OTLP_LOGS_PROTOCOL="http/protobuf"
+```
+
+> **Note:** A protocol must be set (via env var or inferable from the endpoint port). If neither is found, no log exporter is created and a warning is emitted on target `otel::setup`.
+
 ## Changelog - History
 
 [CHANGELOG.md](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/blob/main/CHANGELOG.md)

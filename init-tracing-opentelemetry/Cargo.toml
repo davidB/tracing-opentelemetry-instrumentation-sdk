@@ -16,6 +16,7 @@ rustdoc-args = ["--cfg", "docs_rs"]
 
 [dependencies]
 opentelemetry = { workspace = true }
+opentelemetry-appender-tracing = { version = "0.31", default-features = false, optional = true }
 opentelemetry-aws = { workspace = true, optional = true, features = ["trace"] }
 opentelemetry-jaeger-propagator = { workspace = true, optional = true }
 opentelemetry-otlp = { workspace = true, optional = true, features = [
@@ -28,9 +29,7 @@ opentelemetry-stdout = { workspace = true, features = [
 ], optional = true }
 opentelemetry-semantic-conventions = { workspace = true, optional = true }
 opentelemetry-zipkin = { workspace = true, features = [], optional = true }
-opentelemetry_sdk = { workspace = true, features = [
-  "trace",
-] }
+opentelemetry_sdk = { workspace = true, features = ["trace"] }
 thiserror = "2"
 tonic = { workspace = true, optional = true }
 tracing = { workspace = true }
@@ -81,6 +80,12 @@ tls = ["opentelemetry-otlp/tls", "tonic"]
 tls-roots = ["opentelemetry-otlp/tls-roots"]
 tls-webpki-roots = ["opentelemetry-otlp/tls-webpki-roots"]
 logfmt = ["dep:tracing-logfmt"]
+logs = [
+  "dep:opentelemetry-appender-tracing",
+  "opentelemetry-otlp/logs",
+  "opentelemetry_sdk/logs",
+  "opentelemetry/logs",
+]
 metrics = [
   "opentelemetry-otlp/metrics",
   "tracing-opentelemetry/metrics",
