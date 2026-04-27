@@ -179,17 +179,15 @@ impl LayerBuilder for LogfmtLayerBuilder {
         // Note: tracing_logfmt doesn't support the same configuration options
         // as the standard fmt layer, so we have limited configuration ability
 
-        match &config.writer {
-            WriterConfig::Stderr => {
-                // For stderr, we need to use the builder pattern since layer() doesn't support with_writer
-                // However, the current tracing_logfmt version may not support this
-                // For now, we'll fall back to the basic layer
-                Ok(Box::new(tracing_logfmt::layer()))
-            }
-            _ => {
-                // Default behavior uses stdout
-                Ok(Box::new(tracing_logfmt::layer()))
-            }
+        if let WriterConfig::Stdout = &config.writer {
+            // Default behavior uses stdout
+            Ok(Box::new(tracing_logfmt::layer()))
+        } else {
+            // For stderr, we need to use the builder pattern since layer() doesn't support with_writer
+            // However, the current tracing_logfmt version may not support this
+            // For now, we'll fall back to the basic layer
+            tracing::warn!("logfmt only support stdout");
+            Ok(Box::new(tracing_logfmt::layer()))
         }
     }
 }

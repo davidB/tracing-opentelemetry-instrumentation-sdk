@@ -54,9 +54,13 @@ where
 }
 
 pub fn debug_env() {
+    const SENSITIVE_KEYS: &[&str] = &["OTEL_EXPORTER_OTLP_HEADERS", "OTEL_EXPORTER_OTLP_CERTIFICATE"];
     std::env::vars()
         .filter(|(k, _)| k.starts_with("OTEL_"))
-        .for_each(|(k, v)| tracing::debug!(target: "otel::setup::env", key = %k, value = %v));
+        .for_each(|(k, v)| {
+            let display_value = if SENSITIVE_KEYS.iter().any(|s| k == *s) { "[redacted]" } else { &v };
+            tracing::debug!(target: "otel::setup::env", key = %k, value = %display_value);
+        });
 }
 
 fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
