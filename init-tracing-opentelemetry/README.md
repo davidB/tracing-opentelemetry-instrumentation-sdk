@@ -281,10 +281,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 Log export can be toggled at runtime via `.with_logs(bool)`:
 
 ```rust,no_run
+use init_tracing_opentelemetry::TracingConfig;
+//...
 TracingConfig::default()
     .with_logs(false)   // disable log export (default: enabled when feature is active)
-    .init_subscriber()?;
+    .init_subscriber()
+    .expect("valid tracing configuration");
 ```
+> Traces are automatically attached to logs as well, so if the logs are queried in Grafana (for example), the trace automatically links to the log line.
+
+![screenshot of grafana logs](https://raw.githubusercontent.com/davidB/tracing-opentelemetry-instrumentation-sdk/refs/heads/main/examples/logging/screenshot_grafana.png)
 
 Configure the following environment variables to control the logs exporter (in addition to the shared variables above):
 
