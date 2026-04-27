@@ -66,10 +66,18 @@ impl Drop for OtelGuard {
 }
 
 #[allow(unused_mut)]
-pub(crate) fn infer_protocol(
-    maybe_protocol: Option<&str>,
-    maybe_endpoint: Option<&str>,
+pub(crate) fn infer_protocol_from_env(
+    protocol_key: &str,
+    endpoint_key: &str,
+    endpoint_path: &str,
 ) -> Option<String> {
+    let (maybe_protocol, maybe_endpoint) =
+        read_protocol_and_endpoint_from_env(protocol_key, endpoint_key, endpoint_path);
+    infer_protocol(maybe_protocol.as_deref(), maybe_endpoint.as_deref())
+}
+
+#[allow(unused_mut)]
+fn infer_protocol(maybe_protocol: Option<&str>, maybe_endpoint: Option<&str>) -> Option<String> {
     let mut maybe_protocol = match (maybe_protocol, maybe_endpoint) {
         (Some(protocol), _) => Some(protocol.to_string()),
         (None, Some(endpoint)) => {
@@ -89,6 +97,44 @@ pub(crate) fn infer_protocol(
     }
 
     maybe_protocol
+}
+
+pub fn debug_env() {
+    const SENSITIVE_KEYS: &[&str] = &[
+        "OTEL_EXPORTER_OTLP_HEADERS",
+        "OTEL_EXPORTER_OTLP_CERTIFICATE",
+    ];
+    std::env::vars()
+        .filter(|(k, _)| k.starts_with("OTEL_"))
+        .for_each(|(k, v)| {
+            let display_value = if SENSITIVE_KEYS.iter().any(|s| k == *s) {
+                "[redacted]"
+            } else {
+                &v
+            };
+            tracing::debug!(target: "otel::setup::env", key = %k, value = %display_value);
+        });
+}
+
+fn read_protocol_and_endpoint_from_env(
+    protocol_key: &str,
+    endpoint_key: &str,
+    endpoint_path: &str,
+) -> (Option<String>, Option<String>) {
+    let maybe_protocol = std::env::var(protocol_key)
+        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL"))
+        .ok();
+    let maybe_endpoint = std::env::var(endpoint_key)
+        .or_else(|_| {
+            std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT").map(|endpoint| match &maybe_protocol {
+                Some(protocol) if protocol.contains("http") => {
+                    format!("{endpoint}/{endpoint_path}")
+                }
+                _ => endpoint,
+            })
+        })
+        .ok();
+    (maybe_protocol, maybe_endpoint)
 }
 
 #[cfg(test)]

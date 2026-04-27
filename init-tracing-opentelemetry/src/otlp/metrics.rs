@@ -1,4 +1,4 @@
-use super::infer_protocol;
+use super::infer_protocol_from_env;
 use opentelemetry_otlp::{ExporterBuildError, MetricExporter, WithExportConfig};
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::metrics::{
@@ -21,8 +21,11 @@ pub fn init_meterprovider<F>(
 where
     F: FnOnce(MeterProviderBuilder) -> MeterProviderBuilder,
 {
-    let (maybe_protocol, maybe_endpoint) = read_protocol_and_endpoint_from_env();
-    let protocol = infer_protocol(maybe_protocol.as_deref(), maybe_endpoint.as_deref());
+    let protocol = infer_protocol_from_env(
+        "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL",
+        "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
+        "v1/metrics",
+    );
     let timeout = env::var("OTEL_EXPORTER_OTLP_METRICS_TIMEOUT")
         .ok()
         .and_then(|var| var.parse::<u64>().ok())
@@ -43,6 +46,7 @@ where
         .and_then(|var| var.parse::<u64>().ok())
         .map_or(Duration::from_secs(60), Duration::from_millis);
 
+    // builders used the environment variables to determine the endpoint (but not to setup the protocol)
     let exporter = match protocol.as_deref() {
         Some("http/protobuf") => Some(
             MetricExporter::builder()
@@ -89,21 +93,4 @@ where
     }
     meter_provider = transform(meter_provider);
     Ok(meter_provider.build())
-}
-
-fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
-    let maybe_protocol = std::env::var("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL")
-        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL"))
-        .ok();
-    let maybe_endpoint = std::env::var("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT")
-        .or_else(|_| {
-            std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT").map(|endpoint| match &maybe_protocol {
-                Some(protocol) if protocol.contains("http") => {
-                    format!("{endpoint}/v1/metrics")
-                }
-                _ => endpoint,
-            })
-        })
-        .ok();
-    (maybe_protocol, maybe_endpoint)
 }

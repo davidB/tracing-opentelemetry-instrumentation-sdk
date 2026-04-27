@@ -1,4 +1,4 @@
-use super::infer_protocol;
+use super::infer_protocol_from_env;
 use opentelemetry_otlp::{ExporterBuildError, SpanExporter};
 use opentelemetry_sdk::{Resource, trace::SdkTracerProvider, trace::TracerProviderBuilder};
 #[cfg(feature = "tls")]
@@ -17,10 +17,14 @@ pub fn init_tracerprovider<F>(
 where
     F: FnOnce(TracerProviderBuilder) -> TracerProviderBuilder,
 {
-    debug_env();
-    let (maybe_protocol, maybe_endpoint) = read_protocol_and_endpoint_from_env();
-    let protocol = infer_protocol(maybe_protocol.as_deref(), maybe_endpoint.as_deref());
+    super::debug_env();
+    let protocol = infer_protocol_from_env(
+        "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL",
+        "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+        "v1/traces",
+    );
 
+    // builders used the environment variables to determine the endpoint (but not to setup the protocol)
     let exporter: Option<SpanExporter> = match protocol.as_deref() {
         Some("http/protobuf") => Some(SpanExporter::builder().with_http().build()?),
         #[cfg(feature = "tls")]
@@ -51,31 +55,4 @@ where
 
     trace_provider = transform(trace_provider);
     Ok(trace_provider.build())
-}
-
-pub fn debug_env() {
-    const SENSITIVE_KEYS: &[&str] = &["OTEL_EXPORTER_OTLP_HEADERS", "OTEL_EXPORTER_OTLP_CERTIFICATE"];
-    std::env::vars()
-        .filter(|(k, _)| k.starts_with("OTEL_"))
-        .for_each(|(k, v)| {
-            let display_value = if SENSITIVE_KEYS.iter().any(|s| k == *s) { "[redacted]" } else { &v };
-            tracing::debug!(target: "otel::setup::env", key = %k, value = %display_value);
-        });
-}
-
-fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
-    let maybe_protocol = std::env::var("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL")
-        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL"))
-        .ok();
-    let maybe_endpoint = std::env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
-        .or_else(|_| {
-            std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT").map(|endpoint| match &maybe_protocol {
-                Some(protocol) if protocol.contains("http") => {
-                    format!("{endpoint}/v1/traces")
-                }
-                _ => endpoint,
-            })
-        })
-        .ok();
-    (maybe_protocol, maybe_endpoint)
 }

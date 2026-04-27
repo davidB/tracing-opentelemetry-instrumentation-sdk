@@ -1,4 +1,4 @@
-use super::infer_protocol;
+use super::infer_protocol_from_env;
 use opentelemetry_otlp::{ExporterBuildError, LogExporter};
 use opentelemetry_sdk::{Resource, logs::LoggerProviderBuilder, logs::SdkLoggerProvider};
 #[cfg(feature = "tls")]
@@ -16,9 +16,13 @@ pub fn init_loggerprovider<F>(
 where
     F: FnOnce(LoggerProviderBuilder) -> LoggerProviderBuilder,
 {
-    let (maybe_protocol, maybe_endpoint) = read_protocol_and_endpoint_from_env();
-    let protocol = infer_protocol(maybe_protocol.as_deref(), maybe_endpoint.as_deref());
+    let protocol = infer_protocol_from_env(
+        "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL",
+        "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT",
+        "v1/logs",
+    );
 
+    // builders used the environment variables to determine the endpoint (but not to setup the protocol)
     let exporter: Option<LogExporter> = match protocol.as_deref() {
         Some("http/protobuf") => Some(LogExporter::builder().with_http().build()?),
         #[cfg(feature = "tls")]
@@ -49,21 +53,4 @@ where
 
     logger_provider = transform(logger_provider);
     Ok(logger_provider.build())
-}
-
-fn read_protocol_and_endpoint_from_env() -> (Option<String>, Option<String>) {
-    let maybe_protocol = std::env::var("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL")
-        .or_else(|_| std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL"))
-        .ok();
-    let maybe_endpoint = std::env::var("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT")
-        .or_else(|_| {
-            std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT").map(|endpoint| match &maybe_protocol {
-                Some(protocol) if protocol.contains("http") => {
-                    format!("{endpoint}/v1/logs")
-                }
-                _ => endpoint,
-            })
-        })
-        .ok();
-    (maybe_protocol, maybe_endpoint)
 }
