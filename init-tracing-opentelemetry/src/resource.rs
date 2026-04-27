@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use opentelemetry::KeyValue;
 // use opentelemetry_resource_detectors::OsResourceDetector;
 use opentelemetry_sdk::{Resource, resource::ResourceDetector};
@@ -16,8 +18,8 @@ use opentelemetry_semantic_conventions::resource;
 /// ```
 #[derive(Debug, Default, Clone)]
 pub struct DetectResource {
-    fallback_service_name: Option<&'static str>,
-    fallback_service_version: Option<&'static str>,
+    fallback_service_name: Option<Cow<'static, str>>,
+    fallback_service_version: Option<Cow<'static, str>>,
 }
 
 impl DetectResource {
@@ -25,8 +27,11 @@ impl DetectResource {
     /// (in this order) `OTEL_SERVICE_NAME`, `SERVICE_NAME`, `APP_NAME`.
     /// But a default value can be provided with this method.
     #[must_use]
-    pub fn with_fallback_service_name(mut self, fallback_service_name: &'static str) -> Self {
-        self.fallback_service_name = Some(fallback_service_name);
+    pub fn with_fallback_service_name(
+        mut self,
+        fallback_service_name: impl Into<Cow<'static, str>>,
+    ) -> Self {
+        self.fallback_service_name = Some(fallback_service_name.into());
         self
     }
 
@@ -34,19 +39,22 @@ impl DetectResource {
     /// (in this order) `SERVICE_VERSION`, `APP_VERSION`.
     /// But a default value can be provided with this method.
     #[must_use]
-    pub fn with_fallback_service_version(mut self, fallback_service_version: &'static str) -> Self {
-        self.fallback_service_version = Some(fallback_service_version);
+    pub fn with_fallback_service_version(
+        mut self,
+        fallback_service_version: impl Into<Cow<'static, str>>,
+    ) -> Self {
+        self.fallback_service_version = Some(fallback_service_version.into());
         self
     }
 
     #[must_use]
-    pub fn build(&mut self) -> Resource {
+    pub fn build(self) -> Resource {
         //Box::new(OsResourceDetector), //FIXME enable when available for opentelemetry >= 0.25
         //Box::new(ProcessResourceDetector),
         let rsrc = Resource::builder()
             .with_detector(Box::new(ServiceInfoDetector {
-                fallback_service_name: self.fallback_service_name.take(),
-                fallback_service_version: self.fallback_service_version.take(),
+                fallback_service_name: self.fallback_service_name,
+                fallback_service_version: self.fallback_service_version,
             }))
             .build();
         debug_resource(&rsrc);
@@ -62,8 +70,8 @@ pub fn debug_resource(rsrc: &Resource) {
 
 #[derive(Debug)]
 pub struct ServiceInfoDetector {
-    fallback_service_name: Option<&'static str>,
-    fallback_service_version: Option<&'static str>,
+    fallback_service_name: Option<Cow<'static, str>>,
+    fallback_service_version: Option<Cow<'static, str>>,
 }
 
 impl ResourceDetector for ServiceInfoDetector {
@@ -72,17 +80,15 @@ impl ResourceDetector for ServiceInfoDetector {
             .or_else(|_| std::env::var("SERVICE_NAME"))
             .or_else(|_| std::env::var("APP_NAME"))
             .ok()
-            .or_else(|| {
-                self.fallback_service_name
-                    .map(std::string::ToString::to_string)
-            })
+            .or_else(|| self.fallback_service_name.clone().map(|v| v.to_string()))
             .map(|v| KeyValue::new(resource::SERVICE_NAME, v));
         let service_version = std::env::var("SERVICE_VERSION")
             .or_else(|_| std::env::var("APP_VERSION"))
             .ok()
             .or_else(|| {
                 self.fallback_service_version
-                    .map(std::string::ToString::to_string)
+                    .clone()
+                    .map(std::borrow::Cow::into_owned)
             })
             .map(|v| KeyValue::new(resource::SERVICE_VERSION, v));
         let mut resource = Resource::builder_empty();
