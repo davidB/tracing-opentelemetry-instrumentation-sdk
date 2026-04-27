@@ -648,7 +648,7 @@ impl TracingConfig {
         #[cfg(feature = "logs")]
         let subscriber = subscriber.with(self.otel_config.logs_enabled.then_some(logs_layer));
         #[cfg(feature = "metrics")]
-        let subscriber = subscriber.with(metrics_layer);
+        let subscriber = subscriber.with(self.otel_config.metrics_enabled.then_some(metrics_layer));
         Ok((
             subscriber,
             OtelGuard {
