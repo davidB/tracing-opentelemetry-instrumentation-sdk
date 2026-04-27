@@ -27,6 +27,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - accept owned string for service'name and version
 - add OTLP log exporter ([#333](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/333))
 
+## [0.37.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.36.1...init-tracing-opentelemetry-v0.37.0) - 2026-04-27
+
+### <!-- 1 -->Fixed
+
+- *(init)* metrics enabled if feature flages & explicit enabling
+- avoid to log sensitive OTEL value, and warn if issue on logfmt
+- *(docs)* build of sample & add screenshot for log
+
+### <!-- 2 -->Added
+
+- accept owned string for service'name and version
+- add OTLP log exporter ([#333](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/333))
+
 ## [0.36.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.36.0...init-tracing-opentelemetry-v0.36.1) - 2026-03-15
 
 ### <!-- 1 -->Fixed
