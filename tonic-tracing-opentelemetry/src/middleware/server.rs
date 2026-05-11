@@ -17,7 +17,7 @@ pub type Filter = fn(&str) -> bool;
 /// - propagate `OpenTelemetry` context (`trace_id`, ...) to server
 /// - create a Span for `OpenTelemetry` (and tracing) on call
 ///
-/// `OpenTelemetry` context are extracted frim tracing's span.
+/// `OpenTelemetry` context are extracted from tracing's span.
 #[derive(Default, Debug, Clone)]
 pub struct OtelGrpcLayer {
     filter: Option<Filter>,
