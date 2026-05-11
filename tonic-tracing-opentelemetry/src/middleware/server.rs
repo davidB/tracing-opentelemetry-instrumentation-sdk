@@ -72,7 +72,7 @@ where
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        use tracing_opentelemetry::OpenTelemetrySpanExt;
+        use tracing_opentelemetry::{OpenTelemetrySpanExt, SetParentError};
         // This is necessary because tonic internally uses `tower::buffer::Buffer`.
         // See https://github.com/tower-rs/tower/issues/547#issuecomment-767629149
         // for details on why this is necessary
@@ -82,7 +82,12 @@ where
         let span = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let span = otel_http::grpc_server::make_span_from_request(&req);
             if let Err(error) = span.set_parent(otel_http::extract_context(req.headers())) {
-                tracing::warn!(?error, "can not set parent trace_id to span");
+                match error {
+                    SetParentError::LayerNotFound | SetParentError::AlreadyStarted => {
+                        tracing::warn!(?error, "can not set parent trace_id to span");
+                    }
+                    SetParentError::SpanDisabled => {}
+                }
             }
             span
         } else {

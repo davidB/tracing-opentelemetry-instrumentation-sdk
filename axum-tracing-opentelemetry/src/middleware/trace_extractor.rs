@@ -138,7 +138,7 @@ where
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        use tracing_opentelemetry::OpenTelemetrySpanExt;
+        use tracing_opentelemetry::{OpenTelemetrySpanExt, SetParentError};
         let req = req;
         let span = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let route = http_route(&req);
@@ -162,7 +162,12 @@ where
                 span.record(CLIENT_ADDRESS, client_ip);
             }
             if let Err(error) = span.set_parent(otel_http::extract_context(req.headers())) {
-                tracing::warn!(?error, "can not set parent trace_id to span");
+                match error {
+                    SetParentError::LayerNotFound | SetParentError::AlreadyStarted => {
+                        tracing::warn!(?error, "can not set parent trace_id to span");
+                    }
+                    SetParentError::SpanDisabled => {}
+                }
             }
             span
         } else {
