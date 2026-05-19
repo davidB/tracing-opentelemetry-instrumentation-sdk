@@ -16,7 +16,7 @@ rustdoc-args = ["--cfg", "docs_rs"]
 
 [dependencies]
 opentelemetry = { workspace = true }
-opentelemetry-appender-tracing = { version = "0.31", default-features = false, optional = true }
+opentelemetry-appender-tracing = { version = "0.32", default-features = false, optional = true }
 opentelemetry-aws = { workspace = true, optional = true, features = ["trace"] }
 opentelemetry-jaeger-propagator = { workspace = true, optional = true }
 opentelemetry-otlp = { workspace = true, optional = true, features = [

@@ -15,7 +15,6 @@ pub use error::Error;
 
 use opentelemetry::propagation::{TextMapCompositePropagator, TextMapPropagator};
 use opentelemetry_sdk::propagation::{BaggagePropagator, TraceContextPropagator};
-use opentelemetry_sdk::trace::TraceError;
 
 #[cfg(feature = "tracing_subscriber_ext")]
 #[cfg_attr(docs_rs, doc(cfg(feature = "tracing_subscriber_ext")))]
@@ -54,7 +53,7 @@ pub mod tracing_subscriber_ext;
 /// # Errors
 ///
 /// Will return `TraceError` if issue in reading or instanciate propagator.
-pub fn init_propagator() -> Result<(), TraceError> {
+pub fn init_propagator() -> Result<(), Error> {
     let value_from_env =
         std::env::var("OTEL_PROPAGATORS").unwrap_or_else(|_| "tracecontext,baggage".to_string());
     let propagators: Vec<(Box<dyn TextMapPropagator + Send + Sync>, String)> = value_from_env
@@ -80,7 +79,7 @@ pub fn init_propagator() -> Result<(), TraceError> {
 #[allow(clippy::box_default)]
 fn propagator_from_string(
     v: &str,
-) -> Result<Option<Box<dyn TextMapPropagator + Send + Sync>>, TraceError> {
+) -> Result<Option<Box<dyn TextMapPropagator + Send + Sync>>, Error> {
     match v {
         "tracecontext" => Ok(Some(Box::new(TraceContextPropagator::new()))),
         "baggage" => Ok(Some(Box::new(BaggagePropagator::new()))),
@@ -91,8 +90,8 @@ fn propagator_from_string(
             ),
         ))),
         #[cfg(not(feature = "zipkin"))]
-        "b3" => Err(TraceError::from(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'b3', try to enable compile feature 'zipkin'",
+        "b3" => Err(Error::SetupError(
+            "unsupported propagators form env OTEL_PROPAGATORS: 'b3', try to enable compile feature 'zipkin'".to_string(),
         )),
         #[cfg(feature = "zipkin")]
         "b3multi" => Ok(Some(Box::new(
@@ -101,27 +100,27 @@ fn propagator_from_string(
             ),
         ))),
         #[cfg(not(feature = "zipkin"))]
-        "b3multi" => Err(TraceError::from(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'b3multi', try to enable compile feature 'zipkin'",
+        "b3multi" => Err(Error::SetupError(
+            "unsupported propagators form env OTEL_PROPAGATORS: 'b3multi', try to enable compile feature 'zipkin'".to_string(),
         )),
         #[cfg(feature = "jaeger")]
         "jaeger" => Ok(Some(Box::new(
             opentelemetry_jaeger_propagator::Propagator::default(),
         ))),
         #[cfg(not(feature = "jaeger"))]
-        "jaeger" => Err(TraceError::from(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'jaeger', try to enable compile feature 'jaeger'",
+        "jaeger" => Err(Error::SetupError(
+            "unsupported propagators form env OTEL_PROPAGATORS: 'jaeger', try to enable compile feature 'jaeger'".to_string(),
         )),
         #[cfg(feature = "xray")]
         "xray" => Ok(Some(Box::new(
             opentelemetry_aws::trace::XrayPropagator::default(),
         ))),
         #[cfg(not(feature = "xray"))]
-        "xray" => Err(TraceError::from(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'xray', try to enable compile feature 'xray'",
+        "xray" => Err(Error::SetupError(
+            "unsupported propagators form env OTEL_PROPAGATORS: 'xray', try to enable compile feature 'xray'".to_string(),
         )),
         "none" => Ok(None),
-        unknown => Err(TraceError::from(format!(
+        unknown => Err(Error::SetupError(format!(
             "unsupported propagators form env OTEL_PROPAGATORS: '{unknown}'"
         ))),
     }
