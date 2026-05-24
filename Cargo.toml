@@ -12,7 +12,7 @@ members = [
 exclude = ["target"]
 
 [workspace.package]
-version = "0.32.0"
+version = "0.38.0"
 edition = "2024"
 rust-version = "1.91.0"
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk"
