@@ -24,6 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - add apidoc for public entries and re-export opentelemetry
 
+## [0.38.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.37.0...init-tracing-opentelemetry-v0.38.0) - 2026-05-24
+
+### <!-- 1 -->Fixed
+
+- *(deps)* update opentelemetry
+
+### <!-- 2 -->Added
+
+- add apidoc for public entries and re-export opentelemetry
+
 ## [0.37.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.36.1...init-tracing-opentelemetry-v0.37.0) - 2026-04-27
 
 ### <!-- 1 -->Fixed
