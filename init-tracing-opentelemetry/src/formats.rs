@@ -14,6 +14,7 @@ use crate::{Error, FeatureSet};
 
 /// Trait for building format-specific tracing layers
 pub trait LayerBuilder: Send + Sync {
+    /// Construct a boxed tracing layer configured by `config`.
     fn build_layer<S>(
         &self,
         config: &TracingConfig,

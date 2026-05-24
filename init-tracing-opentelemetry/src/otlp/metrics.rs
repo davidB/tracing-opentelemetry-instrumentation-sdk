@@ -9,11 +9,16 @@ use std::time::Duration;
 #[cfg(feature = "tls")]
 use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
 
+/// No-op transform for [`init_meterprovider`]. Pass when no builder customization is needed.
 #[must_use]
 pub fn identity(v: MeterProviderBuilder) -> MeterProviderBuilder {
     v
 }
 
+/// Build an [`SdkMeterProvider`] driven by env vars.
+///
+/// Protocol, timeout, temporality, and export interval are read from `OTEL_*` env vars.
+/// Pass [`identity`] as `transform` for no customization.
 pub fn init_meterprovider<F>(
     resource: Resource,
     transform: F,

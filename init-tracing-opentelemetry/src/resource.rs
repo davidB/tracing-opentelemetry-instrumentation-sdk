@@ -62,12 +62,18 @@ impl DetectResource {
     }
 }
 
+/// Log all resource attributes at debug level.
+///
+/// Enable with `RUST_LOG=otel::setup::resource=debug`.
 pub fn debug_resource(rsrc: &Resource) {
     rsrc.iter().for_each(
         |kv| tracing::debug!(target: "otel::setup::resource", key = %kv.0, value = %kv.1),
     );
 }
 
+/// Detects `service.name` and `service.version` from env vars with optional fallbacks.
+///
+/// Used internally by [`DetectResource`]. Prefer [`DetectResource`] for public API.
 #[derive(Debug)]
 pub struct ServiceInfoDetector {
     fallback_service_name: Option<Cow<'static, str>>,

@@ -4,11 +4,16 @@ use opentelemetry_sdk::{Resource, trace::SdkTracerProvider, trace::TracerProvide
 #[cfg(feature = "tls")]
 use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
 
+/// No-op transform for [`init_tracerprovider`]. Pass when no builder customization is needed.
 #[must_use]
 pub fn identity(v: TracerProviderBuilder) -> TracerProviderBuilder {
     v
 }
 
+/// Build an [`SdkTracerProvider`] driven by env vars.
+///
+/// Protocol is inferred from `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` (or the endpoint port).
+/// Pass [`identity`] as `transform` for no customization, or a closure to add processors/samplers.
 // see https://opentelemetry.io/docs/reference/specification/protocol/exporter/
 pub fn init_tracerprovider<F>(
     resource: Resource,

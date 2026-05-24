@@ -148,10 +148,14 @@ impl Default for LogFormat {
     }
 }
 
+/// Controls the timestamp format emitted with each log line.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogTimer {
+    /// No timestamp.
     None,
+    /// Wall-clock time.
     Time,
+    /// Elapsed time since process start.
     Uptime,
 }
 

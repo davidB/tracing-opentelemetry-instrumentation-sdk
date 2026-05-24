@@ -9,11 +9,16 @@ use opentelemetry_sdk::trace::TracerProviderBuilder;
 use std::fmt::Debug;
 use std::io::Write;
 
+/// No-op transform for [`init_tracer`]. Pass when no builder customization is needed.
 #[must_use]
 pub fn identity<W: Write>(v: TracerProviderBuilder) -> TracerProviderBuilder {
     v
 }
 
+/// Build a tracer that exports spans to any [`Write`] target (e.g. stdout, stderr).
+///
+/// Useful for local development or debugging when no OTLP collector is available.
+/// Use [`WriteNoWhere`] as `W` to propagate context without exporting.
 pub fn init_tracer<F, W>(resource: Resource, transform: F) -> Result<sdktrace::Tracer, Error>
 where
     F: FnOnce(TracerProviderBuilder) -> TracerProviderBuilder,
@@ -34,6 +39,9 @@ where
     Ok(provider_builder.build().tracer_with_scope(scope))
 }
 
+/// A [`Write`] sink that silently discards all output.
+///
+/// Use with [`init_tracer`] to create a tracer that propagates context but exports nothing.
 #[derive(Debug, Default)]
 pub struct WriteNoWhere;
 

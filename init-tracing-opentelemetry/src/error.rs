@@ -1,3 +1,4 @@
+/// Errors returned when initializing or configuring tracing.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error(transparent)]

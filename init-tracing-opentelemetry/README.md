@@ -35,6 +35,43 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 The `init_subscriber()` function returns an `OtelGuard` instance. Following the guard pattern, this struct provides no functions but, when dropped, ensures that any pending traces/metrics are sent before it exits. The syntax `let _guard` is suggested to ensure that Rust does not drop the struct until the application exits.
 
+## Re-exported crates
+
+To avoid version mismatches (which break the OpenTelemetry global state), this crate re-exports its pinned versions of the core OpenTelemetry crates. **You do not need to add them as direct dependencies** in your `Cargo.toml`.
+
+Instead of:
+
+```toml
+[dependencies]
+init-tracing-opentelemetry = { version = "...", features = ["otlp"] }
+opentelemetry = "0.32"
+opentelemetry_sdk = "0.32"
+tracing-opentelemetry = "0.33"
+```
+
+Use only:
+
+```toml
+[dependencies]
+init-tracing-opentelemetry = { version = "...", features = ["otlp"] }
+```
+
+And reference the re-exported crates via `init_tracing_opentelemetry::`:
+
+```rust,no_run
+use init_tracing_opentelemetry::opentelemetry;
+use init_tracing_opentelemetry::opentelemetry_sdk;
+use init_tracing_opentelemetry::tracing_opentelemetry;
+```
+
+Re-exported crates:
+
+| Re-export | Original crate |
+|-----------|----------------|
+| `init_tracing_opentelemetry::opentelemetry` | [`opentelemetry`](https://docs.rs/opentelemetry) |
+| `init_tracing_opentelemetry::opentelemetry_sdk` | [`opentelemetry_sdk`](https://docs.rs/opentelemetry_sdk) |
+| `init_tracing_opentelemetry::tracing_opentelemetry` | [`tracing-opentelemetry`](https://docs.rs/tracing-opentelemetry) |
+
 ## Configuration Options
 
 ### Presets
@@ -226,14 +263,15 @@ spec:
 
 ## Troubleshot why no trace?
 
-- check you only have a single version of opentelemtry (could be part of your CI/build), use `cargo-deny` or `cargo tree`
+- check you only have a single version of opentelemetry (could be part of your CI/build), use `cargo-deny` or `cargo tree`
 
   ```sh
   # Check only one version of opentelemetry should be used
   # else issue with setup of global (static variable)
-  # check_single_version_opentelemtry:
   cargo tree -i opentelemetry
   ```
+
+  The recommended fix is to drop direct dependencies on `opentelemetry`, `opentelemetry_sdk`, and `tracing-opentelemetry` and use the [re-exports provided by this crate](#re-exported-crates) instead. This guarantees version alignment.
 
 - check the code of your exporter and the integration with `tracing` (as subscriber's layer)
 - check the environment variables of opentelemetry `OTEL_EXPORTER...` and `OTEL_TRACES_SAMPLER` (values are logged on target `otel::setup` )

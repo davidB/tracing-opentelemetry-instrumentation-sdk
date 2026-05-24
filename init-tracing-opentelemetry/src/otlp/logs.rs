@@ -4,11 +4,16 @@ use opentelemetry_sdk::{Resource, logs::LoggerProviderBuilder, logs::SdkLoggerPr
 #[cfg(feature = "tls")]
 use {opentelemetry_otlp::WithTonicConfig, tonic::transport::ClientTlsConfig};
 
+/// No-op transform for [`init_loggerprovider`]. Pass when no builder customization is needed.
 #[must_use]
 pub fn identity(v: LoggerProviderBuilder) -> LoggerProviderBuilder {
     v
 }
 
+/// Build an [`SdkLoggerProvider`] driven by env vars.
+///
+/// Protocol is inferred from `OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` (or the endpoint port).
+/// Pass [`identity`] as `transform` for no customization.
 pub fn init_loggerprovider<F>(
     resource: Resource,
     transform: F,

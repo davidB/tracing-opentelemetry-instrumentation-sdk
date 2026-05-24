@@ -99,6 +99,9 @@ fn infer_protocol(maybe_protocol: Option<&str>, maybe_endpoint: Option<&str>) ->
     maybe_protocol
 }
 
+/// Log all `OTEL_*` env vars at debug level, redacting sensitive headers.
+///
+/// Enable with `RUST_LOG=otel::setup::env=debug`.
 pub fn debug_env() {
     const SENSITIVE_KEYS: &[&str] = &[
         "OTEL_EXPORTER_OTLP_HEADERS",
