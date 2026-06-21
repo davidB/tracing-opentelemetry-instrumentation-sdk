@@ -41,7 +41,7 @@ expression: otel_spans
     code.line.number: "Some(AnyValue { value: Some(IntValue(15)) })"
     code.module.name: "Some(AnyValue { value: Some(StringValue(\"tracing_opentelemetry_instrumentation_sdk::http::http_server\")) })"
     http.request.method: "Some(AnyValue { value: Some(StringValue(\"GET\")) })"
-    http.response.status_code: "Some(AnyValue { value: Some(StringValue(\"200\")) })"
+    http.response.status_code: "Some(AnyValue { value: Some(IntValue(200)) })"
     http.route: "Some(AnyValue { value: Some(StringValue(\"/with_child_span\")) })"
     idle_ns: ignore
     network.protocol.version: "Some(AnyValue { value: Some(StringValue(\"1.1\")) })"

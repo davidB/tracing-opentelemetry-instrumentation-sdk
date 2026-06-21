@@ -37,7 +37,12 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
 
 pub fn update_span_from_response<B>(span: &tracing::Span, response: &http::Response<B>) {
     let status = response.status();
-    span.record(HTTP_RESPONSE_STATUS_CODE, status.as_u16());
+    // tracing widens u16 to u64 when using it as an attribute,
+    // but tracing-opentelemetry does not (and cannot) handle u64,
+    // so it defaults to being recorded as a string. explicitly converting from u16 to i64
+    // allows the attribute to be recorded properly by tracing-opentelemetry
+    // see https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/344
+    span.record(HTTP_RESPONSE_STATUS_CODE, i64::from(status.as_u16()));
 
     if status.is_server_error() {
         span.record(OTEL_STATUS_CODE, "ERROR");
