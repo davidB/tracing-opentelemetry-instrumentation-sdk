@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.1](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.38.0...tracing-opentelemetry-instrumentation-sdk-v0.38.1) - 2026-06-21
+
+### <!-- 1 -->Fixed
+
+- type of `http.response.status_code` attribute to int (previously
+
 ## [0.32.4](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.32.3...tracing-opentelemetry-instrumentation-sdk-v0.32.4) - 2026-03-15
 
 ### <!-- 1 -->Fixed
