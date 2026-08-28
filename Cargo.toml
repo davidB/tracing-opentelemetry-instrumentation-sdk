@@ -32,7 +32,7 @@ opentelemetry-aws = { version = "0.20", default-features = false }
 opentelemetry-jaeger-propagator = { version = "0.32", default-features = false }
 opentelemetry-otlp = { version = "0.32", default-features = false }
 opentelemetry-proto = { version = "0.32", default-features = false }
-opentelemetry-resource-detectors = { version = "0.11", default-features = false }
+opentelemetry-resource-detectors = { version = "0.12", default-features = false }
 opentelemetry_sdk = { version = "0.32", default-features = false, features = [
   "rt-tokio",
 ] }
