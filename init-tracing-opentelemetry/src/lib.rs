@@ -43,7 +43,6 @@ mod tracing_subscriber_ext;
 ///
 /// - "tracecontext": W3C Trace Context
 /// - "baggage": W3C Baggage
-/// - "jaeger": Jaeger (require feature "jaeger")
 /// - "xray": AWS X-Ray (require feature "xray")
 /// - "ottrace": OT Trace (third party) (not supported)
 /// - "none": No automatically configured propagator.
@@ -84,13 +83,8 @@ fn propagator_from_string(
         "b3" | "b3multi" => Err(Error::SetupError(format!(
             "unsupported propagators form env OTEL_PROPAGATORS: '{v}', zipkin/b3 support was removed (opentelemetry-zipkin is deprecated)"
         ))),
-        #[cfg(feature = "jaeger")]
-        "jaeger" => Ok(Some(Box::new(
-            opentelemetry_jaeger_propagator::Propagator::default(),
-        ))),
-        #[cfg(not(feature = "jaeger"))]
         "jaeger" => Err(Error::SetupError(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'jaeger', try to enable compile feature 'jaeger'".to_string(),
+            "unsupported propagators form env OTEL_PROPAGATORS: 'jaeger', jaeger propagation support was removed (opentelemetry-jaeger-propagator is deprecated, use 'tracecontext' instead)".to_string(),
         )),
         #[cfg(feature = "xray")]
         "xray" => Ok(Some(Box::new(
