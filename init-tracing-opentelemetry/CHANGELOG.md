@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.40.0...init-tracing-opentelemetry-v0.41.0) - 2026-08-30
+
+### <!-- 2 -->Added
+
+- *(init-tracing-opentelemetry)* re-export prometheus crate
+
+### <!-- 4 -->Changed
+
+- *(init-tracing-opentelemetry)* promote direct Meter API over tracing-macro metrics bridge
+
 ## [0.40.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.39.0...init-tracing-opentelemetry-v0.40.0) - 2026-08-30
 
 ### <!-- 1 -->Fixed
