@@ -47,6 +47,23 @@ For more info about how to initialize, you can look at crate [`init-tracing-open
 
 ![screenshot](../examples/axum-otlp/Screenshot-20251103_1308.jpg)
 
+## Differences with `tower_http::trace`
+
+[`tower_http::trace`](https://docs.rs/tower-http/latest/tower_http/trace/index.html) is a general-purpose logging middleware: it emits `tracing` events for request/response lifecycle (start, end, failure) and lets you customize the span fields yourself.
+
+`axum-tracing-opentelemetry` is focused on OpenTelemetry distributed tracing instead:
+
+- Extracts the `OTel` trace context (W3C `traceparent`/`tracestate` headers) from the incoming request and makes it the parent of the request's span, so traces connect across services. (No B3 support.)
+- Populates the span with [OTel HTTP semantic convention] attributes (`http.request.method`, `url.path`, `server.address`, ...) instead of arbitrary custom fields.
+- Optionally injects the trace context back into the response headers (`OtelInResponseLayer`), so the `trace_id` is available to clients — handy to surface in error messages (API or human-facing) for support/debugging. This is *not* the same as `tower_http`'s `X-Request-Id` (from its separate `request_id` module, not `trace`): ours is the actual `OTel` trace id, correlated with your backend traces.
+- Does not log request/response bodies or emit per-phase log events — combine it with `tower_http::trace` (or your own logging) if you need that.
+
+Use `tower_http::trace` for human-readable request logging, and `OtelAxumLayer` for `OTel` trace propagation/correlation. They are complementary and can be layered together.
+
+See [issue #158](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/issues/158) for more background and discussion.
+
+[OTel HTTP semantic convention]: https://opentelemetry.io/docs/specs/semconv/http/http-spans/
+
 ## Metrics endpoint
 
 Enable the `metrics-prometheus` feature to get `prometheus_metrics::router`, which mounts a `GET /metrics` route serving a Prometheus [`Registry`](https://docs.rs/prometheus/latest/prometheus/struct.Registry.html) in text format:
