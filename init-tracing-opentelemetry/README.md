@@ -71,6 +71,7 @@ Re-exported crates:
 | `init_tracing_opentelemetry::opentelemetry` | [`opentelemetry`](https://docs.rs/opentelemetry) |
 | `init_tracing_opentelemetry::opentelemetry_sdk` | [`opentelemetry_sdk`](https://docs.rs/opentelemetry_sdk) |
 | `init_tracing_opentelemetry::tracing_opentelemetry` | [`tracing-opentelemetry`](https://docs.rs/tracing-opentelemetry) |
+| `init_tracing_opentelemetry::prometheus` (with `metrics-prometheus` feature) | [`prometheus`](https://docs.rs/prometheus) |
 
 ## Configuration Options
 
@@ -274,7 +275,7 @@ let registry = guard.prometheus_registry().expect("prometheus enabled").clone();
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-The returned [`prometheus::Registry`](https://docs.rs/prometheus/latest/prometheus/struct.Registry.html) can be served over HTTP with `axum_tracing_opentelemetry::prometheus_metrics::router`, see the [`axum-prometheus` example](../examples/axum-prometheus).
+The returned [`prometheus::Registry`](https://docs.rs/prometheus/latest/prometheus/struct.Registry.html) (re-exported as `init_tracing_opentelemetry::prometheus::Registry` — no need to add `prometheus` as a direct dependency) can be served over HTTP with `axum_tracing_opentelemetry::prometheus_metrics::router`, see the [`axum-prometheus` example](../examples/axum-prometheus).
 
 ## Logs
 

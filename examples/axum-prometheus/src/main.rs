@@ -23,6 +23,11 @@ async fn main() -> Result<(), BoxError> {
     let guard = init_tracing_opentelemetry::TracingConfig::production()
         .with_metrics_prometheus()
         .init_subscriber()?;
+    // Type is inferred as `prometheus::Registry`, so this crate doesn't need
+    // `prometheus` as a direct dependency (see `Cargo.toml`). It's re-exported
+    // as `init_tracing_opentelemetry::prometheus` for when you do need to
+    // name the type (e.g. a struct field) — works the same either way, just
+    // guarantees you stay on the exact version this crate is pinned to.
     let registry = guard
         .prometheus_registry()
         .expect("prometheus metrics enabled")
