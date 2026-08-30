@@ -9,9 +9,9 @@
 
 pub use opentelemetry;
 pub use opentelemetry_sdk;
-pub use tracing_opentelemetry;
 #[cfg(feature = "metrics-prometheus")]
 pub use prometheus;
+pub use tracing_opentelemetry;
 
 mod error;
 pub use error::Error;
