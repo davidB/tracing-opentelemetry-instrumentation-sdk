@@ -6,10 +6,12 @@ on:
     branches-ignore:
       - "release-plz-*"
   push:
+    branches-ignore:
+      - "release-plz-*"
     branches:
       - main
       - master
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
