@@ -14,6 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.39.0...init-tracing-opentelemetry-v0.40.0) - 2026-08-30
+
+### <!-- 1 -->Fixed
+
+- *(init-tracing-opentelemetry)* [**breaking**] remove deprecated jaeger propagator support
+- *(init-tracing-opentelemetry)* [**breaking**] remove deprecated zipkin/b3 propagator support
+
+### <!-- 3 -->Removed
+
+- *(init-tracing-opentelemetry)* [**breaking**] remove legacy tracing_subscriber_ext public API
+
 ## [0.39.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.38.1...init-tracing-opentelemetry-v0.39.0) - 2026-08-30
 
 ### <!-- 1 -->Fixed
