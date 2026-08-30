@@ -1,7 +1,9 @@
 use http::HeaderMap;
-use opentelemetry_semantic_conventions::attribute::{
-    EXCEPTION_MESSAGE, OTEL_STATUS_CODE, RPC_GRPC_STATUS_CODE,
-};
+use opentelemetry_semantic_conventions::attribute::{EXCEPTION_MESSAGE, OTEL_STATUS_CODE};
+
+/// `opentelemetry_semantic_conventions::attribute::RPC_GRPC_STATUS_CODE` is deprecated
+/// but has no non-deprecated equivalent constant yet.
+const RPC_GRPC_STATUS_CODE: &str = "rpc.grpc.status_code";
 
 /// [`gRPC` status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md#status-codes-and-their-use-in-grpc)
 /// copied from tonic
