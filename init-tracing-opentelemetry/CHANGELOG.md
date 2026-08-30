@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.38.1...init-tracing-opentelemetry-v0.39.0) - 2026-08-30
+
+### <!-- 1 -->Fixed
+
+- *(metrics)* drop unused protobuf feature from prometheus dep
+
+### <!-- 2 -->Added
+
+- *(metrics)* add Prometheus /metrics support via TracingConfig
+
 ## [0.38.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.37.0...init-tracing-opentelemetry-v0.38.0) - 2026-05-24
 
 ### <!-- 1 -->Fixed
