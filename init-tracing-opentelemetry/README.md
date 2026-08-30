@@ -236,9 +236,23 @@ spec:
 
 ## Metrics
 
-To configure opentelemetry metrics, enable the `metrics` feature, this will initialize a `SdkMeterProvider`, set it globally and add a a [`MetricsLayer`](https://docs.rs/tracing-opentelemetry/latest/tracing_opentelemetry/struct.MetricsLayer.html) to allow using `tracing` events to produce metrics.
+To configure opentelemetry metrics, enable the `metrics` feature. This initializes a `SdkMeterProvider` and sets it **globally**, so instruments created anywhere via [`opentelemetry::metrics`](https://docs.rs/opentelemetry/latest/opentelemetry/metrics/struct.Meter.html) are wired to your configured exporter — with no dependency on `tracing`.
 
-The `opentelemetry_sdk` can still be used to produce metrics as well, since we configured the `SdkMeterProvider` globally, so any Axum/Tonic middleware that does not use `tracing` but directly [opentelemetry::metrics](https://docs.rs/opentelemetry/latest/opentelemetry/metrics/struct.Meter.html) will work.
+### Recommended: create instruments directly
+
+This is the primary, recommended way to produce metrics — an OpenTelemetry/Prometheus-flavored API, not a tracing one. Create the instrument once, then call it directly; dimensions are passed as `KeyValue` attributes at the call site, no log line is emitted, and metric cardinality stays independent of your log volume:
+
+```rust,no_run
+use init_tracing_opentelemetry::opentelemetry::{KeyValue, global};
+
+let http_requests = global::meter("my-service").u64_counter("http_requests").build();
+
+http_requests.add(1, &[KeyValue::new("method", "GET"), KeyValue::new("path", "/")]);
+```
+
+### Optional: tracing-macro bridge
+
+Enabling the `metrics` feature also adds a [`MetricsLayer`](https://docs.rs/tracing-opentelemetry/latest/tracing_opentelemetry/struct.MetricsLayer.html), letting specially-named fields on `tracing` events produce metrics, e.g. `tracing::info!(monotonic_counter.index_calls = 1, method = %method)`. Use this **only** when you already emit that tracing event for other reasons (logging/spans) and want to piggyback a metric on it for free — it is not recommended as your primary metrics API, since it couples metric emission (and its cardinality) to log volume: one increment means one log line.
 
 Configure the following set of environment variables to configure the metrics exporter (on top of those configured above):
 

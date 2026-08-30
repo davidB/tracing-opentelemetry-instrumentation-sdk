@@ -68,16 +68,21 @@ async fn index(
     let method = request.method().to_string();
     let path = matched_path.map_or_else(|| "/".to_string(), |p| p.as_str().to_string());
 
-    // 1. tracing-macro bridge: extra fields on the event become metric
-    //    attributes via `MetricsLayer` (requires `TracingConfig::with_metrics*`).
-    tracing::info!(monotonic_counter.index_calls = 1, method = %method, path = %path);
-
-    // 2. raw `opentelemetry::metrics::Meter` API: attach attributes per call
-    //    via `KeyValue`.
+    // 1. Recommended: raw `opentelemetry::metrics::Meter` API, attaching
+    //    attributes per call via `KeyValue`. No log line, no tracing coupling.
     state.http_requests.add(
         1,
-        &[KeyValue::new("method", method), KeyValue::new("path", path)],
+        &[
+            KeyValue::new("method", method.clone()),
+            KeyValue::new("path", path.clone()),
+        ],
     );
+
+    // 2. Optional: tracing-macro bridge. Extra fields on the event become
+    //    metric attributes via `MetricsLayer` (requires
+    //    `TracingConfig::with_metrics*`). Only worth it when you already
+    //    emit this event for logging and want to piggyback a metric on it.
+    tracing::info!(monotonic_counter.index_calls = 1, method = %method, path = %path);
 
     axum::Json(json!({ "status": "UP" }))
 }
