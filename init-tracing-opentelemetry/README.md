@@ -291,6 +291,20 @@ Configure the following set of environment variables to configure the metrics ex
 - `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` to set the temporality preference for the exporter
 - `OTEL_METRIC_EXPORT_INTERVAL` to set frequence of metrics export in **_milliseconds_**, defaults to 60s
 
+### Prometheus
+
+To expose metrics for pull-based Prometheus scraping instead of pushing via OTLP, enable the `metrics-prometheus` feature and call `.with_metrics_prometheus()` on `TracingConfig`:
+
+```rust,no_run
+let guard = init_tracing_opentelemetry::TracingConfig::production()
+    .with_metrics_prometheus()
+    .init_subscriber()?;
+let registry = guard.prometheus_registry().expect("prometheus enabled").clone();
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+The returned [`prometheus::Registry`](https://docs.rs/prometheus/latest/prometheus/struct.Registry.html) can be served over HTTP with `axum_tracing_opentelemetry::prometheus_metrics::router`, see the [`axum-prometheus` example](../examples/axum-prometheus).
+
 ## Logs
 
 To configure OpenTelemetry log export, enable the `logs` feature. This initializes a `SdkLoggerProvider` and adds a log bridge layer so that `tracing` events are forwarded to the OpenTelemetry log pipeline and exported via OTLP.

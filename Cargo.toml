@@ -39,6 +39,7 @@ opentelemetry_sdk = { version = "0.32", default-features = false, features = [
 opentelemetry-semantic-conventions = { version = "0.32", default-features = false }
 opentelemetry-stdout = { version = "0.32" }
 opentelemetry-zipkin = { version = "0.32", default-features = false }
+prometheus = { version = "0.14", default-features = false }
 rstest = "0.26"
 tokio = { version = "1", default-features = false }
 tokio-stream = { version = "0.1", default-features = false }

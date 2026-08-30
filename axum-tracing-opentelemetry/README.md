@@ -47,6 +47,18 @@ For more info about how to initialize, you can look at crate [`init-tracing-open
 
 ![screenshot](../examples/axum-otlp/Screenshot-20251103_1308.jpg)
 
+## Metrics endpoint
+
+Enable the `metrics-prometheus` feature to get `prometheus_metrics::router`, which mounts a `GET /metrics` route serving a Prometheus [`Registry`](https://docs.rs/prometheus/latest/prometheus/struct.Registry.html) in text format:
+
+```txt
+let app = Router::new()
+    .merge(axum_tracing_opentelemetry::prometheus_metrics::router(registry))
+    .route("/", get(index));
+```
+
+See [`init-tracing-opentelemetry`]'s "Metrics" section for how to build `registry` via `TracingConfig::with_metrics_prometheus()`, and the [`axum-prometheus` example](../examples/axum-prometheus).
+
 ## Changelog - History
 
 [CHANGELOG.md](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/blob/main/CHANGELOG.md)

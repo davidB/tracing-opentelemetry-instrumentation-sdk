@@ -2,6 +2,8 @@
 pub mod logs;
 #[cfg(feature = "metrics")]
 pub mod metrics;
+#[cfg(feature = "metrics-prometheus")]
+pub(crate) mod metrics_prometheus;
 pub mod traces;
 
 #[cfg(feature = "logs")]
@@ -25,6 +27,8 @@ pub struct OtelGuard {
     pub(crate) logger_provider: SdkLoggerProvider,
     #[cfg(feature = "metrics")]
     pub(crate) meter_provider: SdkMeterProvider,
+    #[cfg(feature = "metrics-prometheus")]
+    pub(crate) prometheus_registry: Option<prometheus::Registry>,
     pub(crate) tracer_provider: SdkTracerProvider,
 }
 
@@ -44,6 +48,14 @@ impl OtelGuard {
     #[must_use]
     pub fn meter_provider(&self) -> &impl MeterProvider {
         &self.meter_provider
+    }
+
+    /// The Prometheus registry backing metrics, when
+    /// [`crate::TracingConfig::with_metrics_prometheus`] was used.
+    #[cfg(feature = "metrics-prometheus")]
+    #[must_use]
+    pub fn prometheus_registry(&self) -> Option<&prometheus::Registry> {
+        self.prometheus_registry.as_ref()
     }
 }
 

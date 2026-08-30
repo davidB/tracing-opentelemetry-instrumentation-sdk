@@ -116,6 +116,8 @@ where
             logger_provider,
             #[cfg(feature = "metrics")]
             meter_provider,
+            #[cfg(feature = "metrics-prometheus")]
+            prometheus_registry: None,
             tracer_provider,
         },
     ))
@@ -207,6 +209,27 @@ where
     let layer = MetricsLayer::new(meter_provider.clone());
     opentelemetry::global::set_meter_provider(meter_provider.clone());
     Ok((layer, meter_provider))
+}
+
+#[cfg(feature = "metrics-prometheus")]
+pub(crate) fn build_prometheus_metrics_layer_with_resource<S>(
+    otel_rsrc: Resource,
+) -> Result<
+    (
+        MetricsLayer<S, SdkMeterProvider>,
+        SdkMeterProvider,
+        prometheus::Registry,
+    ),
+    Error,
+>
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+{
+    let (meter_provider, registry) =
+        otlp::metrics_prometheus::init_meterprovider_prometheus(otel_rsrc)?;
+    let layer = MetricsLayer::new(meter_provider.clone());
+    opentelemetry::global::set_meter_provider(meter_provider.clone());
+    Ok((layer, meter_provider, registry))
 }
 
 /// Initialize subscribers with default configuration

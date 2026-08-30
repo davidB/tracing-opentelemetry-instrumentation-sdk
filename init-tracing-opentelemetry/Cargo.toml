@@ -23,6 +23,9 @@ opentelemetry-otlp = { workspace = true, optional = true, features = [
   "grpc-tonic",
   "trace",
 ] }
+opentelemetry-prometheus = { version = "0.32.0", default-features = false, optional = true, features = [
+  "prometheus-encoding",
+] }
 # opentelemetry-resource-detectors = { workspace = true } //FIXME enable when available for opentelemetry >= 0.25
 opentelemetry-stdout = { workspace = true, features = [
   "trace",
@@ -30,6 +33,7 @@ opentelemetry-stdout = { workspace = true, features = [
 opentelemetry-semantic-conventions = { workspace = true, optional = true }
 opentelemetry-zipkin = { workspace = true, features = [], optional = true }
 opentelemetry_sdk = { workspace = true, features = ["trace"] }
+prometheus = { workspace = true, optional = true, features = ["protobuf"] }
 thiserror = "2"
 tonic = { workspace = true, optional = true }
 tracing = { workspace = true }
@@ -91,6 +95,7 @@ metrics = [
   "tracing-opentelemetry/metrics",
   "opentelemetry-stdout/metrics",
 ]
+metrics-prometheus = ["metrics", "dep:opentelemetry-prometheus", "dep:prometheus"]
 
 [lints]
 [lints.rust]

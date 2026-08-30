@@ -7,6 +7,8 @@
 
 #[allow(deprecated)]
 pub mod middleware;
+#[cfg(feature = "metrics-prometheus")]
+pub mod prometheus_metrics;
 
 /// for basic backward compatibility and transition
 #[allow(deprecated)]

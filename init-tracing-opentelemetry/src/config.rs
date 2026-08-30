@@ -58,6 +58,8 @@ use crate::formats::{
 use crate::tracing_subscriber_ext::build_logger_layer_with_resource;
 #[cfg(feature = "metrics")]
 use crate::tracing_subscriber_ext::build_metrics_layer_with_resource;
+#[cfg(feature = "metrics-prometheus")]
+use crate::tracing_subscriber_ext::build_prometheus_metrics_layer_with_resource;
 use crate::tracing_subscriber_ext::build_tracer_layer_with_resource_and_name;
 use crate::{Error, otlp::OtelGuard, resource::DetectResource};
 
@@ -119,6 +121,16 @@ impl Guard {
     #[must_use]
     pub fn is_global(&self) -> bool {
         self.default_guard.is_none()
+    }
+
+    /// The Prometheus registry backing metrics, when
+    /// [`TracingConfig::with_metrics_prometheus`] was used.
+    #[cfg(feature = "metrics-prometheus")]
+    #[must_use]
+    pub fn prometheus_registry(&self) -> Option<&prometheus::Registry> {
+        self.otel_guard
+            .as_ref()
+            .and_then(OtelGuard::prometheus_registry)
     }
 }
 
@@ -243,6 +255,18 @@ impl Default for FeatureSet {
     }
 }
 
+/// Backend used to export metrics, selected via
+/// [`TracingConfig::with_metrics_exporter`] / [`TracingConfig::with_metrics_prometheus`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum MetricsExporter {
+    /// Push metrics via OTLP (default).
+    #[default]
+    Otlp,
+    /// Expose metrics for pull-based Prometheus scraping.
+    #[cfg(feature = "metrics-prometheus")]
+    Prometheus,
+}
+
 /// Configuration for OpenTelemetry integration
 #[derive(Debug)]
 pub struct OtelConfig {
@@ -254,6 +278,8 @@ pub struct OtelConfig {
     pub logs_enabled: bool,
     /// Enable metrics collection
     pub metrics_enabled: bool,
+    /// Backend used to export metrics
+    pub metrics_exporter: MetricsExporter,
 }
 
 impl Default for OtelConfig {
@@ -263,6 +289,7 @@ impl Default for OtelConfig {
             resource_config: None,
             logs_enabled: cfg!(feature = "logs"),
             metrics_enabled: cfg!(feature = "metrics"),
+            metrics_exporter: MetricsExporter::default(),
         }
     }
 }
@@ -500,6 +527,26 @@ impl TracingConfig {
         self
     }
 
+    /// Set the backend used to export metrics (default: OTLP)
+    #[must_use]
+    pub fn with_metrics_exporter(mut self, exporter: MetricsExporter) -> Self {
+        self.otel_config.metrics_exporter = exporter;
+        self
+    }
+
+    /// Enable metrics collection and export them for pull-based Prometheus
+    /// scraping instead of pushing via OTLP.
+    ///
+    /// The resulting [`prometheus::Registry`] is available from
+    /// [`Guard::prometheus_registry`] after [`TracingConfig::init_subscriber`],
+    /// to be exposed over HTTP (e.g. via `axum_tracing_opentelemetry::prometheus_metrics::router`).
+    #[must_use]
+    #[cfg(feature = "metrics-prometheus")]
+    pub fn with_metrics_prometheus(self) -> Self {
+        self.with_metrics(true)
+            .with_metrics_exporter(MetricsExporter::Prometheus)
+    }
+
     /// Set resource configuration for OpenTelemetry
     #[must_use]
     pub fn with_resource_config(mut self, config: DetectResource) -> Self {
@@ -644,7 +691,17 @@ impl TracingConfig {
             .build();
         #[cfg(feature = "logs")]
         let (logs_layer, logger_provider) = build_logger_layer_with_resource(otel_rsrc.clone())?;
-        #[cfg(feature = "metrics")]
+        #[cfg(feature = "metrics-prometheus")]
+        let (metrics_layer, meter_provider, prometheus_registry) =
+            if self.otel_config.metrics_exporter == MetricsExporter::Prometheus {
+                let (layer, provider, registry) =
+                    build_prometheus_metrics_layer_with_resource(otel_rsrc.clone())?;
+                (layer, provider, Some(registry))
+            } else {
+                let (layer, provider) = build_metrics_layer_with_resource(otel_rsrc.clone())?;
+                (layer, provider, None)
+            };
+        #[cfg(all(feature = "metrics", not(feature = "metrics-prometheus")))]
         let (metrics_layer, meter_provider) = build_metrics_layer_with_resource(otel_rsrc.clone())?;
         let (trace_layer, tracer_provider) =
             build_tracer_layer_with_resource_and_name(otel_rsrc, self.tracer_name.clone())?;
@@ -660,6 +717,8 @@ impl TracingConfig {
                 logger_provider,
                 #[cfg(feature = "metrics")]
                 meter_provider,
+                #[cfg(feature = "metrics-prometheus")]
+                prometheus_registry,
                 tracer_provider,
             },
         ))
