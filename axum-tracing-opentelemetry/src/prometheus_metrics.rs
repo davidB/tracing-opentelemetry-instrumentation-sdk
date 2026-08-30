@@ -30,7 +30,7 @@ pub fn router(registry: Registry) -> Router {
                 encoder
                     .encode(&registry.gather(), &mut buf)
                     .unwrap_or_else(|err| {
-                        tracing::warn!("failed to encode prometheus metrics: {err}")
+                        tracing::warn!("failed to encode prometheus metrics: {err}");
                     });
                 ([(CONTENT_TYPE, encoder.format_type().to_string())], buf)
             }

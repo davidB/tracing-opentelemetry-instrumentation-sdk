@@ -25,7 +25,7 @@ opentelemetry = { workspace = true, features = [
 ], default-features = false }
 opentelemetry-semantic-conventions = { workspace = true }
 pin-project-lite = "0.2"
-prometheus = { workspace = true, optional = true, features = ["protobuf"] }
+prometheus = { workspace = true, optional = true }
 tower = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
