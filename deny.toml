@@ -227,8 +227,9 @@ skip = [
   # "rand_core", # until tonic & tower upgrade
   "r-efi",
   # "socket2",
+  "syn",
   # "wasi",
-  "wit-bindgen",
+  # "wit-bindgen",
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
