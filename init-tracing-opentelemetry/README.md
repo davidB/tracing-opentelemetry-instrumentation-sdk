@@ -132,52 +132,9 @@ async fn main() {
 }
 ```
 
-### Legacy API (deprecated)
+### Legacy API (removed)
 
-For backward compatibility, the old API is still available:
-
-```txt
-pub fn build_loglevel_filter_layer() -> tracing_subscriber::filter::EnvFilter {
-    // filter what is output on log (fmt)
-    // std::env::set_var("RUST_LOG", "warn,axum_tracing_opentelemetry=info,otel=debug");
-    std::env::set_var(
-        "RUST_LOG",
-        format!(
-            // `otel::tracing` should be a level trace to emit opentelemetry trace & span
-            // `otel::setup` set to debug to log detected resources, configuration read and infered
-            "{},otel::tracing=trace,otel=debug",
-            std::env::var("RUST_LOG")
-                .or_else(|_| std::env::var("OTEL_LOG_LEVEL"))
-                .unwrap_or_else(|_| "info".to_string())
-        ),
-    );
-    EnvFilter::from_default_env()
-}
-
-pub fn build_otel_layer<S>() -> Result<OpenTelemetryLayer<S, Tracer>, BoxError>
-where
-    S: Subscriber + for<'a> LookupSpan<'a>,
-{
-    use crate::{
-        init_propagator, //stdio,
-        otlp,
-        resource::DetectResource,
-    };
-    let otel_rsrc = DetectResource::default()
-        //.with_fallback_service_name(env!("CARGO_PKG_NAME"))
-        //.with_fallback_service_version(env!("CARGO_PKG_VERSION"))
-        .build();
-    let otel_tracer = otlp::init_tracer(otel_rsrc, otlp::identity)?;
-    // to not send trace somewhere, but continue to create and propagate,...
-    // then send them to `axum_tracing_opentelemetry::stdio::WriteNoWhere::default()`
-    // or to `std::io::stdout()` to print
-    //
-    // let otel_tracer =
-    //     stdio::init_tracer(otel_rsrc, stdio::identity, stdio::WriteNoWhere::default())?;
-    init_propagator()?;
-    Ok(tracing_opentelemetry::layer().with_tracer(otel_tracer))
-}
-```
+The old procedural API (`init_subscribers`, `build_tracer_layer`, `register_otel_layers_with_resource`, etc. in `tracing_subscriber_ext`) has been removed since `0.40.0`. Use `TracingConfig` instead.
 
 To retrieve the current `trace_id` (eg to add it into error message (as header or attributes))
 

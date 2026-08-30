@@ -33,8 +33,7 @@ pub mod resource;
 #[cfg_attr(docs_rs, doc(cfg(feature = "stdout")))]
 pub mod stdio;
 #[cfg(feature = "tracing_subscriber_ext")]
-#[cfg_attr(docs_rs, doc(cfg(feature = "tracing_subscriber_ext")))]
-pub mod tracing_subscriber_ext;
+mod tracing_subscriber_ext;
 
 /// Configure the global propagator based on content of the env variable [OTEL_PROPAGATORS](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_propagators)
 /// Specifies Propagators to be used in a comma-separated list.

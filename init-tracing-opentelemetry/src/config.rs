@@ -38,7 +38,6 @@
 //! }
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
-#![allow(deprecated)]
 
 use std::path::{Path, PathBuf};
 
