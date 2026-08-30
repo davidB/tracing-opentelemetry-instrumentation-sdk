@@ -31,7 +31,6 @@ opentelemetry-stdout = { workspace = true, features = [
   "trace",
 ], optional = true }
 opentelemetry-semantic-conventions = { workspace = true, optional = true }
-opentelemetry-zipkin = { workspace = true, features = [], optional = true }
 opentelemetry_sdk = { workspace = true, features = ["trace"] }
 prometheus = { workspace = true, optional = true }
 thiserror = "2"
@@ -78,7 +77,6 @@ otlp = [
 stdout = ["dep:opentelemetry-stdout", "tracer"]
 tracer = ["dep:opentelemetry-semantic-conventions"]
 xray = ["dep:opentelemetry-aws"]
-zipkin = ["dep:opentelemetry-zipkin"]
 tracing_subscriber_ext = ["dep:tracing-subscriber", "otlp"]
 tls = ["opentelemetry-otlp/tls", "tonic"]
 tls-roots = ["opentelemetry-otlp/tls-roots"]

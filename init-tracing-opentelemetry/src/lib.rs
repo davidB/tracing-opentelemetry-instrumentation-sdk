@@ -43,8 +43,6 @@ mod tracing_subscriber_ext;
 ///
 /// - "tracecontext": W3C Trace Context
 /// - "baggage": W3C Baggage
-/// - "b3": B3 Single (require feature "zipkin")
-/// - "b3multi": B3 Multi (require feature "zipkin")
 /// - "jaeger": Jaeger (require feature "jaeger")
 /// - "xray": AWS X-Ray (require feature "xray")
 /// - "ottrace": OT Trace (third party) (not supported)
@@ -83,26 +81,9 @@ fn propagator_from_string(
     match v {
         "tracecontext" => Ok(Some(Box::new(TraceContextPropagator::new()))),
         "baggage" => Ok(Some(Box::new(BaggagePropagator::new()))),
-        #[cfg(feature = "zipkin")]
-        "b3" => Ok(Some(Box::new(
-            opentelemetry_zipkin::Propagator::with_encoding(
-                opentelemetry_zipkin::B3Encoding::SingleHeader,
-            ),
+        "b3" | "b3multi" => Err(Error::SetupError(format!(
+            "unsupported propagators form env OTEL_PROPAGATORS: '{v}', zipkin/b3 support was removed (opentelemetry-zipkin is deprecated)"
         ))),
-        #[cfg(not(feature = "zipkin"))]
-        "b3" => Err(Error::SetupError(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'b3', try to enable compile feature 'zipkin'".to_string(),
-        )),
-        #[cfg(feature = "zipkin")]
-        "b3multi" => Ok(Some(Box::new(
-            opentelemetry_zipkin::Propagator::with_encoding(
-                opentelemetry_zipkin::B3Encoding::MultipleHeader,
-            ),
-        ))),
-        #[cfg(not(feature = "zipkin"))]
-        "b3multi" => Err(Error::SetupError(
-            "unsupported propagators form env OTEL_PROPAGATORS: 'b3multi', try to enable compile feature 'zipkin'".to_string(),
-        )),
         #[cfg(feature = "jaeger")]
         "jaeger" => Ok(Some(Box::new(
             opentelemetry_jaeger_propagator::Propagator::default(),
