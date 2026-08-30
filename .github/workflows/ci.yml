@@ -8,9 +8,9 @@ on:
   push:
     branches-ignore:
       - "release-plz-*"
-    branches:
-      - main
-      - master
+    # branches:
+    #   - main
+    #   - master
   workflow_dispatch: {}
 
 concurrency:
