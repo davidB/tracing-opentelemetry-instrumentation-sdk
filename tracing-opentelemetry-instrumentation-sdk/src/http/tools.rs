@@ -111,9 +111,48 @@ pub fn http_host<B>(req: &http::Request<B>) -> &str {
         .unwrap_or("")
 }
 
+/// Returns `(server.address, server.port)` per the OpenTelemetry semantic
+/// conventions, splitting the trailing `:port` (if any) off of [`http_host`].
+#[inline]
+pub fn http_host_port<B>(req: &http::Request<B>) -> (&str, Option<i64>) {
+    split_host_port(http_host(req))
+}
+
+fn split_host_port(host: &str) -> (&str, Option<i64>) {
+    if let Some(rest) = host.strip_prefix('[') {
+        // IPv6, e.g. "[::1]" or "[::1]:8080"
+        return match rest.split_once(']') {
+            Some((address, port)) => (address, port.strip_prefix(':').and_then(parse_port)),
+            None => (host, None),
+        };
+    }
+    match host.rsplit_once(':') {
+        Some((address, port)) => match parse_port(port) {
+            Some(port) => (address, Some(port)),
+            None => (host, None),
+        },
+        None => (host, None),
+    }
+}
+
+fn parse_port(port: &str) -> Option<i64> {
+    port.parse::<u16>().ok().map(i64::from)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[rstest::rstest]
+    #[case("0.0.0.0:49459", "0.0.0.0", Some(49459))]
+    #[case("example.com", "example.com", None)]
+    #[case("example.com:8080", "example.com", Some(8080))]
+    #[case("[::1]", "::1", None)]
+    #[case("[::1]:8080", "::1", Some(8080))]
+    #[case("", "", None)]
+    fn test_split_host_port(#[case] host: &str, #[case] address: &str, #[case] port: Option<i64>) {
+        assert2::assert!(split_host_port(host) == (address, port));
+    }
     use assert2::assert;
     use rstest::rstest;
 

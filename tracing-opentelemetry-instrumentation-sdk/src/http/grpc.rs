@@ -158,11 +158,12 @@ pub(crate) fn make_span_from_request<B>(
     req: &http::Request<B>,
     kind: opentelemetry::trace::SpanKind,
 ) -> tracing::Span {
-    use crate::http::{extract_service_method, http_host, user_agent};
+    use crate::http::{extract_service_method, http_host_port, user_agent};
     use crate::otel_trace_span;
     use tracing::field::Empty;
 
     let (service, method) = extract_service_method(req.uri());
+    let (server_address, server_port) = http_host_port(req);
     otel_trace_span!(
         "GRPC request",
         http.user_agent = %user_agent(req),
@@ -173,7 +174,8 @@ pub(crate) fn make_span_from_request<B>(
         rpc.service = %service,
         rpc.method = %method,
         rpc.grpc.status_code = Empty, // to set on response
-        server.address = %http_host(req),
+        server.address = %server_address,
+        server.port = server_port,
         exception.message = Empty, // to set on response
         exception.details = Empty, // to set on response
     )

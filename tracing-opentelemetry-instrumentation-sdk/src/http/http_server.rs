@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use crate::http::{http_flavor, http_host, url_scheme, user_agent};
+use crate::http::{http_flavor, http_host_port, url_scheme, user_agent};
 use crate::otel_trace_span;
 use crate::span_type::SpanType;
 use opentelemetry_semantic_conventions::attribute::OTEL_STATUS_CODE;
@@ -12,13 +12,14 @@ pub fn make_span_from_request<B>(req: &http::Request<B>) -> tracing::Span {
     // [semantic-conventions/.../general/attributes.md](https://github.com/open-telemetry/semantic-conventions/blob/v1.25.0/docs/general/attributes.md)
     // Can not use const or opentelemetry_semantic_conventions::trace::* for name of records
     let http_method = req.method();
+    let (server_address, server_port) = http_host_port(req);
     otel_trace_span!(
         "HTTP request",
         http.request.method = %http_method,
         http.route = Empty, // to set by router of "webframework" after
         network.protocol.version = %http_flavor(req.version()),
-        server.address = http_host(req),
-        // server.port = req.uri().port(),
+        server.address = server_address,
+        server.port = server_port,
         http.client.address = Empty, //%$request.connection_info().realip_remote_addr().unwrap_or(""),
         user_agent.original = user_agent(req),
         http.response.status_code = Empty, // to set on response
