@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.3](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.38.2...tracing-opentelemetry-instrumentation-sdk-v0.38.3) - 2026-08-30
+
+### <!-- 1 -->Fixed
+
+- *(tracing-opentelemetry-instrumentation-sdk)* split server.address/server.port from Host header
+
 ## [0.38.2](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.38.1...tracing-opentelemetry-instrumentation-sdk-v0.38.2) - 2026-08-30
 
 ### <!-- 1 -->Fixed
