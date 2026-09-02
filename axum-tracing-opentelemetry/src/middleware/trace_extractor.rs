@@ -138,7 +138,7 @@ where
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        use tracing_opentelemetry::OpenTelemetrySpanExt;
+        use tracing_opentelemetry::{OpenTelemetrySpanExt, SetParentError};
         let req = req;
         let span = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let route = http_route(&req);
@@ -162,7 +162,12 @@ where
                 span.record(CLIENT_ADDRESS, client_ip);
             }
             if let Err(error) = span.set_parent(otel_http::extract_context(req.headers())) {
-                tracing::warn!(?error, "can not set parent trace_id to span");
+                match error {
+                    SetParentError::SpanDisabled => {}
+                    SetParentError::LayerNotFound | SetParentError::AlreadyStarted => {
+                        tracing::warn!(?error, "can not set parent trace_id to span");
+                    }
+                }
             }
             span
         } else {
@@ -283,5 +288,21 @@ mod tests {
         }
         let (tracing_events, otel_spans) = fake_env.collect_traces().await;
         assert_trace(name, tracing_events, otel_spans, is_trace_id_constant);
+    }
+
+    #[tokio::test]
+    async fn disabled_request_span_does_not_warn() {
+        let mut fake_env = FakeEnvironment::setup_with_filter("warn").await;
+        {
+            let mut svc = Router::new()
+                .route("/", get(|| async { StatusCode::OK }))
+                .layer(OtelAxumLayer::default());
+            let req = Request::new(Body::empty());
+            let _res = svc.call(req).await.unwrap();
+        }
+
+        let (tracing_events, otel_spans) = fake_env.collect_traces().await;
+        assert!(tracing_events.is_empty());
+        assert!(otel_spans.is_empty());
     }
 }

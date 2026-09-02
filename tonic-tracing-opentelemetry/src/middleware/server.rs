@@ -72,7 +72,7 @@ where
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        use tracing_opentelemetry::OpenTelemetrySpanExt;
+        use tracing_opentelemetry::{OpenTelemetrySpanExt, SetParentError};
         // This is necessary because tonic internally uses `tower::buffer::Buffer`.
         // See https://github.com/tower-rs/tower/issues/547#issuecomment-767629149
         // for details on why this is necessary
@@ -82,7 +82,12 @@ where
         let span = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let span = otel_http::grpc_server::make_span_from_request(&req);
             if let Err(error) = span.set_parent(otel_http::extract_context(req.headers())) {
-                tracing::warn!(?error, "can not set parent trace_id to span");
+                match error {
+                    SetParentError::SpanDisabled => {}
+                    SetParentError::LayerNotFound | SetParentError::AlreadyStarted => {
+                        tracing::warn!(?error, "can not set parent trace_id to span");
+                    }
+                }
             }
             span
         } else {
@@ -126,5 +131,28 @@ where
         let result = futures_util::ready!(this.inner.poll(cx));
         otel_http::grpc::update_span_from_response_or_error(this.span, &result);
         Poll::Ready(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use testing_tracing_opentelemetry::FakeEnvironment;
+    use tower::service_fn;
+
+    #[tokio::test]
+    async fn disabled_request_span_does_not_warn() {
+        let mut fake_env = FakeEnvironment::setup_with_filter("warn").await;
+        {
+            let inner = service_fn(|_req: Request<()>| async {
+                Ok::<_, std::io::Error>(Response::new(()))
+            });
+            let mut svc = OtelGrpcLayer::default().layer(inner);
+            let _res = svc.call(Request::new(())).await.unwrap();
+        }
+
+        let (tracing_events, otel_spans) = fake_env.collect_traces().await;
+        assert!(tracing_events.is_empty());
+        assert!(otel_spans.is_empty());
     }
 }

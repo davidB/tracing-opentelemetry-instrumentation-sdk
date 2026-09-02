@@ -13,7 +13,7 @@ expression: otel_spans
   attributes:
     busy_ns: ignore
     code.file.path: "Some(AnyValue { value: Some(StringValue(\"axum-tracing-opentelemetry/src/middleware/trace_extractor.rs\")) })"
-    code.line.number: "Some(AnyValue { value: Some(IntValue(257)) })"
+    code.line.number: "Some(AnyValue { value: Some(IntValue(262)) })"
     code.module.name: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor::tests\")) })"
     idle_ns: ignore
     target: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor::tests\")) })"
