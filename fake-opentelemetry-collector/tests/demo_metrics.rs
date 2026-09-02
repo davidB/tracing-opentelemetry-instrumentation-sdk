@@ -1,3 +1,4 @@
+use assertables::assert_some;
 use fake_opentelemetry_collector::{FakeCollectorServer, setup_meter_provider};
 use opentelemetry::{KeyValue, global};
 use std::time::Duration;
@@ -59,7 +60,7 @@ async fn demo_fake_meter_and_collector() {
     insta::assert_yaml_snapshot!(otel_metrics, {
         // Validate gauge metric
         "[0].metrics[0].name" => insta::dynamic_redaction(|value, _path| {
-            assert2::assert!(let Some(name) = value.as_str());
+            let name = assert_some!(value.as_str());
             assert_eq!(name, "test_gauge");
             name.to_string()
         }),
@@ -74,7 +75,7 @@ async fn demo_fake_meter_and_collector() {
             unit.to_string()
         }),
         "[0].metrics[0].data.Gauge.data_points[0].value.AsDouble" => insta::dynamic_redaction(|value, _path| {
-            assert2::assert!(let Some(val) = value.as_f64());
+            let val = assert_some!(value.as_f64());
             assert!((val - 123.456).abs() < 0.001);
             format!("{val}")
         }),
@@ -101,7 +102,7 @@ async fn demo_fake_meter_and_collector() {
             format!("{val}")
         }),
         "[0].metrics[1].data.Sum.is_monotonic" => insta::dynamic_redaction(|value, _path| {
-            assert2::assert!(let Some(monotonic) = value.as_bool());
+            let monotonic = assert_some!(value.as_bool());
             assert!(!monotonic);
             format!("{monotonic}")
         }),
@@ -187,7 +188,7 @@ async fn demo_fake_meter_and_collector() {
 
         // Validate attributes for all metrics
         "[].metrics[].data.**.attributes.foo" => insta::dynamic_redaction(|value, _path| {
-            assert2::assert!(let Some(attr_value) = value.as_str());
+            let attr_value = assert_some!(value.as_str());
             assert!(attr_value.contains("bar"));
             "\"Some(AnyValue { value: Some(StringValue(\\\"bar\\\")) })\""
         }),

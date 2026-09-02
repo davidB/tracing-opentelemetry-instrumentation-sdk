@@ -38,4 +38,5 @@ tracing = { workspace = true }
 
 [dev-dependencies]
 assert2 = { workspace = true }
+assertables = "10"
 insta = { workspace = true }
