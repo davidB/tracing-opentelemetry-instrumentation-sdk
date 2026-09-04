@@ -1,5 +1,6 @@
 //! code based on [tonic/examples/src/tower/client.rs at master · hyperium/tonic · GitHub](https://github.com/hyperium/tonic/blob/master/examples/src/tower/client.rs)
 use http::{Request, Response};
+use opentelemetry::Context as OtelContext;
 use pin_project_lite::pin_project;
 use std::{
     future::Future,
@@ -72,29 +73,37 @@ where
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        use tracing_opentelemetry::OpenTelemetrySpanExt;
+        use tracing_opentelemetry::{OpenTelemetrySpanExt, SetParentError};
         // This is necessary because tonic internally uses `tower::buffer::Buffer`.
         // See https://github.com/tower-rs/tower/issues/547#issuecomment-767629149
         // for details on why this is necessary
         // let clone = self.inner.clone();
         // let mut inner = std::mem::replace(&mut self.inner, clone);
         let req = req;
-        let span = if self.filter.is_none_or(|f| f(req.uri().path())) {
+        let (span, fallback_context) = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let span = otel_http::grpc_server::make_span_from_request(&req);
-            if let Err(error) = span.set_parent(otel_http::extract_context(req.headers())) {
-                tracing::warn!(?error, "can not set parent trace_id to span");
-            }
-            span
+            let extracted_context = otel_http::extract_context(req.headers());
+            let fallback_context = match span.set_parent(extracted_context.clone()) {
+                Ok(()) => None,
+                Err(SetParentError::SpanDisabled) => Some(extracted_context),
+                Err(error @ (SetParentError::LayerNotFound | SetParentError::AlreadyStarted)) => {
+                    tracing::warn!(?error, "can not set parent trace_id to span");
+                    None
+                }
+            };
+            (span, fallback_context)
         } else {
-            tracing::Span::none()
+            (tracing::Span::none(), None)
         };
         let future = {
+            let _context_guard = fallback_context.clone().map(OtelContext::attach);
             let _enter = span.enter();
             self.inner.call(req)
         };
         ResponseFuture {
             inner: future,
             span,
+            fallback_context,
         }
     }
 }
@@ -107,6 +116,7 @@ pin_project! {
         #[pin]
         pub(crate) inner: F,
         pub(crate) span: Span,
+        pub(crate) fallback_context: Option<OtelContext>,
         // pub(crate) start: Instant,
     }
 }
@@ -122,9 +132,48 @@ where
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
+        let _context_guard = this
+            .fallback_context
+            .as_ref()
+            .map(|context| context.clone().attach());
         let _guard = this.span.enter();
         let result = futures_util::ready!(this.inner.poll(cx));
         otel_http::grpc::update_span_from_response_or_error(this.span, &result);
         Poll::Ready(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use testing_tracing_opentelemetry::FakeEnvironment;
+    use tower::service_fn;
+
+    #[tokio::test]
+    async fn disabled_request_span_preserves_remote_context() {
+        const TRACE_ID: &str = "b2611246a58fd7ea623d2264c5a1e226";
+        const PARENT_SPAN_ID: &str = "b2c9b811f2f424af";
+
+        let mut fake_env = FakeEnvironment::setup_with_filter("warn").await;
+        {
+            let inner = service_fn(|_req: Request<()>| async {
+                let span = tracing::warn_span!("enabled child span");
+                let _guard = span.enter();
+                Ok::<_, std::io::Error>(Response::new(()))
+            });
+            let mut svc = OtelGrpcLayer::default().layer(inner);
+            let req = Request::builder()
+                .header("traceparent", format!("00-{TRACE_ID}-{PARENT_SPAN_ID}-01"))
+                .body(())
+                .unwrap();
+            let _res = svc.call(req).await.unwrap();
+        }
+
+        let (tracing_events, otel_spans) = fake_env.collect_traces().await;
+        assert_eq!(tracing_events.len(), 2);
+        assert_eq!(otel_spans.len(), 1);
+        assert_eq!(otel_spans[0].name, "enabled child span");
+        assert_eq!(otel_spans[0].trace_id, TRACE_ID);
+        assert_eq!(otel_spans[0].parent_span_id, PARENT_SPAN_ID);
     }
 }

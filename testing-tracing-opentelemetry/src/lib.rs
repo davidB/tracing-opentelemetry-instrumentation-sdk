@@ -93,6 +93,10 @@ pub struct FakeEnvironment {
 
 impl FakeEnvironment {
     pub async fn setup() -> Self {
+        Self::setup_with_filter("trace").await
+    }
+
+    pub async fn setup_with_filter(filter: &str) -> Self {
         //use axum::body::HttpBody as _;
         //use tower::{Service, ServiceExt};
         use tracing_subscriber::layer::SubscriberExt;
@@ -113,7 +117,7 @@ impl FakeEnvironment {
             .with_writer(make_writer)
             .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
         let subscriber = tracing_subscriber::registry()
-            .with(EnvFilter::try_new("trace").unwrap())
+            .with(EnvFilter::try_new(filter).unwrap())
             .with(fmt_layer)
             .with(otel_layer);
         let _subsciber_guard = subscriber.set_default();
