@@ -16,13 +16,13 @@ rustdoc-args = ["--cfg", "docs_rs"]
 
 [dependencies]
 opentelemetry = { workspace = true }
-opentelemetry-appender-tracing = { version = "0.32", default-features = false, optional = true }
+opentelemetry-appender-tracing = { version = "0.33", default-features = false, optional = true }
 opentelemetry-aws = { workspace = true, optional = true, features = ["trace"] }
 opentelemetry-otlp = { workspace = true, optional = true, features = [
   "grpc-tonic",
   "trace",
 ] }
-opentelemetry-prometheus = { version = "0.32.0", default-features = false, optional = true, features = [
+opentelemetry-prometheus = { version = "0.33.0", default-features = false, optional = true, features = [
   "prometheus-encoding",
 ] }
 # opentelemetry-resource-detectors = { workspace = true } //FIXME enable when available for opentelemetry >= 0.25
