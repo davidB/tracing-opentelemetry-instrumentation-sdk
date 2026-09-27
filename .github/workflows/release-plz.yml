@@ -28,5 +28,7 @@ jobs:
       - name: Run release-plz
         uses: MarcoIeni/release-plz-action@v0.5
         env:
+          # override rust-toolchain.toml: cargo-semver-checks requires a recent rustc
+          RUSTUP_TOOLCHAIN: stable
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
