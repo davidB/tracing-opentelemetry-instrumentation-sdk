@@ -6,7 +6,7 @@ keywords = ["tracing", "opentelemetry"]
 categories = ["development-tools::debugging", "development-tools::profiling"]
 homepage = "https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/tree/main/init-tracing-opentelemetry"
 edition.workspace = true
-version = "0.41.1"
+version = "0.42.0"
 repository.workspace = true
 license.workspace = true
 
@@ -37,7 +37,7 @@ tonic = { workspace = true, optional = true }
 tracing = { workspace = true }
 tracing-logfmt = { version = "0.3", optional = true }
 tracing-opentelemetry = { workspace = true }
-tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", version = "0.38" }
+tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", version = "0.42" }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "ansi",
   "env-filter",
