@@ -220,6 +220,7 @@ skip = [
   # "indexmap",
   # "hermit-abi",
   # "rustls-native-certs",
+  "base64",
   "hashbrown",
   "getrandom",
   # "rand", # until tonic & tower upgrade
