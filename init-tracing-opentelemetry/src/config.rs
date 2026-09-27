@@ -480,18 +480,6 @@ impl TracingConfig {
         self
     }
 
-    /// Enable or disable uptime timer (vs wall clock)
-    #[must_use]
-    #[deprecated = "Use `TracingConfig::with_timer` instead"]
-    pub fn with_uptime_timer(mut self, enabled: bool) -> Self {
-        self.features.timer = if enabled {
-            LogTimer::Uptime
-        } else {
-            LogTimer::Time
-        };
-        self
-    }
-
     /// Configure time logging (wall clock, uptime or none)
     #[must_use]
     pub fn with_timer(mut self, timer: LogTimer) -> Self {

@@ -5,17 +5,9 @@
 #![allow(clippy::module_name_repetitions)]
 #![doc = include_str!("../README.md")]
 
-#[allow(deprecated)]
 pub mod middleware;
 #[cfg(feature = "metrics-prometheus")]
 pub mod prometheus_metrics;
-
-/// for basic backward compatibility and transition
-#[allow(deprecated)]
-pub use self::middleware::opentelemetry_tracing_layer;
-/// for basic backward compatibility and transition
-#[allow(deprecated)]
-pub use self::middleware::response_with_trace_layer;
 
 // reexport tracing_opentelemetry_instrumentation_sdk crate
 pub use tracing_opentelemetry_instrumentation_sdk;
