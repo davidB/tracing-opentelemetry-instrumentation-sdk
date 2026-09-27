@@ -9,7 +9,7 @@ use std::{
 };
 use tower::{Layer, Service};
 use tracing::Span;
-use tracing_opentelemetry_instrumentation_sdk::http as otel_http;
+use tracing_opentelemetry_instrumentation_sdk::{self as otel, http as otel_http};
 
 pub type Filter = fn(&str) -> bool;
 
@@ -73,7 +73,6 @@ where
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        use tracing_opentelemetry::{OpenTelemetrySpanExt, SetParentError};
         // This is necessary because tonic internally uses `tower::buffer::Buffer`.
         // See https://github.com/tower-rs/tower/issues/547#issuecomment-767629149
         // for details on why this is necessary
@@ -82,15 +81,8 @@ where
         let req = req;
         let (span, fallback_context) = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let span = otel_http::grpc_server::make_span_from_request(&req);
-            let extracted_context = otel_http::extract_context(req.headers());
-            let fallback_context = match span.set_parent(extracted_context.clone()) {
-                Ok(()) => None,
-                Err(SetParentError::SpanDisabled) => Some(extracted_context),
-                Err(error @ (SetParentError::LayerNotFound | SetParentError::AlreadyStarted)) => {
-                    tracing::warn!(?error, "can not set parent trace_id to span");
-                    None
-                }
-            };
+            let fallback_context =
+                otel::set_parent_or_fallback(&span, otel_http::extract_context(req.headers()));
             (span, fallback_context)
         } else {
             (tracing::Span::none(), None)

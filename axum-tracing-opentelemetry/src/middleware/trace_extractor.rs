@@ -46,6 +46,7 @@ use std::{
 };
 use tower::{Layer, Service};
 use tracing::Span;
+use tracing_opentelemetry_instrumentation_sdk as otel;
 use tracing_opentelemetry_instrumentation_sdk::http::{
     self as otel_http, extract_client_ip_from_headers,
 };
@@ -139,7 +140,6 @@ where
     }
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
-        use tracing_opentelemetry::{OpenTelemetrySpanExt, SetParentError};
         let req = req;
         let (span, fallback_context) = if self.filter.is_none_or(|f| f(req.uri().path())) {
             let route = http_route(&req);
@@ -162,15 +162,8 @@ where
             if let Some(client_ip) = client_ip {
                 span.record(CLIENT_ADDRESS, client_ip);
             }
-            let extracted_context = otel_http::extract_context(req.headers());
-            let fallback_context = match span.set_parent(extracted_context.clone()) {
-                Ok(()) => None,
-                Err(SetParentError::SpanDisabled) => Some(extracted_context),
-                Err(error @ (SetParentError::LayerNotFound | SetParentError::AlreadyStarted)) => {
-                    tracing::warn!(?error, "can not set parent trace_id to span");
-                    None
-                }
-            };
+            let fallback_context =
+                otel::set_parent_or_fallback(&span, otel_http::extract_context(req.headers()));
             (span, fallback_context)
         } else {
             (tracing::Span::none(), None)
@@ -329,5 +322,39 @@ mod tests {
         assert_eq!(otel_spans[0].name, "enabled child span");
         assert_eq!(otel_spans[0].trace_id, TRACE_ID);
         assert_eq!(otel_spans[0].parent_span_id, PARENT_SPAN_ID);
+    }
+
+    #[tokio::test]
+    async fn remote_context_propagated_without_otel_layer() {
+        use tracing_subscriber::layer::SubscriberExt as _;
+        use tracing_subscriber::util::SubscriberInitExt as _;
+        const TRACE_ID: &str = "b2611246a58fd7ea623d2264c5a1e226";
+
+        opentelemetry::global::set_text_map_propagator(
+            opentelemetry_sdk::propagation::TraceContextPropagator::new(),
+        );
+        // no `OpenTelemetryLayer` => `set_parent` returns `LayerNotFound`
+        let _guard = tracing_subscriber::registry()
+            .with(tracing_subscriber::layer::Identity::new())
+            .set_default();
+        let mut svc = Router::new()
+            .route(
+                "/",
+                get(|| async {
+                    let mut headers = http::HeaderMap::new();
+                    otel_http::inject_context(&otel::find_current_context(), &mut headers);
+                    headers["traceparent"].to_str().unwrap().to_string()
+                }),
+            )
+            .layer(OtelAxumLayer::default());
+        let req = Request::builder()
+            .header("traceparent", format!("00-{TRACE_ID}-b2c9b811f2f424af-01"))
+            .body(Body::empty())
+            .unwrap();
+        let res = svc.call(req).await.unwrap();
+        let body = axum::body::to_bytes(res.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        assert_eq!(body, format!("00-{TRACE_ID}-b2c9b811f2f424af-01"));
     }
 }
