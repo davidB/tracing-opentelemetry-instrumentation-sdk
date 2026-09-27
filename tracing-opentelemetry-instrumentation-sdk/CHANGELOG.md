@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.38.3...tracing-opentelemetry-instrumentation-sdk-v0.42.0) - 2026-09-27
+
+### <!-- 2 -->Added
+
+- *(sdk)* propagate remote otel context without otel layer or with disabled span
+
 ## [0.38.3](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tracing-opentelemetry-instrumentation-sdk-v0.38.2...tracing-opentelemetry-instrumentation-sdk-v0.38.3) - 2026-08-30
 
 ### <!-- 1 -->Fixed

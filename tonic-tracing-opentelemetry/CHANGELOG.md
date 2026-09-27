@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tonic-tracing-opentelemetry-v0.38.0...tonic-tracing-opentelemetry-v0.42.0) - 2026-09-27
+
+### <!-- 1 -->Fixed
+
+- preserve context when request span is disabled
+
+### <!-- 2 -->Added
+
+- *(sdk)* propagate remote otel context without otel layer or with disabled span
+
 ## [0.30.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/tonic-tracing-opentelemetry-v0.29.1...tonic-tracing-opentelemetry-v0.30.0) - 2025-09-27
 
 ### <!-- 2 -->Added
