@@ -44,9 +44,9 @@ Instead of:
 ```toml
 [dependencies]
 init-tracing-opentelemetry = { version = "...", features = ["otlp"] }
-opentelemetry = "0.32"
-opentelemetry_sdk = "0.32"
-tracing-opentelemetry = "0.33"
+opentelemetry = "0.33"
+opentelemetry_sdk = "0.33"
+tracing-opentelemetry = "0.34"
 ```
 
 Use only:
@@ -172,6 +172,10 @@ export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://127.0.0.1:4318/v1/traces"
 export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="http/protobuf"
 export OTEL_TRACES_SAMPLER="always_on"
 ```
+
+> [!NOTE]
+> For gRPC, an endpoint without a scheme (eg `collector:4317`) defaults to `https://` (since opentelemetry-otlp 0.33), which requires the `tls` feature.
+> For plain-text gRPC, prefix the endpoint with `http://` or set `OTEL_EXPORTER_OTLP_INSECURE=true` (or per signal: `OTEL_EXPORTER_OTLP_TRACES_INSECURE`, `OTEL_EXPORTER_OTLP_METRICS_INSECURE`, `OTEL_EXPORTER_OTLP_LOGS_INSECURE`).
 
 In the context of **kubernetes**, some of the above environment variables can be injected by the Opentelemetry operator (via `inject-sdk`):
 
