@@ -152,10 +152,20 @@ To ease setup and compliance with [OpenTelemetry SDK configuration](https://open
 
 - `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` fallback to `OTEL_EXPORTER_OTLP_ENDPOINT` for the url of the exporter / collector
 - `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` fallback to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to auto-detection based on ENDPOINT port
+- `OTEL_SDK_DISABLED=true` to disable OpenTelemetry (no span created, like `TracingConfig::with_otel(false)`), incoming trace context is still propagated to downstream services (unless `OTEL_PROPAGATORS=none`)
 - `OTEL_TRACES_EXPORTER=none` to not export spans (no OTLP exporter created), while still creating trace context (`trace_id`,...) and propagating it to downstream services
 - `OTEL_SERVICE_NAME` for the name of the service
 - `OTEL_PROPAGATORS` for the configuration of the propagators
 - `OTEL_TRACES_SAMPLER` & `OTEL_TRACES_SAMPLER_ARG` for configuration of the sampler
+
+How to enable/disable span creation, export and propagation (with `axum-tracing-opentelemetry` / `tonic-tracing-opentelemetry` middlewares):
+
+| Setup | Spans / trace_id created | Exported | Context propagated to downstream |
+|---|---|---|---|
+| default, with `OTEL_EXPORTER_OTLP_*` | yes | yes | yes |
+| `OTEL_TRACES_EXPORTER=none` | yes | no | yes (new trace_id if none incoming) |
+| `OTEL_SDK_DISABLED=true` or `TracingConfig::with_otel(false)` | no | no | only incoming `traceparent` |
+| + `OTEL_PROPAGATORS=none` | - | - | no |
 
 Few other environment variables can also be used to configure OTLP exporter (eg to configure headers, authentication,, etc...):
 

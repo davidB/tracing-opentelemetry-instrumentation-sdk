@@ -519,6 +519,8 @@ impl TracingConfig {
     // === OpenTelemetry Configuration ===
 
     /// Enable or disable OpenTelemetry tracing
+    ///
+    /// Ignored (disabled) when env var `OTEL_SDK_DISABLED=true`.
     #[must_use]
     pub fn with_otel(mut self, enabled: bool) -> Self {
         self.otel_config.enabled = enabled;
@@ -658,7 +660,9 @@ impl TracingConfig {
         info!("init logging & tracing");
 
         // Build the final subscriber based on OTEL configuration
-        if self.otel_config.enabled {
+        if self.otel_config.enabled
+            && !is_sdk_disabled(std::env::var("OTEL_SDK_DISABLED").ok().as_deref())
+        {
             let subscriber = transform(tracing_subscriber::registry());
             let layer = self.build_layer()?;
             let filter_layer = self.build_filter_layer()?;
@@ -674,6 +678,8 @@ impl TracingConfig {
             }
         } else {
             info!("OpenTelemetry disabled - proceeding without OTEL layers");
+            // still propagate incoming trace context to downstream (no span created)
+            crate::init_propagator()?;
             let subscriber = transform(tracing_subscriber::registry())
                 .with(self.build_layer()?)
                 .with(self.build_filter_layer()?);
@@ -825,9 +831,24 @@ impl TracingConfig {
     }
 }
 
+/// `OTEL_SDK_DISABLED` is a boolean, only `true` (case insensitive) disables the SDK.
+/// see [OpenTelemetry SDK configuration](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/)
+fn is_sdk_disabled(value: Option<&str>) -> bool {
+    value.is_some_and(|v| v.trim().eq_ignore_ascii_case("true"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_is_sdk_disabled() {
+        assert!(!is_sdk_disabled(None));
+        assert!(!is_sdk_disabled(Some("false")));
+        assert!(!is_sdk_disabled(Some("1")));
+        assert!(is_sdk_disabled(Some("true")));
+        assert!(is_sdk_disabled(Some(" TRUE ")));
+    }
 
     #[test]
     fn test_global_subscriber_true_returns_global_guard() {
