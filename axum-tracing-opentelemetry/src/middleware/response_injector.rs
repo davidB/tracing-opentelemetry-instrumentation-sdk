@@ -5,15 +5,6 @@ use tower::{Layer, Service};
 use tracing_opentelemetry_instrumentation_sdk as otel;
 use tracing_opentelemetry_instrumentation_sdk::http as otel_http;
 
-#[deprecated(
-    since = "0.12.0",
-    note = "keep for transition, replaced by OtelInResponseLayer"
-)]
-#[must_use]
-pub fn response_with_trace_layer() -> OtelInResponseLayer {
-    OtelInResponseLayer {}
-}
-
 #[derive(Default, Debug, Clone)]
 pub struct OtelInResponseLayer;
 

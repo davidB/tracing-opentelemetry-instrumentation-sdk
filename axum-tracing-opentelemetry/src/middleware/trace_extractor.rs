@@ -51,15 +51,6 @@ use tracing_opentelemetry_instrumentation_sdk::http::{
     self as otel_http, extract_client_ip_from_headers,
 };
 
-#[deprecated(
-    since = "0.12.0",
-    note = "keep for transition, replaced by OtelAxumLayer"
-)]
-#[must_use]
-pub fn opentelemetry_tracing_layer() -> OtelAxumLayer {
-    OtelAxumLayer::default()
-}
-
 pub type Filter = fn(&str) -> bool;
 
 /// layer/middleware for axum:
@@ -276,7 +267,7 @@ mod tests {
                         .fallback(|| async { (StatusCode::NOT_FOUND, "inner fallback") }),
                 )
                 .fallback(|| async { (StatusCode::NOT_FOUND, "outer fallback") })
-                .layer(opentelemetry_tracing_layer());
+                .layer(OtelAxumLayer::default());
             let mut builder = Request::builder();
             for (key, value) in headers {
                 builder = builder.header(*key, *value);
