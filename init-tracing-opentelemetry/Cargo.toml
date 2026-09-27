@@ -37,6 +37,7 @@ tonic = { workspace = true, optional = true }
 tracing = { workspace = true }
 tracing-logfmt = { version = "0.3", optional = true }
 tracing-opentelemetry = { workspace = true }
+tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk", version = "0.38" }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "ansi",
   "env-filter",
@@ -48,7 +49,6 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 assert2 = { workspace = true }
 rstest = { workspace = true }
 # need tokio runtime to run smoke tests and rust doc
-tracing-opentelemetry-instrumentation-sdk = { path = "../tracing-opentelemetry-instrumentation-sdk" }
 opentelemetry_sdk = { workspace = true, features = [
   "trace",
   "rt-tokio",

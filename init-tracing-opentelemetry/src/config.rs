@@ -234,6 +234,8 @@ pub struct FeatureSet {
     pub span_events: Option<FmtSpan>,
     /// Display target information
     pub target_display: bool,
+    /// Prefix fmt log lines with the current OpenTelemetry `trace_id` (when inside a span)
+    pub fmt_trace_id: bool,
 }
 
 impl Default for FeatureSet {
@@ -250,6 +252,7 @@ impl Default for FeatureSet {
                 None
             },
             target_display: true,
+            fmt_trace_id: false,
         }
     }
 }
@@ -503,6 +506,16 @@ impl TracingConfig {
         self
     }
 
+    /// Enable or disable the current OpenTelemetry `trace_id` in the fmt output
+    /// (as first JSON field, or `trace_id=...` prefix for text formats, logfmt included).
+    ///
+    /// OpenTelemetry logs (feature `logs`) always carry the trace context, whatever this setting.
+    #[must_use]
+    pub fn with_fmt_trace_id(mut self, enabled: bool) -> Self {
+        self.features.fmt_trace_id = enabled;
+        self
+    }
+
     // === OpenTelemetry Configuration ===
 
     /// Enable or disable OpenTelemetry tracing
@@ -747,6 +760,7 @@ impl TracingConfig {
     /// - Output to stdout
     /// - Minimal metadata (no line numbers or thread names)
     /// - No span events to reduce verbosity
+    /// - `trace_id` field in each JSON line (when inside a span)
     /// - Full OpenTelemetry integration
     #[must_use]
     pub fn production() -> Self {
@@ -756,6 +770,7 @@ impl TracingConfig {
             .with_line_numbers(false)
             .with_thread_names(false)
             .without_span_events()
+            .with_fmt_trace_id(true)
             .with_otel(true)
     }
 

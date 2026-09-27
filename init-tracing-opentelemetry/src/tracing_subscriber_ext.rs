@@ -96,3 +96,32 @@ where
     opentelemetry::global::set_meter_provider(meter_provider.clone());
     Ok((layer, meter_provider, registry))
 }
+
+#[cfg(all(test, feature = "logs"))]
+mod tests {
+    use opentelemetry::trace::TracerProvider as _;
+    use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
+    use opentelemetry_sdk::logs::{InMemoryLogExporter, SdkLoggerProvider};
+    use opentelemetry_sdk::trace::SdkTracerProvider;
+    use tracing_subscriber::layer::SubscriberExt;
+
+    #[test]
+    fn otel_logs_have_trace_context_inside_span() {
+        let exporter = InMemoryLogExporter::default();
+        let logger_provider = SdkLoggerProvider::builder()
+            .with_simple_exporter(exporter.clone())
+            .build();
+        let tracer_provider = SdkTracerProvider::builder().build();
+        let subscriber = tracing_subscriber::registry()
+            .with(tracing_opentelemetry::layer().with_tracer(tracer_provider.tracer("test")))
+            .with(OpenTelemetryTracingBridge::new(&logger_provider));
+        tracing::subscriber::with_default(subscriber, || {
+            tracing::info_span!("span").in_scope(|| tracing::info!("inside"));
+            tracing::info!("outside");
+        });
+        let logs = exporter.get_emitted_logs().unwrap();
+        assert_eq!(logs.len(), 2);
+        assert!(logs[0].record.trace_context().is_some());
+        assert!(logs[1].record.trace_context().is_none());
+    }
+}

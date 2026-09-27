@@ -314,6 +314,23 @@ TracingConfig::default()
 ```
 > Traces are automatically attached to logs as well, so if the logs are queried in Grafana (for example), the trace automatically links to the log line.
 
+### `trace_id` in logs
+
+- **OpenTelemetry logs** (feature `logs`): every event emitted inside a span carries the trace context (`trace_id`, `span_id`). Nothing to configure.
+- **fmt output** (stdout, stderr, file): enable `.with_fmt_trace_id(true)` (already enabled by the `production()` preset). Events emitted inside a span get the current `trace_id`:
+  - JSON: `{"trace_id":"d097ae91be74af8dee5c1c8b97b60215","timestamp":...,"level":"INFO",...}`
+  - pretty / full / compact / logfmt: `trace_id=d097ae91be74af8dee5c1c8b97b60215 <usual line>` (e.g. logfmt: `trace_id=d097... ts=... level=info ... message=...`)
+
+```rust,no_run
+use init_tracing_opentelemetry::TracingConfig;
+//...
+TracingConfig::default()
+    .with_json_format()
+    .with_fmt_trace_id(true)
+    .init_subscriber()
+    .expect("valid tracing configuration");
+```
+
 ![screenshot of grafana logs](https://raw.githubusercontent.com/davidB/tracing-opentelemetry-instrumentation-sdk/refs/heads/main/examples/logging/screenshot_grafana.png)
 
 Configure the following environment variables to control the logs exporter (in addition to the shared variables above):
