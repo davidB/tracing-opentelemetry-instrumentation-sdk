@@ -77,6 +77,13 @@ impl Drop for OtelGuard {
     }
 }
 
+/// `true` when `OTEL_TRACES_EXPORTER` (a comma-separated list) contains `none`.
+///
+/// Spans are still created (with `trace_id`, `span_id`) and propagated, but not exported.
+pub(crate) fn is_traces_exporter_none(value: Option<&str>) -> bool {
+    value.is_some_and(|v| v.split(',').any(|x| x.trim().eq_ignore_ascii_case("none")))
+}
+
 #[allow(unused_mut)]
 pub(crate) fn infer_protocol_from_env(
     protocol_key: &str,
@@ -158,6 +165,16 @@ mod tests {
     use rstest::rstest;
 
     use super::*;
+
+    #[rstest]
+    #[case(None, false)]
+    #[case(Some("otlp"), false)]
+    #[case(Some("none"), true)]
+    #[case(Some(" None "), true)]
+    #[case(Some("console,none"), true)]
+    fn test_is_traces_exporter_none(#[case] input: Option<&str>, #[case] expected: bool) {
+        assert!(is_traces_exporter_none(input) == expected);
+    }
 
     #[rstest]
     #[case(None, None, None)] //Devskim: ignore DS137138

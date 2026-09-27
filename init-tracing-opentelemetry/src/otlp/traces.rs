@@ -1,4 +1,4 @@
-use super::infer_protocol_from_env;
+use super::{infer_protocol_from_env, is_traces_exporter_none};
 use opentelemetry_otlp::{ExporterBuildError, SpanExporter};
 use opentelemetry_sdk::{Resource, trace::SdkTracerProvider, trace::TracerProviderBuilder};
 #[cfg(feature = "tls")]
@@ -13,6 +13,7 @@ pub fn identity(v: TracerProviderBuilder) -> TracerProviderBuilder {
 /// Build an [`SdkTracerProvider`] driven by env vars.
 ///
 /// Protocol is inferred from `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` (or the endpoint port).
+/// No exporter is created when `OTEL_TRACES_EXPORTER=none` (spans & context are still created and propagated).
 /// Pass [`identity`] as `transform` for no customization, or a closure to add processors/samplers.
 // see https://opentelemetry.io/docs/reference/specification/protocol/exporter/
 pub fn init_tracerprovider<F>(
@@ -23,6 +24,11 @@ where
     F: FnOnce(TracerProviderBuilder) -> TracerProviderBuilder,
 {
     super::debug_env();
+    if is_traces_exporter_none(std::env::var("OTEL_TRACES_EXPORTER").ok().as_deref()) {
+        tracing::debug!("OTEL_TRACES_EXPORTER=none; no span exporter will be created");
+        let trace_provider = SdkTracerProvider::builder().with_resource(resource);
+        return Ok(transform(trace_provider).build());
+    }
     let protocol = infer_protocol_from_env(
         "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL",
         "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",

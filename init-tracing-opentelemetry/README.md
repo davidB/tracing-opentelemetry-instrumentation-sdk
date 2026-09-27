@@ -152,6 +152,7 @@ To ease setup and compliance with [OpenTelemetry SDK configuration](https://open
 
 - `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` fallback to `OTEL_EXPORTER_OTLP_ENDPOINT` for the url of the exporter / collector
 - `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` fallback to `OTEL_EXPORTER_OTLP_PROTOCOL`, fallback to auto-detection based on ENDPOINT port
+- `OTEL_TRACES_EXPORTER=none` to not export spans (no OTLP exporter created), while still creating trace context (`trace_id`,...) and propagating it to downstream services
 - `OTEL_SERVICE_NAME` for the name of the service
 - `OTEL_PROPAGATORS` for the configuration of the propagators
 - `OTEL_TRACES_SAMPLER` & `OTEL_TRACES_SAMPLER_ARG` for configuration of the sampler
