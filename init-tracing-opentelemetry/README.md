@@ -329,19 +329,21 @@ TracingConfig::default()
 ```
 > Traces are automatically attached to logs as well, so if the logs are queried in Grafana (for example), the trace automatically links to the log line.
 
-### `trace_id` in logs
+### `trace_id` / `span_id` in logs
 
 - **OpenTelemetry logs** (feature `logs`): every event emitted inside a span carries the trace context (`trace_id`, `span_id`). Nothing to configure.
-- **fmt output** (stdout, stderr, file): enable `.with_fmt_trace_id(true)` (already enabled by the `production()` preset). Events emitted inside a span get the current `trace_id`:
-  - JSON: `{"trace_id":"d097ae91be74af8dee5c1c8b97b60215","timestamp":...,"level":"INFO",...}`
-  - pretty / full / compact / logfmt: `trace_id=d097ae91be74af8dee5c1c8b97b60215 <usual line>` (e.g. logfmt: `trace_id=d097... ts=... level=info ... message=...`)
+- **fmt output** (stdout, stderr, file): enable `.with_fmt_trace_context(...)` (`FmtTraceContext::TraceId` is enabled by the `production()` preset). Events emitted inside a span get the current trace context (field names and hex encoding as recommended by OpenTelemetry for non-OTLP log formats):
+  - `FmtTraceContext::TraceId`: `trace_id` only, enough to link logs to traces (e.g. Grafana Loki -> Tempo)
+  - `FmtTraceContext::TraceIdSpanId`: `trace_id` and `span_id` (e.g. required by Datadog log/trace correlation)
+  - JSON: `{"trace_id":"d097ae91be74af8dee5c1c8b97b60215","span_id":"5ffc1a8e3b0d2c47","timestamp":...,"level":"INFO",...}`
+  - pretty / full / compact / logfmt: `trace_id=d097ae91be74af8dee5c1c8b97b60215 span_id=5ffc1a8e3b0d2c47 <usual line>` (e.g. logfmt: `trace_id=d097... span_id=5ffc... ts=... level=info ... message=...`)
 
 ```rust,no_run
-use init_tracing_opentelemetry::TracingConfig;
+use init_tracing_opentelemetry::{FmtTraceContext, TracingConfig};
 //...
 TracingConfig::default()
     .with_json_format()
-    .with_fmt_trace_id(true)
+    .with_fmt_trace_context(FmtTraceContext::TraceId)
     .init_subscriber()
     .expect("valid tracing configuration");
 ```

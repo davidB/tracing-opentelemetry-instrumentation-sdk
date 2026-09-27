@@ -9,7 +9,7 @@ use tracing_subscriber::fmt::format::{FmtSpan, Writer};
 use tracing_subscriber::fmt::time::{Uptime, time, uptime};
 use tracing_subscriber::{Layer, registry::LookupSpan};
 
-use crate::config::{LogFormat, LogTimer, TracingConfig, WriterConfig};
+use crate::config::{FmtTraceContext, LogFormat, LogTimer, TracingConfig, WriterConfig};
 use crate::{Error, FeatureSet};
 
 /// Trait for building format-specific tracing layers
@@ -45,7 +45,7 @@ where
         timer,
         span_events,
         target_display,
-        fmt_trace_id,
+        fmt_trace_context,
     } = &config.features;
     let span_events = span_events
         .as_ref()
@@ -61,20 +61,19 @@ where
         .with_target(*target_display);
 
     // Configure timer, trace_id and writer
-    let trace_id = fmt_trace_id.then(|| matches!(config.format, LogFormat::Json));
+    let json = matches!(config.format, LogFormat::Json);
+    let (ctx, writer) = (*fmt_trace_context, &config.writer);
     match timer {
-        LogTimer::None => configure_trace_id(layer.without_time(), trace_id, &config.writer),
-        LogTimer::Time => configure_trace_id(layer.with_timer(time()), trace_id, &config.writer),
-        LogTimer::Uptime => {
-            configure_trace_id(layer.with_timer(uptime()), trace_id, &config.writer)
-        }
+        LogTimer::None => configure_trace_context(layer.without_time(), ctx, json, writer),
+        LogTimer::Time => configure_trace_context(layer.with_timer(time()), ctx, json, writer),
+        LogTimer::Uptime => configure_trace_context(layer.with_timer(uptime()), ctx, json, writer),
     }
 }
 
-/// `trace_id`: `None` = disabled, `Some(json)` = enabled (JSON or text output)
-fn configure_trace_id<S, N, E, W>(
+fn configure_trace_context<S, N, E, W>(
     layer: fmt::Layer<S, N, E, W>,
-    trace_id: Option<bool>,
+    fmt_trace_context: FmtTraceContext,
+    json: bool,
     writer: &WriterConfig,
 ) -> Result<Box<dyn Layer<S> + Send + Sync + 'static>, Error>
 where
@@ -83,25 +82,32 @@ where
     E: fmt::FormatEvent<S, N> + Send + Sync + 'static,
     W: for<'writer> fmt::MakeWriter<'writer> + 'static,
 {
-    match trace_id {
-        Some(json) => configure_writer(
-            layer.map_event_format(|inner| WithTraceId { inner, json }),
-            writer,
-        ),
-        None => configure_writer(layer, writer),
-    }
+    let span_id = match fmt_trace_context {
+        FmtTraceContext::None => return configure_writer(layer, writer),
+        FmtTraceContext::TraceId => false,
+        FmtTraceContext::TraceIdSpanId => true,
+    };
+    configure_writer(
+        layer.map_event_format(|inner| WithTraceContext {
+            inner,
+            json,
+            span_id,
+        }),
+        writer,
+    )
 }
 
-/// Event formatter wrapper that adds the current OpenTelemetry `trace_id` (when inside a span).
+/// Event formatter wrapper that adds the current OpenTelemetry `trace_id` (and `span_id`) (when inside a span).
 ///
 // ponytail: uses the entered span, not an explicit `parent:` of the event;
-// fine for `trace_id` as parent and child share the same trace.
-struct WithTraceId<F> {
+// same `trace_id`, but `span_id` is the entered span's (the usual case anyway).
+struct WithTraceContext<F> {
     inner: F,
     json: bool,
+    span_id: bool,
 }
 
-impl<S, N, F> fmt::FormatEvent<S, N> for WithTraceId<F>
+impl<S, N, F> fmt::FormatEvent<S, N> for WithTraceContext<F>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
     N: for<'writer> fmt::FormatFields<'writer> + 'static,
@@ -115,21 +121,32 @@ where
     ) -> std::fmt::Result {
         // `Span::current()` (so `find_current_trace_id()`) is disabled while an event is dispatched,
         // but tracing-opentelemetry activates the OTel context of the entered span.
-        let Some(trace_id) = tracing_opentelemetry_instrumentation_sdk::find_trace_id(
-            &opentelemetry::Context::current(),
-        ) else {
+        let otel_ctx = opentelemetry::Context::current();
+        let Some(trace_id) = tracing_opentelemetry_instrumentation_sdk::find_trace_id(&otel_ctx)
+        else {
             return self.inner.format_event(ctx, writer, event);
         };
+        let span_id = self
+            .span_id
+            .then(|| tracing_opentelemetry_instrumentation_sdk::find_span_id(&otel_ctx))
+            .flatten();
         if self.json {
-            // JSON object: inject `trace_id` as first field
+            // JSON object: inject `trace_id` (and `span_id`) as first fields
             let mut buf = String::new();
             self.inner.format_event(ctx, Writer::new(&mut buf), event)?;
-            match buf.strip_prefix('{') {
-                Some(rest) => write!(writer, "{{\"trace_id\":\"{trace_id}\",{rest}"),
-                None => writer.write_str(&buf),
+            let Some(rest) = buf.strip_prefix('{') else {
+                return writer.write_str(&buf);
+            };
+            write!(writer, "{{\"trace_id\":\"{trace_id}\",")?;
+            if let Some(span_id) = span_id {
+                write!(writer, "\"span_id\":\"{span_id}\",")?;
             }
+            writer.write_str(rest)
         } else {
             write!(writer, "trace_id={trace_id} ")?;
+            if let Some(span_id) = span_id {
+                write!(writer, "span_id={span_id} ")?;
+            }
             self.inner.format_event(ctx, writer, event)
         }
     }
@@ -253,7 +270,7 @@ impl LayerBuilder for LogfmtLayerBuilder {
             timer,
             span_events,
             target_display,
-            fmt_trace_id,
+            fmt_trace_context,
         } = &config.features;
         let layer = tracing_logfmt::builder()
             .with_location(*file_names)
@@ -263,8 +280,8 @@ impl LayerBuilder for LogfmtLayerBuilder {
             .with_span_events(span_events.clone().unwrap_or(FmtSpan::NONE))
             .with_target(*target_display)
             .layer();
-        // logfmt is text: `trace_id=...` prefix is a valid logfmt pair
-        configure_trace_id(layer, fmt_trace_id.then_some(false), &config.writer)
+        // logfmt is text: `trace_id=... span_id=...` prefix is a valid logfmt pair
+        configure_trace_context(layer, *fmt_trace_context, false, &config.writer)
     }
 }
 
@@ -275,10 +292,10 @@ mod tests {
     use opentelemetry_sdk::trace::SdkTracerProvider;
     use tracing_subscriber::layer::SubscriberExt;
 
-    /// Log one event inside a span and one outside (with `fmt_trace_id` on), return the output lines
-    fn log_lines(format: LogFormat) -> Vec<String> {
+    /// Log one event inside a span and one outside, return the output lines
+    fn log_lines(format: LogFormat, fmt_trace_context: FmtTraceContext) -> Vec<String> {
         let path = std::env::temp_dir().join(format!(
-            "init-tracing-opentelemetry-{format:?}-{}.log",
+            "init-tracing-opentelemetry-{format:?}-{fmt_trace_context:?}-{}.log",
             std::process::id()
         ));
         let _ = std::fs::remove_file(&path);
@@ -286,7 +303,7 @@ mod tests {
             .with_format(format)
             .with_file(&path)
             .without_span_events()
-            .with_fmt_trace_id(true);
+            .with_fmt_trace_context(fmt_trace_context);
         let provider = SdkTracerProvider::builder().build();
         let registry = tracing_subscriber::registry()
             .with(tracing_opentelemetry::layer().with_tracer(provider.tracer("test")));
@@ -308,32 +325,66 @@ mod tests {
 
     fn assert_text_trace_id_only_inside_span(lines: &[String]) {
         assert_eq!(lines.len(), 2);
-        let trace_id = lines[0].strip_prefix("trace_id=").unwrap();
-        assert_eq!(trace_id.split(' ').next().unwrap().len(), 32);
+        let mut parts = lines[0].split(' ');
+        assert_eq!(
+            parts
+                .next()
+                .unwrap()
+                .strip_prefix("trace_id=")
+                .unwrap()
+                .len(),
+            32
+        );
+        assert_eq!(
+            parts
+                .next()
+                .unwrap()
+                .strip_prefix("span_id=")
+                .unwrap()
+                .len(),
+            16
+        );
         assert!(!lines[1].contains("trace_id="));
+        assert!(!lines[1].contains("span_id="));
     }
 
     #[test]
     fn json_has_trace_id_only_inside_span() {
-        let lines = log_lines(LogFormat::Json);
+        let lines = log_lines(LogFormat::Json, FmtTraceContext::TraceIdSpanId);
         assert_eq!(lines.len(), 2);
         let inside: serde_json::Value = serde_json::from_str(&lines[0]).unwrap();
         let trace_id = inside["trace_id"].as_str().unwrap();
         assert_eq!(trace_id.len(), 32);
+        assert_eq!(inside["span_id"].as_str().unwrap().len(), 16);
         assert_eq!(inside["fields"]["message"], "inside");
         let outside: serde_json::Value = serde_json::from_str(&lines[1]).unwrap();
         assert!(outside.get("trace_id").is_none());
+        assert!(outside.get("span_id").is_none());
     }
 
     #[test]
     fn text_has_trace_id_prefix_only_inside_span() {
-        assert_text_trace_id_only_inside_span(&log_lines(LogFormat::Full));
+        assert_text_trace_id_only_inside_span(&log_lines(
+            LogFormat::Full,
+            FmtTraceContext::TraceIdSpanId,
+        ));
+    }
+
+    #[test]
+    fn trace_id_without_span_id() {
+        let lines = log_lines(LogFormat::Json, FmtTraceContext::TraceId);
+        let inside: serde_json::Value = serde_json::from_str(&lines[0]).unwrap();
+        assert_eq!(inside["trace_id"].as_str().unwrap().len(), 32);
+        assert!(inside.get("span_id").is_none());
+        let lines = log_lines(LogFormat::Full, FmtTraceContext::TraceId);
+        assert!(lines[0].starts_with("trace_id="));
+        assert!(!lines[0].contains("span_id="));
     }
 
     #[cfg(feature = "logfmt")]
     #[test]
     fn logfmt_has_trace_id_prefix_only_inside_span() {
-        let lines = log_lines(LogFormat::Logfmt);
+        let lines = log_lines(LogFormat::Logfmt, FmtTraceContext::TraceIdSpanId);
         assert_text_trace_id_only_inside_span(&lines);
         assert!(lines[0].ends_with(" message=inside"));
     }

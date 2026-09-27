@@ -159,6 +159,21 @@ impl Default for LogFormat {
     }
 }
 
+/// OpenTelemetry trace context added to fmt log lines (when inside a span).
+///
+/// Field names and hex encoding follow the OpenTelemetry spec for non-OTLP log formats.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[non_exhaustive]
+pub enum FmtTraceContext {
+    /// No trace context.
+    #[default]
+    None,
+    /// `trace_id` only (enough to link logs to traces, e.g. Grafana Loki -> Tempo).
+    TraceId,
+    /// `trace_id` and `span_id` (e.g. required by Datadog log/trace correlation).
+    TraceIdSpanId,
+}
+
 /// Controls the timestamp format emitted with each log line.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogTimer {
@@ -234,8 +249,8 @@ pub struct FeatureSet {
     pub span_events: Option<FmtSpan>,
     /// Display target information
     pub target_display: bool,
-    /// Prefix fmt log lines with the current OpenTelemetry `trace_id` (when inside a span)
-    pub fmt_trace_id: bool,
+    /// Prefix fmt log lines with the current OpenTelemetry trace context (when inside a span)
+    pub fmt_trace_context: FmtTraceContext,
 }
 
 impl Default for FeatureSet {
@@ -252,7 +267,7 @@ impl Default for FeatureSet {
                 None
             },
             target_display: true,
-            fmt_trace_id: false,
+            fmt_trace_context: FmtTraceContext::None,
         }
     }
 }
@@ -494,13 +509,13 @@ impl TracingConfig {
         self
     }
 
-    /// Enable or disable the current OpenTelemetry `trace_id` in the fmt output
-    /// (as first JSON field, or `trace_id=...` prefix for text formats, logfmt included).
+    /// Select the current OpenTelemetry trace context (`trace_id`, `span_id`) added to the fmt output
+    /// (as first JSON fields, or `trace_id=... span_id=...` prefix for text formats, logfmt included).
     ///
     /// OpenTelemetry logs (feature `logs`) always carry the trace context, whatever this setting.
     #[must_use]
-    pub fn with_fmt_trace_id(mut self, enabled: bool) -> Self {
-        self.features.fmt_trace_id = enabled;
+    pub fn with_fmt_trace_context(mut self, fmt_trace_context: FmtTraceContext) -> Self {
+        self.features.fmt_trace_context = fmt_trace_context;
         self
     }
 
@@ -764,7 +779,7 @@ impl TracingConfig {
             .with_line_numbers(false)
             .with_thread_names(false)
             .without_span_events()
-            .with_fmt_trace_id(true)
+            .with_fmt_trace_context(FmtTraceContext::TraceId)
             .with_otel(true)
     }
 

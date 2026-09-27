@@ -106,7 +106,8 @@ fn propagator_from_string(
 // Re-export the new configuration API for easier access
 #[cfg(feature = "tracing_subscriber_ext")]
 pub use config::{
-    FeatureSet, Guard, LevelConfig, LogFormat, LogTimer, OtelConfig, TracingConfig, WriterConfig,
+    FeatureSet, FmtTraceContext, Guard, LevelConfig, LogFormat, LogTimer, OtelConfig,
+    TracingConfig, WriterConfig,
 };
 
 #[cfg(feature = "tracing_subscriber_ext")]
