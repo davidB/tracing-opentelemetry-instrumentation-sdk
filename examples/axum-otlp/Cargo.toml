@@ -18,7 +18,7 @@ opentelemetry = { workspace = true }
 opentelemetry-otlp = { workspace = true, default-features = false, features = [
   "reqwest-rustls",
   "http-proto",
-  "tls",
+  "tls-ring",
 ] }
 serde_json = "1"
 tokio = { workspace = true, features = ["full"] }
