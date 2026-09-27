@@ -1,6 +1,5 @@
 ---
 source: testing-tracing-opentelemetry/src/lib.rs
-assertion_line: 53
 expression: otel_spans
 ---
 - trace_id: "[trace_id:lg32]"
@@ -14,7 +13,7 @@ expression: otel_spans
   attributes:
     busy_ns: ignore
     code.file.path: "Some(AnyValue { value: Some(StringValue(\"axum-tracing-opentelemetry/src/middleware/trace_extractor.rs\")) })"
-    code.line.number: "Some(AnyValue { value: Some(IntValue(264)) })"
+    code.line.number: "Some(AnyValue { value: Some(IntValue(255)) })"
     code.module.name: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor::tests\")) })"
     idle_ns: ignore
     target: "Some(AnyValue { value: Some(StringValue(\"axum_tracing_opentelemetry::middleware::trace_extractor::tests\")) })"
