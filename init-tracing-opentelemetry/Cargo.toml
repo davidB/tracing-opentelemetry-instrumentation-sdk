@@ -32,6 +32,8 @@ opentelemetry-stdout = { workspace = true, features = [
 opentelemetry-semantic-conventions = { workspace = true, optional = true }
 opentelemetry_sdk = { workspace = true, features = ["trace"] }
 prometheus = { workspace = true, optional = true }
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider"], optional = true }
+rustls = { version = "0.23", default-features = false, features = ["std"], optional = true }
 thiserror = "2"
 tonic = { workspace = true, optional = true }
 tracing = { workspace = true }
@@ -66,17 +68,22 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ] }
 
 [features]
+default = ["tls-aws-lc"]
 otlp = [
+  "dep:reqwest",
+  "dep:rustls",
   "opentelemetry-otlp/http-proto",
   "opentelemetry-otlp/reqwest-blocking-client",
-  "opentelemetry-otlp/reqwest-rustls",
   "tracer",
 ]
 stdout = ["dep:opentelemetry-stdout", "tracer"]
 tracer = ["dep:opentelemetry-semantic-conventions"]
 xray = ["dep:opentelemetry-aws"]
 tracing_subscriber_ext = ["dep:tracing-subscriber", "otlp"]
-tls = ["opentelemetry-otlp/tls-ring", "tonic"]
+tls = ["dep:rustls", "opentelemetry-otlp/tls-provider-agnostic", "tonic"]
+# Select a provider only for enabled transports; defaults must not enable OTLP.
+tls-aws-lc = ["rustls?/aws_lc_rs", "reqwest?/rustls", "tonic?/tls-aws-lc"]
+tls-ring = ["rustls?/ring", "tonic?/tls-ring"]
 tls-roots = ["opentelemetry-otlp/tls-roots"]
 tls-webpki-roots = ["opentelemetry-otlp/tls-webpki-roots"]
 logfmt = ["dep:tracing-logfmt"]
