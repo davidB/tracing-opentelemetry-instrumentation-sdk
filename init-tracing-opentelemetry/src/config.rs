@@ -659,6 +659,28 @@ impl TracingConfig {
         let temp_subscriber = tracing_subscriber::registry()
             .with(self.build_layer()?)
             .with(self.build_filter_layer()?);
+
+        self.init_subscriber_ext_with_temporary_subscriber(transform, temp_subscriber)
+    }
+
+    /// Performs the same functionality as `init_subscriber_ext_quiet` without
+    /// any layers added to the temporary subscriber, for '--quiet' or
+    /// other situations where standard log output is undesirable.
+    pub fn init_subscriber_ext_quiet<F, SOut>(self, transform: F) -> Result<Guard, Error>
+    where
+        SOut: Subscriber + for<'a> LookupSpan<'a> + Send + Sync,
+        F: FnOnce(Registry) -> SOut,
+    {
+        let temp_subscriber = tracing_subscriber::registry();
+        self.init_subscriber_ext_with_temporary_subscriber(transform, temp_subscriber)
+    }
+
+    fn init_subscriber_ext_with_temporary_subscriber<F, SOut, STemp>(self, transform: F, temp_subscriber: STemp) -> Result<Guard, Error>
+    where
+        STemp: Subscriber + Send + Sync + 'static,
+        SOut: Subscriber + for<'a> LookupSpan<'a> + Send + Sync,
+        F: FnOnce(Registry) -> SOut,
+    {
         let _guard = tracing::subscriber::set_default(temp_subscriber);
         info!("init logging & tracing");
 
