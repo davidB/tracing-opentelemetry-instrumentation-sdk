@@ -659,7 +659,21 @@ impl TracingConfig {
         let temp_subscriber = tracing_subscriber::registry()
             .with(self.build_layer()?)
             .with(self.build_filter_layer()?);
-        let _guard = tracing::subscriber::set_default(temp_subscriber);
+
+        self.init_subscriber_ext_with_temporary_subscriber(transform, Some(temp_subscriber))
+    }
+
+    fn init_subscriber_ext_with_temporary_subscriber<F, SOut, STemp>(self, transform: F, temp_subscriber: Option<STemp>) -> Result<Guard, Error>
+    where
+        STemp: Subscriber + Send + Sync + 'static,
+        SOut: Subscriber + for<'a> LookupSpan<'a> + Send + Sync,
+        F: FnOnce(Registry) -> SOut,
+    {
+        let _guard = if let Some(temp_subscriber) = temp_subscriber {
+            Some(tracing::subscriber::set_default(temp_subscriber))
+        } else {
+            None
+        };
         info!("init logging & tracing");
 
         // Build the final subscriber based on OTEL configuration
