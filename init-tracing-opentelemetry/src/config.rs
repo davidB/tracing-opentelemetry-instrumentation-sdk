@@ -663,6 +663,18 @@ impl TracingConfig {
         self.init_subscriber_ext_with_temporary_subscriber(transform, Some(temp_subscriber))
     }
 
+    /// Performs the same functionality as `init_subscriber_ext_quiet` without
+    /// any temporary subscriber, for '--quiet' or other situations where standard log output
+    /// is undesirable.
+    pub fn init_subscriber_ext_quiet<F, SOut, STemp>(self, transform: F) -> Result<Guard, Error>
+    where
+        STemp: Subscriber + Send + Sync + 'static,
+        SOut: Subscriber + for<'a> LookupSpan<'a> + Send + Sync,
+        F: FnOnce(Registry) -> SOut,
+    {
+        self.init_subscriber_ext_with_temporary_subscriber::<F, SOut, STemp>(transform, None)
+    }
+
     fn init_subscriber_ext_with_temporary_subscriber<F, SOut, STemp>(self, transform: F, temp_subscriber: Option<STemp>) -> Result<Guard, Error>
     where
         STemp: Subscriber + Send + Sync + 'static,
