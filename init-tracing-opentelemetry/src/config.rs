@@ -329,6 +329,8 @@ pub struct TracingConfig {
     pub global_subscriber: bool,
     /// name of the tracer (default `""`)
     pub tracer_name: String,
+    /// Silence log output during [`TracingConfig::init_subscriber`]
+    pub quiet_init: bool,
 }
 
 impl Default for TracingConfig {
@@ -341,6 +343,7 @@ impl Default for TracingConfig {
             otel_config: OtelConfig::default(),
             global_subscriber: true,
             tracer_name: String::new(),
+            quiet_init: false,
         }
     }
 }
@@ -582,6 +585,13 @@ impl TracingConfig {
         self
     }
 
+    /// Silence the log output from [`TracingConfig::init_subscriber`]
+    #[must_use]
+    pub fn with_quiet_init(mut self, enabled: bool) -> Self {
+        self.quiet_init = enabled;
+        self
+    }
+
     // === Build Methods ===
 
     /// Build a tracing layer with the current configuration
@@ -656,8 +666,11 @@ impl TracingConfig {
         F: FnOnce(Registry) -> SOut,
     {
         // Setup a temporary subscriber for initialization logging
+        let layer_or_quiet = |layer| {
+            if self.quiet_init { None } else { Some(layer) }
+        };
         let temp_subscriber = tracing_subscriber::registry()
-            .with(self.build_layer()?)
+            .with(layer_or_quiet(self.build_layer()?))
             .with(self.build_filter_layer()?);
         let _guard = tracing::subscriber::set_default(temp_subscriber);
         info!("init logging & tracing");
