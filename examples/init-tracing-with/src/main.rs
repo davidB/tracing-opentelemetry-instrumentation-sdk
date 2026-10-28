@@ -11,6 +11,8 @@ async fn main() {
     let _guard = TracingConfig::default()
         .with_log_directives("info,tokio::task=trace,tokio::task::waker=warn")
         .with_span_events(tracing_subscriber::fmt::format::FmtSpan::NONE)
+        // Using 'with_quiet_init(true)' will suppress the logging during initialization
+        // .with_quiet_init(true)
         .init_subscriber_ext(|subscriber| subscriber.with(blocked))
         .unwrap();
 
