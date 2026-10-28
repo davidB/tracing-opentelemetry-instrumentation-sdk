@@ -665,6 +665,12 @@ impl TracingConfig {
         SOut: Subscriber + for<'a> LookupSpan<'a> + Send + Sync,
         F: FnOnce(Registry) -> SOut,
     {
+        #[cfg(all(feature = "tls-ring", not(feature = "tls-aws-lc")))]
+        if rustls::crypto::CryptoProvider::get_default().is_none() {
+            // Reqwest needs an installed provider; preserve one installed concurrently.
+            let _ = rustls::crypto::ring::default_provider().install_default();
+        }
+
         // Setup a temporary subscriber for initialization logging
         let layer_or_quiet = |layer| {
             if self.quiet_init { None } else { Some(layer) }
