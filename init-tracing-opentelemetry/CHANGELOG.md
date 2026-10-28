@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.43.0...init-tracing-opentelemetry-v0.44.0) - 2026-10-28
+
+### <!-- 2 -->Added
+
+- allow choosing tls provider when using init-tracing-opentelemetry ([#370](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/370))
+- add `with_quiet_init` ([#374](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/pull/374))
+
 ## [0.43.0](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/compare/init-tracing-opentelemetry-v0.42.1...init-tracing-opentelemetry-v0.43.0) - 2026-09-27
 
 ### <!-- 2 -->Added
